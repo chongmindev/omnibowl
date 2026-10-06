@@ -1,0 +1,15 @@
+# Textbook content, extracted text, built DB, API cache. Never commit.
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+web/dist/
+
+.DS_Store

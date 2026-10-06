@@ -1,0 +1,82 @@
+# All thresholds and weights for the pipeline. No magic numbers in code.
+# Everything here must hold for any textbook; per-book facts are discovered into
+# data/profiles/<book>.auto.toml (see pipeline/omnibowl/profile.py).
+
+[paths]
+db = "data/omnibowl.db"
+qbreader_cache = "data/qbreader_cache"
+profiles = "data/profiles"
+
+[parse]
+# A filled drawing counts as a "panel" (box background) when every RGB channel is
+# at least this light, and it is not pure white (page background).
+panel_min_channel = 0.80
+panel_white_channel = 0.99
+# Ignore filled drawings thinner than this (rules, underlines), in points.
+panel_min_height = 5.0
+# A line belongs to an outline entry if its top is at or below the entry's
+# destination y minus this many points.
+outline_y_tolerance = 4.0
+# Matching an outline title to its heading line: compare at least this many
+# alphanumeric characters, so a stray short line ("1") cannot match.
+heading_match_min_chars = 4
+# Two-column pages: at least this many lines wholly on each side of the midline, and
+# at most this share of lines crossing it.
+columns_min_lines = 8
+columns_max_cross_frac = 0.15
+
+[profile]
+# Size peaks: rel_size is binned to this width; a bin is a peak if it holds at least
+# this share of content characters.
+size_bin = 0.01
+min_peak_share = 0.002
+# Furniture: top/bottom margin zone as a share of page height; a pattern is furniture
+# if it appears there on at least this share of content pages.
+margin_zone = 0.06
+furniture_min_page_share = 0.3
+# Generic share threshold for a role guess ("most of them").
+role_share = 0.5
+# Lines ending in "?" above this share read as questions (objective or exercise).
+question_share = 0.3
+url_share = 0.2
+# Panel styles: ignore styles with fewer lines; a definition panel is short; an
+# objective panel is short and question-like; a table has short cells in several
+# x-columns (x binned to 10 pt, a column needs this share of the style's lines).
+panel_min_lines = 5
+definition_max_lines = 6
+objective_max_lines = 6
+table_cell_max_chars = 30
+table_x_min_share = 0.05
+table_min_columns = 3
+# Markers: recurring bold lines of at most this many words, seen at least this many
+# times in this many top-level chapters. Content is sampled from the lines after each.
+marker_max_words = 6
+marker_min_count = 5
+marker_min_chapters = 3
+marker_sample_lines = 12
+caption_prefixes = ["Figure", "Fig.", "Table", "Exhibit"]
+
+# Words in a marker that decide its role before content statistics are consulted.
+# English textbook vocabulary, not tied to one book.
+[profile.role_lexicon]
+exercise = ["question", "questions", "exercise", "exercises", "activity", "practice",
+            "test", "quiz", "project", "check", "answer", "answers", "problem", "problems",
+            "frq", "frqs", "points", "rubric", "contemplate", "try", "discussion", "yourself"]
+objective = ["objective", "objectives", "target", "targets", "goals", "outcomes"]
+summary = ["review", "summary", "recap", "remember", "takeaways"]
+table = ["table"]
+
+[tag]
+# Above-body lines longer than this are display prose (chapter openers), not headings.
+heading_max_chars = 60
+# Side-stream lines indented at least this far (points) past the chapter's body
+# margin are numbered examples, not continuations of a caption or definition.
+example_min_indent = 12.0
+# Lines to scan after a marker for its panel before treating the region as open.
+panel_search_lines = 8
+# A line whose top is within this many points of the previous line's top, on the same
+# page and in the same size band, continues it (e.g. caption text beside "Figure 2.1").
+same_row_tolerance = 2.0
+# Inside a box, a caption continues on lines whose left edge is within this many
+# points of the "Figure N.M" label; the box's next paragraph is indented further.
+caption_continue_indent = 4.0
