@@ -119,11 +119,30 @@ CREATE TABLE IF NOT EXISTS sentences (
     page_end    INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS sentences_book ON sentences(book_id, unit, ord);
+
+-- Glossary and index entries from the back matter: labels for evaluating candidates,
+-- never a source of clues. role: glossary | subject_index | author_index.
+-- target_pages is a JSON list of 1-based PDF pages from the entry's links. in_text is
+-- 1 when the term occurs in the chapters' sentences (filters e.g. a bilingual
+-- glossary's other language).
+CREATE TABLE IF NOT EXISTS labels (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    role        TEXT NOT NULL,
+    term        TEXT NOT NULL,
+    parent_id   INTEGER REFERENCES labels(id),
+    definition  TEXT,
+    target_pages TEXT NOT NULL,
+    in_text     INTEGER NOT NULL,
+    line_id     INTEGER NOT NULL REFERENCES lines(id)
+);
+CREATE INDEX IF NOT EXISTS labels_book ON labels(book_id, role);
 """
 
-PARSE_TABLES = ["sentences", "blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
+LABEL_TABLES = ["labels"]
 
 
 def connect(path: Path) -> sqlite3.Connection:

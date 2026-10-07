@@ -27,6 +27,7 @@ from . import config
 ROMAN_RE = re.compile(r"(?<=\s)[IVXLC]+(?![\w])")
 NUM_RE = re.compile(r"\d+")
 URL_RE = re.compile(r"https?://|www\.|\.com\b|\.org\b")
+BACK_MATTER_ROLES = ("glossary", "subject_index", "author_index", "other")
 ROLES = ("body", "box", "exercise", "objective", "summary", "table", "caption", "definition", "heading")
 
 
@@ -206,13 +207,65 @@ def side_bold_role(lines, bands, pcfg) -> dict:
     return {"role": role, "evidence": f"{len(cands)} lines, lowercase start {lower:.0%}"}
 
 
+# ---------------------------------------------------------------------- back matter
+
+NAME_RE = re.compile(r"^[A-Z][\w'’.-]+(?:[ -][A-Z][\w'’.-]+)*, (?:[A-Z]\.|[A-Z][a-z]+)")
+
+
+def _bold_run(spans_json: str) -> str:
+    out = []
+    for text, _size, flags in json.loads(spans_json):
+        if not (flags & 16 or not text.strip()):
+            break
+        out.append(text)
+    return "".join(out)
+
+
+def back_matter_parts(conn, book_id: int, secs, pcfg, chapter_text: str) -> list[dict]:
+    """Guess what each back-matter part is from its contents: glossary (bold terms with
+    definitions), subject or author index (lines of page links; author entries look
+    like "Surname, X."), or other (references, appendices)."""
+    children = {s["parent_id"] for s in secs if s["parent_id"] is not None}
+    leaves = [s for s in secs if s["kind"] == "back_matter" and s["id"] not in children]
+    out = []
+    for s in leaves:
+        lines = conn.execute(
+            """SELECT l.id, l.text, l.bold_start, l.spans_json,
+                      EXISTS(SELECT 1 FROM links k WHERE k.line_id = l.id AND k.target_page IS NOT NULL) AS linked
+               FROM lines l WHERE l.section_id = ? ORDER BY l.seq""", (s["id"],)).fetchall()
+        if len(lines) < pcfg["back_matter_min_lines"]:
+            continue
+        n = len(lines)
+        linked = sum(l["linked"] for l in lines) / n
+        bold = sum(l["bold_start"] for l in lines) / n
+        # Glossary terms are short bold phrases without digits that also occur in the
+        # chapters; bold author names in references and bold answer keys do not.
+        terms = [t for l in lines if l["bold_start"]
+                 and (t := _bold_run(l["spans_json"]).lower().strip(" :"))
+                 and len(t.split()) <= pcfg["glossary_term_max_words"] and not any(c.isdigit() for c in t)]
+        in_text = sum(t in chapter_text for t in terms) / max(1, len(terms))
+        names = sum(bool(NAME_RE.match(l["text"])) for l in lines if l["linked"]) / max(1, sum(l["linked"] for l in lines))
+        if linked >= pcfg["index_link_share"]:
+            role = "author_index" if names >= pcfg["role_share"] else "subject_index"
+        elif (len(terms) / n >= pcfg["glossary_bold_share"]
+              and in_text >= pcfg["glossary_in_text_share"]):
+            role = "glossary"
+        else:
+            role = "other"
+        out.append({"title": s["title"], "role": role,
+                    "evidence": (f"{n} lines, linked {linked:.0%}, bold-start {bold:.0%}, "
+                                 f"short bold terms {len(terms)}, in chapters {in_text:.0%}, "
+                                 f"name-like {names:.0%}")})
+    return out
+
+
 # ---------------------------------------------------------------------------- build
 
 def build(book_id: int, conn, cfg: dict) -> dict:
     pcfg = cfg["profile"]
     caption_re = re.compile(rf"^(?:{'|'.join(map(re.escape, pcfg['caption_prefixes']))})\s+\d")
     book = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
-    secs = conn.execute("SELECT id, parent_id, kind FROM sections WHERE book_id = ?", (book_id,)).fetchall()
+    secs = conn.execute("SELECT id, parent_id, kind, title FROM sections WHERE book_id = ?", (book_id,)).fetchall()
     parent = {s["id"]: s["parent_id"] for s in secs}
     kind = {s["id"]: s["kind"] for s in secs}
 
@@ -236,6 +289,8 @@ def build(book_id: int, conn, cfg: dict) -> dict:
         "side_bold": side_bold_role(lines, bands, pcfg),
         "panel_styles": panel_styles(lines, panels, pcfg, caption_re),
         "markers": markers(lines, tops, bands, pcfg, caption_re, pcfg["role_lexicon"]),
+        "back_matter": back_matter_parts(conn, book_id, secs, pcfg,
+                                         " ".join(ln["text"] for ln in lines).lower()),
     }
 
 
@@ -254,14 +309,15 @@ def _val(v) -> str:
 def to_toml(p: dict) -> str:
     out = [f"# Auto-generated layout profile for {p['book']}. Regenerated on every run;",
            f"# put corrections in profiles/{p['book']}.toml (same keys; markers by pattern, panel",
-           "# styles by fill). Roles: " + ", ".join(ROLES) + ".", "",
+           "# styles by fill, back matter by title). Roles: " + ", ".join(ROLES) + ".",
+           "# Back-matter roles: " + ", ".join(BACK_MATTER_ROLES) + ".", "",
            f"book = {_val(p['book'])}", ""]
     for table in ("sizes", "furniture", "side_bold"):
         out.append(f"[{table}]")
         out += [f"{k} = {_val(v)}" for k, v in p[table].items()]
         out.append("")
-    for arr in ("panel_styles", "markers"):
-        for item in p[arr]:
+    for arr in ("panel_styles", "markers", "back_matter"):
+        for item in p.get(arr, []):
             out.append(f"[[{arr}]]")
             out += [f"{k} = {_val(v)}" for k, v in item.items()]
             out.append("")
@@ -273,8 +329,8 @@ def merge(auto: dict, override: dict) -> dict:
          for k, v in auto.items()}
     for table in ("sizes", "furniture", "side_bold"):
         p[table].update(override.get(table, {}))
-    for arr, key in (("markers", "pattern"), ("panel_styles", "fill")):
-        index = {json.dumps(x[key]): x for x in p[arr]}
+    for arr, key in (("markers", "pattern"), ("panel_styles", "fill"), ("back_matter", "title")):
+        index = {json.dumps(x[key]): x for x in p.setdefault(arr, [])}
         for o in override.get(arr, []):
             if json.dumps(o[key]) in index:
                 index[json.dumps(o[key])].update(o)

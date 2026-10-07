@@ -1,0 +1,8 @@
+# Hand corrections to data/profiles/myers_ap_psych.auto.toml (2026-10-07).
+# Same keys as the auto profile; markers match by pattern, panel styles by fill,
+# back matter by title.
+
+# An answer key: its bold answers are real terms, so the guess reads it as a glossary.
+[[back_matter]]
+title = "Appendix E Answers to Test Yourself Questions"
+role = "other"

@@ -15,7 +15,7 @@ reader are not built yet.
 
 | Stage | Produces | Status |
 |---|---|---|
-| `parse` | sections, lines, tagged blocks, sentences | measurement, profiling, tagging and sentence splitting done; glossary/index capture next |
+| `parse` | sections, lines, tagged blocks, sentences, glossary and index labels | done |
 | `candidates` | answer terms with scores | not started |
 | `clues` | one-fact clues per answer, grounded in sentence ids | not started |
 | `rank` | referent, giveaway, clue difficulty | not started |
@@ -37,6 +37,8 @@ reader are not built yet.
 4. **Sentences** (`pipeline/omnibowl/sentences.py`): stitch each stream of text back
    together (drop caps, hyphens, body text interrupted by sidebars) and split it with
    spaCy. Every sentence keeps the line ids and character offsets it came from.
+5. **Back matter** (`pipeline/omnibowl/backmatter.py`): read the glossary and indexes
+   into labels (terms, definitions, linked pages) used to evaluate later stages.
 
 Nothing in the code names a particular book's features; per-book facts live in the
 profile. See `docs/decisions.md` for each design choice and the alternatives rejected.

@@ -167,3 +167,25 @@ first sentence (2), a split after initials in a reference (1).
 - C (deferred): no split right before "(year)" after initials; one case so far.
 
 After A and B: 49/50 (Sedivy 29/30, Myers 20/20). Tagging unchanged at 146/150.
+
+## parse: glossary and indexes as labels (2026-10-07)
+
+Back-matter parts are identified by content, using the same guess-then-review approach
+as features (corrections in `profiles/<book>.toml`, by part title):
+- index: at least half its lines carry page links; author index when most linked
+  lines look like "Surname, X.", else subject index;
+- glossary: enough short bold terms (no digits, at most 6 words) of which at least 40%
+  occur in the chapters. Bold-start share alone misread Myers' references and answer
+  key as glossaries;
+- everything else: other (references, appendices).
+
+Extraction (`backmatter.py`) writes `labels`: glossary terms with definitions and the
+introduction page; index entries with linked pages, sub-entries under their parent
+(indent past the leftmost common left edge), wrapped page lists joined. `in_text`
+marks terms found in the chapters (for authors, the surname), which filters the
+Spanish half of Myers' bilingual glossary.
+
+Results: Sedivy 275 glossary terms (all in text), 2,441 subject index entries (1,336
+sub-entries), 796 authors (779 found). Myers 1,361 glossary entries (715 in text),
+8,049 subject index entries, 438 authors. One hand correction: Myers' Appendix E (an
+answer key) set to `other`.

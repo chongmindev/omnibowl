@@ -57,6 +57,15 @@ marker_min_count = 5
 marker_min_chapters = 3
 marker_sample_lines = 12
 caption_prefixes = ["Figure", "Fig.", "Table", "Exhibit"]
+# Back-matter parts: ignore parts with fewer lines; an index has at least this share
+# of lines carrying page links; a glossary at least this share of bold-start lines.
+back_matter_min_lines = 20
+index_link_share = 0.5
+glossary_bold_share = 0.2
+# Glossary terms are at most this many words, and at least this share of them occur in
+# the chapters (a bilingual glossary's other language does not).
+glossary_term_max_words = 6
+glossary_in_text_share = 0.4
 
 # Words in a marker that decide its role before content statistics are consulted.
 # English textbook vocabulary, not tied to one book.
@@ -98,3 +107,10 @@ spacy_model = "en_core_web_sm"
 spacy_exclude = ["ner", "lemmatizer"]
 spacy_max_length = 2000000
 spacy_batch_size = 64
+
+[backmatter]
+# An index line indented at least this many points past the part's usual left edge is
+# a sub-entry of the entry above it.
+subentry_min_indent = 8.0
+# The part's left edge is the leftmost x shared by at least this share of its lines.
+margin_min_share = 0.05
