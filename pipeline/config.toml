@@ -69,8 +69,9 @@ summary = ["review", "summary", "recap", "remember", "takeaways"]
 table = ["table"]
 
 [tag]
-# Above-body lines longer than this are display prose (chapter openers), not headings.
-heading_max_chars = 60
+# A run of at least this many consecutive non-bold above-body lines is display prose
+# (a chapter opener set large), not a heading; titles run one or two lines.
+display_prose_min_lines = 3
 # A line set entirely in bold, at most this many words, not ending in sentence
 # punctuation, standing alone on its row, is a heading (inside boxes, and at body
 # size elsewhere). Bold share at or above this counts as "entirely".
@@ -87,3 +88,13 @@ same_row_tolerance = 2.0
 # Inside a box, a caption continues on lines whose left edge is within this many
 # points of the "Figure N.M" label; the box's next paragraph is indented further.
 caption_continue_indent = 4.0
+
+[sentences]
+# Line kinds that produce sentences. Headings, drop caps (joined to their word),
+# furniture, tables and front/back matter do not.
+kinds = ["body", "box", "summary", "objective", "definition", "caption", "example", "exercise"]
+spacy_model = "en_core_web_sm"
+# Components not needed for sentence boundaries (the parser decides them).
+spacy_exclude = ["ner", "lemmatizer"]
+spacy_max_length = 2000000
+spacy_batch_size = 64

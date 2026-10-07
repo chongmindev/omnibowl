@@ -22,6 +22,8 @@ from . import db
 from .profile import normalize
 
 BOLD = 16
+# Enumeration labels set on their own line: "(a)", "1.", "(12)", "iv)".
+ENUM_RE = re.compile(r"^\(?(?:\d{1,3}|[a-z]|[ivx]{1,4})[.)]?\)?$")
 CONTAINER_ROLES = {"box", "table", "exercise"}
 ITEM_ROLES = {"caption", "definition", "objective"}
 
@@ -65,6 +67,7 @@ class Tagger:
         self.side_bold = profile["side_bold"]["role"]
         self.furn = profile["furniture"]
         self.page_height = page_height
+        self.display_prose: set[int] = set()
         prefixes = cfg["profile"]["caption_prefixes"]
         self.caption = re.compile(rf"^(?:{'|'.join(map(re.escape, prefixes))})\s+\d")
 
@@ -78,6 +81,8 @@ class Tagger:
         return self.panel_role.get(json.dumps(self.panel_fill.get(ln["panel_id"])), "box")
 
     def is_furniture(self, ln) -> bool:
+        if ENUM_RE.match(ln["text"].strip()):
+            return True
         if not self.page_height:
             return False
         zone = self.furn["margin_zone"] * self.page_height
@@ -87,12 +92,29 @@ class Tagger:
             return True
         return normalize(ln["text"]) in self.furn["running_heads"]
 
+    def find_display_prose(self, lines) -> None:
+        """Runs of at least `display_prose_min_lines` consecutive non-bold above-body
+        lines (page furniture ignored) are prose, not headings."""
+        run: list[int] = []
+        for ln in list(lines) + [None]:
+            if ln is not None and self.is_furniture(ln):
+                continue
+            if (ln is not None and self.band(ln["rel_size"]) == "head"
+                    and not ln["bold_start"] and not self.is_dropcap(ln)):
+                run.append(ln["id"])
+                continue
+            if len(run) >= self.t["display_prose_min_lines"]:
+                self.display_prose.update(run)
+            run = []
+
     def is_dropcap(self, ln) -> bool:
         return self.band(ln["rel_size"]) == "head" and len(ln["text"]) == 1 and ln["text"].isalpha()
 
     def is_heading(self, ln) -> bool:
+        """Above-body size, not a drop cap, and either bold or not part of a run of
+        display prose (a chapter opener set large; titles are one or two lines)."""
         return (self.band(ln["rel_size"]) == "head" and not self.is_dropcap(ln)
-                and (bool(ln["bold_start"]) or len(ln["text"]) <= self.t["heading_max_chars"]))
+                and (bool(ln["bold_start"]) or ln["id"] not in self.display_prose))
 
     def is_inline_heading(self, ln, prev_ln=None) -> bool:
         """Entirely bold, short, no sentence-ending punctuation, alone on its row."""
@@ -251,6 +273,7 @@ def run(book_id: int, conn, cfg: dict, profile: dict) -> None:
         return sid
 
     lines = conn.execute("SELECT * FROM lines WHERE book_id = ? ORDER BY seq", (book_id,)).fetchall()
+    tagger.find_display_prose(lines)
     tags: list[tuple[str, str | None, int]] = []
     region: Region | None = None
     prev = None

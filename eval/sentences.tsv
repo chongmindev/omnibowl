@@ -1,0 +1,55 @@
+# Predicted sentences judged by hand, 2026-10-06 (Claude; needs review by Chong).
+# A sentence is start line key + char offset to end line key + char offset. No book text here.
+# sample: U = uniform, R = contains abbreviations, initials, quotes or citations.
+# correct: yes = this split is right and should keep existing; no = it is wrong and should go away.
+book	start_lkey	start_char	end_lkey	end_char	sample	correct	note
+language_in_mind	421:237:85	86	421:267:85	16	U	yes	
+language_in_mind	81:148:85	39	81:178:85	72	U	yes	
+language_in_mind	610:408:85	69	610:423:85	83	U	yes	
+language_in_mind	356:118:85	7	356:118:85	82	U	yes	
+language_in_mind	238:548:77	0	238:569:77	66	U	yes	
+language_in_mind	407:502:77	67	407:522:77	46	U	yes	
+language_in_mind	140:502:77	59	140:542:77	54	U	yes	
+language_in_mind	941:276:77	30	941:337:77	7	U	yes	
+language_in_mind	323:565:77	42	323:646:77	5	U	yes	
+language_in_mind	443:583:77	27	443:623:77	60	U	yes	
+language_in_mind	1025:558:92	0	1025:558:92	64	U	yes	
+language_in_mind	883:462:85	42	883:492:85	38	U	yes	
+language_in_mind	928:586:77	56	928:606:77	48	U	yes	
+language_in_mind	332:540:77	71	332:621:77	39	U	yes	
+language_in_mind	566:73:77	0	566:88:77	79	U	yes	
+language_in_mind	193:74:77	68	193:134:77	20	U	yes	
+language_in_mind	752:245:77	40	752:285:77	20	U	yes	
+language_in_mind	975:467:107	66	975:528:107	14	U	yes	
+language_in_mind	646:549:77	23	646:579:77	5	U	yes	
+language_in_mind	61:236:77	9	61:296:77	54	U	yes	
+language_in_mind	619:604:77	0	619:624:77	46	R	yes	
+language_in_mind	566:562:77	100	566:607:77	23	R	yes	
+language_in_mind	351:687:174	0	351:687:174	61	R	no	split after initials in a reference
+language_in_mind	359:496:77	0	359:511:77	5	R	yes	
+language_in_mind	444:566:77	12	444:606:77	4	R	yes	
+language_in_mind	690:380:126	64	690:405:76	70	R	yes	
+language_in_mind	119:644:77	14	119:684:77	66	R	yes	
+language_in_mind	313:347:77	41	313:368:77	47	R	yes	
+language_in_mind	166:239:77	34	166:320:77	24	R	yes	
+language_in_mind	827:501:96	0	827:516:85	28	R	yes	
+myers_ap_psych	1085:686:102	12	1085:702:102	73	U	yes	
+myers_ap_psych	1460:275:72	42	1460:275:72	63	U	no	split inside a citation after ';'
+myers_ap_psych	1775:586:72	21	1775:607:72	25	U	yes	
+myers_ap_psych	1664:360:72	25	1664:402:72	32	U	yes	
+myers_ap_psych	1660:573:91	40	1660:573:91	53	U	yes	
+myers_ap_psych	285:314:87	0	285:314:87	61	U	yes	
+myers_ap_psych	91:378:87	0	91:378:87	69	U	yes	
+myers_ap_psych	1268:684:87	0	1268:726:87	33	U	yes	
+myers_ap_psych	360:248:87	55	360:269:87	60	U	yes	
+myers_ap_psych	1764:684:102	0	1764:701:102	69	U	no	run-in caption title fused with first sentence
+myers_ap_psych	311:244:72	0	311:286:72	9	U	yes	
+myers_ap_psych	1206:290:102	0	1206:306:102	7	U	no	run-in caption title fused with first sentence
+myers_ap_psych	2055:630:72	59	2055:651:72	66	U	yes	
+myers_ap_psych	1885:160:72	21	1885:160:72	74	U	yes	
+myers_ap_psych	2157:97:72	63	2157:139:72	18	U	yes	
+myers_ap_psych	405:418:72	7	405:460:72	22	R	no	split inside a citation after ';'
+myers_ap_psych	1208:202:72	0	1208:244:72	40	R	yes	
+myers_ap_psych	653:739:72	11	653:760:72	75	R	yes	
+myers_ap_psych	1251:357:87	19	1251:421:87	21	R	yes	
+myers_ap_psych	357:703:72	7	357:745:72	49	R	yes	

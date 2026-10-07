@@ -15,7 +15,7 @@ reader are not built yet.
 
 | Stage | Produces | Status |
 |---|---|---|
-| `parse` | sections, lines, blocks tagged by kind | measurement, profiling and tagging done; sentence splitting and glossary/index capture next |
+| `parse` | sections, lines, tagged blocks, sentences | measurement, profiling, tagging and sentence splitting done; glossary/index capture next |
 | `candidates` | answer terms with scores | not started |
 | `clues` | one-fact clues per answer, grounded in sentence ids | not started |
 | `rank` | referent, giveaway, clue difficulty | not started |
@@ -34,6 +34,9 @@ reader are not built yet.
 3. **Tag** (`pipeline/omnibowl/tag.py`): label every line (body, box, caption,
    definition, exercise, objective, summary, table, example, heading, ...) using only
    the profile and generic rules, then group lines into blocks.
+4. **Sentences** (`pipeline/omnibowl/sentences.py`): stitch each stream of text back
+   together (drop caps, hyphens, body text interrupted by sidebars) and split it with
+   spaCy. Every sentence keeps the line ids and character offsets it came from.
 
 Nothing in the code names a particular book's features; per-book facts live in the
 profile. See `docs/decisions.md` for each design choice and the alternatives rejected.
@@ -53,7 +56,8 @@ Textbooks are not included. Put a text-layer PDF (no OCR) in `data/books/`.
 ```
 uv run python -m omnibowl.run --stage parse --book data/books/<file>.pdf    # measure, profile, tag
 uv run python -m omnibowl.run --stage profile --book data/books/<file>.pdf  # re-profile and re-tag
-uv run python -m omnibowl.run --stage tag --book data/books/<file>.pdf      # re-tag only
+uv run python -m omnibowl.run --stage tag --book data/books/<file>.pdf      # re-tag and re-split
+uv run python -m omnibowl.run --stage sentences --book data/books/<file>.pdf  # re-split only
 uv run pytest
 ```
 
@@ -66,6 +70,7 @@ position, never by quoted text.
 
 ```
 uv run python eval/tag_accuracy.py                                  # tagging accuracy per book
+uv run python eval/sentence_accuracy.py                             # sentence-split accuracy
 uv run python eval/review_tags.py && open data/review/index.html    # review labels against page crops
 ```
 

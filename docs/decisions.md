@@ -129,3 +129,41 @@ captions, and a body line in a smaller font. Text inside figures also produces f
 headings (bold axis labels such as "Height in Inches"); not yet handled.
 
 Fixed in the review tool: crops on a page with two sampled lines showed both outlines.
+
+## parse: sentences (2026-10-06)
+
+**Splitter: spaCy (chosen),** `en_core_web_sm`, dependency parser for boundaries.
+Rejected: regex rules (an abbreviation list that grows with every book); spaCy plus
+correction rules (Chong chose plain spaCy; rules can be added where the eval shows
+failures). spaCy is also needed by `candidates` for noun phrases and entities.
+
+Stitching before splitting (plumbing, in `sentences.py`):
+- Units: body prose of a section continues across interruptions (definitions,
+  captions, boxes placed mid-paragraph) and breaks at a plain heading or a new
+  section; a region's text breaks at its own headings; each definition or caption
+  starts at its bold line, so page furniture inside a panel cannot split it.
+- Drop caps join the first line of their stream.
+- Line-final hyphen: kept unless the book uses the joined word more often than the
+  hyphenated form. Both test books are reflowed ebooks whose line-final hyphens are
+  all real compounds; a print-layout PDF would hyphenate ordinary words. Deciding from
+  the book's own vocabulary covers both.
+- A definition's bold term always stays with the sentence after it (spaCy splits
+  "phonetics The study of..." and "placebo [pluh-SEE-bo] effect ...").
+
+Tagging fixes found while stitching: a run of 3+ non-bold above-body lines is display
+prose (chapter openers), not headings (`display_prose_min_lines`, replacing the
+character-length rule); enumeration labels on their own line ("(a)", "12.") are
+furniture.
+
+Eval (`eval/sentences.tsv`, 50 judged sentences): 45/50. Sedivy 29/30, Myers 16/20.
+Errors: splits inside citations after ";" (2), run-in caption titles fused with the
+first sentence (2), a split after initials in a reference (1).
+
+**Correction rules (2026-10-07, Chong chose A and B):**
+- A: never end a sentence inside unclosed parentheses or brackets.
+- B: a caption's bold run-in label ("Figure 2.1", "Culture and normality") is dropped
+  from its first sentence, like a heading; a bold opening that is itself a sentence
+  is kept.
+- C (deferred): no split right before "(year)" after initials; one case so far.
+
+After A and B: 49/50 (Sedivy 29/30, Myers 20/20). Tagging unchanged at 146/150.

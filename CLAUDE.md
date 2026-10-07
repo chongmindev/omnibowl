@@ -103,14 +103,14 @@ For generated tossups, `set.name` is the book title and `packet` is the chapter.
 
 ## Stack (proposed defaults; change here if they change)
 
-- Pipeline: Python 3.12, uv, PyMuPDF, spaCy, wordfreq, SQLite, pytest.
+- Pipeline: Python 3.12, uv, PyMuPDF, spaCy (en_core_web_sm), wordfreq, SQLite, pytest.
 - Server: FastAPI. Serves tossups, proxies `check-answer`, logs buzzes. WebSocket rooms come later.
 - Web: Vite and TypeScript, no framework in v0.
 
 ## Layout
 
 ```
-pipeline/omnibowl/   parse.py profile.py tag.py candidates.py clues.py rank.py assemble.py rewrite.py run.py
+pipeline/omnibowl/   parse.py profile.py tag.py sentences.py candidates.py clues.py rank.py assemble.py rewrite.py run.py
 pipeline/config.toml
 pipeline/tests/
 server/
@@ -132,7 +132,7 @@ uv run uvicorn server.main:app --reload   # not built yet
 cd web && npm run dev                      # not built yet
 ```
 
-Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`). `--stage profile` reruns profile and tag; `--stage tag` reruns only tagging. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
+Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`) -> sentences (`sentences.py`, spaCy). `--stage profile`, `--stage tag` and `--stage sentences` rerun from that step on. Evals: `eval/tag_accuracy.py`, `eval/sentence_accuracy.py`. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
 
 ## Evaluation
 

@@ -99,10 +99,31 @@ CREATE TABLE IF NOT EXISTS blocks (
     page_start  INTEGER NOT NULL,
     page_end    INTEGER NOT NULL
 );
+
+-- Sentences in reading order. unit groups sentences from one stitched stream of text
+-- (body prose of a section, one box, one definition, ...). line_ids is a JSON list
+-- of the lines the sentence came from, for grounding.
+CREATE TABLE IF NOT EXISTS sentences (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    section_id  INTEGER REFERENCES sections(id),
+    kind        TEXT NOT NULL,
+    feature     TEXT,
+    unit        INTEGER NOT NULL,
+    ord         INTEGER NOT NULL,
+    text        TEXT NOT NULL,
+    line_ids    TEXT NOT NULL,
+    start_char  INTEGER NOT NULL,  -- offset of the first character in the first line
+    end_char    INTEGER NOT NULL,  -- offset just past the last character in the last line
+    page_start  INTEGER NOT NULL,
+    page_end    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sentences_book ON sentences(book_id, unit, ord);
 """
 
-PARSE_TABLES = ["blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
+SENTENCE_TABLES = ["sentences"]
 
 
 def connect(path: Path) -> sqlite3.Connection:

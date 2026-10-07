@@ -26,7 +26,7 @@ PANELS = {1: DEF_FILL, 5: BOX_FILL}
 
 def line(text, rel=1.0, x0=77.0, y0=100.0, page=1, bold=False, panel=None, spans=None, section=1):
     spans = spans or [[text, 15.0 * rel, BOLD if bold else 0]]
-    return {"text": text, "rel_size": rel, "x0": x0, "y0": y0, "y1": y0 + 12, "page": page,
+    return {"id": hash((text, page, y0)) & 0xFFFFFFF, "text": text, "rel_size": rel, "x0": x0, "y0": y0, "y1": y0 + 12, "page": page,
             "bold_start": bold, "bold_frac": 1.0 if bold and len(spans) == 1 else 0.0,
             "panel_id": panel, "spans_json": json.dumps(spans), "section_id": section}
 
@@ -53,13 +53,18 @@ def test_markers_come_from_profile(tagger):
 def test_furniture(tagger):
     assert tagger.outside(line("87", y0=790), None) == "furniture"
     assert tagger.outside(line("Chapter 3 Title", y0=10), None) == "furniture"
-    assert tagger.outside(line("87", y0=400), None) == "body"
+    assert tagger.outside(line("Chapter 3 Title", y0=400), None) == "body"  # not in the margin
+    assert tagger.outside(line("(a)", y0=400), None) == "furniture"         # enumeration label
+    assert tagger.outside(line("12.", y0=400), None) == "furniture"
 
 
 def test_outside_rules(tagger):
     assert tagger.outside(line("A", rel=2.25, bold=True), None) == "dropcap"
     assert tagger.outside(line("Some subsection", rel=1.13, bold=True), None) == "heading"
-    assert tagger.outside(line("x" * 70, rel=1.13), None) == "body"
+    opener = [{**line(f"opener line {i}", rel=1.13, y0=100 + 20 * i), "id": 100 + i} for i in range(3)]
+    tagger.find_display_prose(opener)
+    assert tagger.outside(opener[0], None) == "body"
+    assert tagger.outside({**line("Short title", rel=1.41), "id": 1}, None) == "heading"
     assert tagger.outside(line("■"), None) == "furniture"
     assert tagger.outside(line("Figure 2.1", rel=0.75, bold=True), None) == "caption"
     d = line("term Definition text", rel=0.75, bold=True)
