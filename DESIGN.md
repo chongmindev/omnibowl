@@ -79,18 +79,17 @@ everything else.
 ┌──────────┬───────────────────────────────────────────┬────┐
 │ OMNIBOWL │ CH. 13 LANGUAGE DIVERSITY / 13.3 ...      │ 04 │  header
 ├──────────┴───────────────────────────────┬───────────┴────┤
-│ question text, full width of the column  │ TEXTBOOK  Change│
-│                                          │ Language in Mind│
-│                                          ├─────────────────┤
-│                                          │ SCOREBOARD      │
+│ (space above the question)               │ TEXTBOOK  Change│
+├──────────────────────────────────────────┤ Language in Mind│
+│ question text, full width of the column  ├─────────────────┤
+│ time bar (yellow, when running)          │ SCOREBOARD      │
 │                                          │ # player +10 ...│
 ├──────────────────────────────────────────┤─────────────────┤
 │ answer row (when buzzed)                 │ SPEED  ━━━━┃──  │
 │ verdict row (when judged)                ├─────────────────┤
 ├──────────────────────────────────────────┤ CHAPTERS        │
 │ log: 03 Broca's area              +10    │ ■ 03 ...        │
-├──────────────────────────────────────────┤ □ 07 ...        │
-│ time bar (yellow, when running)          │                 │
+│      02 garden path sentences      −5    │ □ 07 ...        │
 ├──────────────────────────────┬───────────┤                 │
 │ Space · buzz   → · next      │   BUZZ    │                 │
 └──────────────────────────────┴───────────┴─────────────────┘
@@ -106,7 +105,9 @@ everything else.
   is "QBREADER / <set name> <year> / filed under CH. N", so it never reads as if the
   textbook wrote it.
 - **Question.** Red Hat Mono, full column width. A 2px red cursor follows the last
-  revealed word.
+  revealed word. The question block does not start at the top of the column: it sits
+  `clamp(28px, 12vh, 140px)` down, with a 3px rule above it, so the eye lands on it
+  lower on the screen.
 - **Answer row.** Opens under the question on buzz: an ink label cell "Answer" and a
   text field. A QBReader prompt shows "Be more specific" in the label cell.
 - **Verdict row.** A colored result cell (blue "+10 · correct", red "−5 · incorrect",
@@ -114,9 +115,10 @@ everything else.
   source: chapters and sections for generated tossups, or set name and year for
   QBReader tossups, marked "QBReader".
 - **Tossup log.** Newest first: number, answer, result colored by sign. Hairline rows.
-- **Time bar.** 10px yellow bar along the bottom border, draining left to right. Used
-  for the buzz window after the question ends and for the answer window after a buzz.
-  Nothing tracks progress while the question is being read.
+- **Time bar.** 10px yellow bar attached directly under the question (a hairline
+  between them), draining left to right, so the clock sits next to what you are
+  reading. Used for the buzz window after the question ends and for the answer window
+  after a buzz. Nothing tracks progress while the question is being read.
 - **Footer.** Key hints in mono on the left; the action cell on the right: red "Buzz",
   red "Enter · submit" while answering, yellow "→ · next" after a verdict.
 - **Sidebar sections.** Each has an uppercase label row over its content.

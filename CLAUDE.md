@@ -69,9 +69,12 @@ What this means for the pipeline:
 
 ## Quizbowl conventions
 
-- A tossup is one paragraph of roughly four to six sentences. It is pyramidal: the hardest clue comes first and the easiest (the giveaway) last.
-- The answer is never named. It is referred to by one consistent referent ("this psychologist", "this effect").
-- The last sentence starts "For 10 points," and asks for the answer.
+- A tossup is one paragraph of four to seven sentences, about 500 to 700 characters (limits in `config.toml`). If an answer has too few good clues, it gets no tossup.
+- It is pyramidal: the hardest clue comes first and the easiest (the giveaway) last. No drop-back clues: clue difficulty never rises again later in the question.
+- The lead-in (first clue) must uniquely identify the answer. No vague clues that could fit several answers, and no hostage clues that leave a guess between two named options.
+- The answer is never named. It is referred to by one consistent referent ("this psychologist", "this effect"), and the referent appears in the first sentence so the answer type is clear from the start.
+- The last sentence starts "For 10 points," and asks for the answer with the easiest clue.
+- Tossups only: no bonuses. No pronunciation guides.
 - The reader reveals words one at a time at an adjustable speed. A buzz stops the reveal. Record the word index of every buzz.
 - Scoring: +10 correct, -5 for a wrong answer given before the question finished, 0 for a wrong answer after it finished.
 - After each question, show the full text and the textbook sections its clues came from.
@@ -150,3 +153,7 @@ Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, wri
 
 - Answer vs. clue-only vs. too-broad thresholds: TBD, to be tuned against the index and glossary.
 - How much weight QBReader signals get relative to textbook signals in `rank`: TBD.
+- How clue difficulty is scored (textbook emphasis, mention counts, QBReader signals): TBD.
+- How clue uniqueness is measured, and the threshold a lead-in must pass: TBD. The same measure drops vague clues.
+- How the referent ("this hypothesis") is chosen: TBD.
+- How hostage clues (a guess between two named options) are detected without an LLM: TBD.
