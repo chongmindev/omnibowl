@@ -18,7 +18,7 @@ import pymupdf
 
 ROOT = Path(__file__).resolve().parents[1]
 KINDS = ["body", "box", "caption", "definition", "example", "exercise", "objective",
-         "summary", "table", "heading", "dropcap", "furniture", "other"]
+         "summary", "table", "figure", "heading", "dropcap", "furniture", "other"]
 # Points of page shown above and below the labeled line.
 CONTEXT = 110
 
@@ -31,7 +31,6 @@ def main() -> None:
         gold = list(csv.DictReader((l for l in f if not l.startswith("#")), delimiter="\t"))
     conn = sqlite3.connect(ROOT / "data" / "omnibowl.db")
     conn.row_factory = sqlite3.Row
-    docs = {}
 
     out = ROOT / "data" / "review"
     (out / "img").mkdir(parents=True, exist_ok=True)
@@ -39,14 +38,15 @@ def main() -> None:
     for i, g in enumerate(gold):
         ln = conn.execute("""SELECT l.*, b.path FROM lines l JOIN books b ON b.id = l.book_id
                              WHERE b.slug = ? AND l.lkey = ?""", (g["book"], g["lkey"])).fetchone()
-        doc = docs.setdefault(g["book"], pymupdf.open(ROOT / ln["path"]))
+        # A fresh copy per crop: drawing the outline changes the page in memory.
+        doc = pymupdf.open(ROOT / ln["path"])
         page = doc[ln["page"] - 1]
         line_rect = pymupdf.Rect(ln["x0"], ln["y0"], ln["x1"], ln["y1"])
         clip = pymupdf.Rect(0, max(0, ln["y0"] - CONTEXT), page.rect.width,
                             min(page.rect.height, ln["y1"] + CONTEXT))
         page.draw_rect(line_rect + (-3, -2, 3, 2), color=(0.85, 0.1, 0.1), width=1.5)
         page.get_pixmap(clip=clip, dpi=110).save(out / "img" / f"{i:03}.png")
-        doc.reload_page(page)  # drop the outline so it doesn't show on other crops
+        doc.close()
         items.append({"i": i, "book": g["book"], "lkey": g["lkey"], "sample": g["sample"], "gold": g["gold"],
                       "note": g["note"], "pred": ln["kind"], "feature": ln["feature"] or ""})
 

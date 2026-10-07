@@ -1,0 +1,7 @@
+# Hand corrections to data/profiles/language_in_mind.auto.toml (Chong, 2026-10-06).
+# Same keys as the auto profile; markers match by pattern, panel styles by fill.
+
+# Chapter-end essays are main prose: normal clue sources, still traceable by feature.
+[[markers]]
+pattern = "DIGGING DEEPER"
+role = "body"

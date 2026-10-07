@@ -27,8 +27,8 @@ PANELS = {1: DEF_FILL, 5: BOX_FILL}
 def line(text, rel=1.0, x0=77.0, y0=100.0, page=1, bold=False, panel=None, spans=None, section=1):
     spans = spans or [[text, 15.0 * rel, BOLD if bold else 0]]
     return {"text": text, "rel_size": rel, "x0": x0, "y0": y0, "y1": y0 + 12, "page": page,
-            "bold_start": bold, "panel_id": panel, "spans_json": json.dumps(spans),
-            "section_id": section}
+            "bold_start": bold, "bold_frac": 1.0 if bold and len(spans) == 1 else 0.0,
+            "panel_id": panel, "spans_json": json.dumps(spans), "section_id": section}
 
 
 @pytest.fixture
@@ -79,8 +79,10 @@ def test_same_row_continues(tagger):
 
 def test_box_region_ends_with_panel(tagger):
     r = tagger.marker(line("BOX 1.1", rel=1.41, bold=True))
-    assert tagger.in_region(r, line("Box title", rel=1.41)) == "box"
+    assert tagger.in_region(r, line("Box title", rel=1.41)) == "heading"
     assert tagger.in_region(r, line("inside", rel=0.75, panel=5)) == "box"
+    assert tagger.in_region(r, line("Sub heading", rel=0.75, bold=True, panel=5,
+                                    spans=[["Sub heading", 11, BOLD]], y0=105)) == "heading"
     assert tagger.in_region(r, line("Figure 1.2", rel=0.75, bold=True, panel=5, x0=85)) == "caption"
     assert tagger.in_region(r, line("caption more", rel=0.75, panel=5, x0=85, y0=115)) == "caption"
     assert tagger.in_region(r, line("next paragraph", rel=0.75, panel=5, x0=96, y0=130)) == "box"
@@ -90,7 +92,9 @@ def test_box_region_ends_with_panel(tagger):
 
 def test_open_region_side_content_ends_at_prose(tagger):
     r = tagger.marker(line("WEB ACTIVITY 2.1", bold=True))
-    assert tagger.in_region(r, line("Title In this activity", bold=True)) == "exercise"
+    title = line("Title In this activity", bold=True,
+                 spans=[["Title", 15, BOLD], [" In this activity", 15, 0]])
+    assert tagger.in_region(r, {**title, "bold_frac": 0.25}) == "exercise"
     assert tagger.in_region(r, line("side description", rel=0.75)) == "exercise"
     assert tagger.in_region(r, line("https://example.org/a-", rel=1.0)) == "exercise"
     assert tagger.in_region(r, line("activity-1", rel=1.0)) == "exercise"
@@ -120,6 +124,20 @@ def test_essay_definitions(tagger):
     assert tagger.in_region(r, defn) == "definition"
     assert tagger.in_region(r, line("continues and ends.", rel=0.75)) == "definition"
     assert tagger.in_region(r, line("essay again", rel=0.75)) == "box"
+
+
+def test_inline_and_titled_caption_headings(tagger):
+    whole_bold = dict(bold=True)
+    assert tagger.is_inline_heading({**line("Exposure Therapies", **whole_bold), "bold_frac": 1.0})
+    assert not tagger.is_inline_heading({**line("Ends a sentence.", **whole_bold), "bold_frac": 1.0})
+    assert not tagger.is_inline_heading({**line("partly bold", **whole_bold), "bold_frac": 0.5})
+    assert not tagger.is_inline_heading({**line("H", rel=2.25, **whole_bold), "bold_frac": 1.0})
+    assert not tagger.is_inline_heading({**line("Figure 2.1", rel=0.75, **whole_bold), "bold_frac": 1.0})
+    tail = {**line("focus", x0=502, y0=300, **whole_bold), "bold_frac": 1.0}
+    assert not tagger.is_inline_heading(tail, line("the start of the row", y0=300))
+    titled = {**line("Figure 54.4 Predicting decline", rel=0.9, **whole_bold), "bold_frac": 1.0}
+    bare = {**line("Figure 5.3", rel=0.75, **whole_bold), "bold_frac": 1.0}
+    assert tagger.is_titled_caption(titled) and not tagger.is_titled_caption(bare)
 
 
 def test_starts_definition():

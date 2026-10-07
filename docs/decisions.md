@@ -97,3 +97,35 @@ Results (eval/parse_tags.tsv): Sedivy 100/100 (tuned on this set, optimistic). M
 46/50 after fixing section starts. Remaining Myers misses need rules that do not exist
 yet: text inside diagrams, tables without panels, captions without a "Figure" label,
 and a body line set in a smaller font.
+
+## parse: labels review and heading rules (2026-10-06)
+
+Chong reviewed the 150 eval labels. Decisions from the review:
+
+- **Labels name the line's role, not its look.** A line that names a region (a feature
+  marker such as "BOX 3.1", "Module 51 REVIEW", "AP® EXAM TIP"; title lines right after
+  it; an entirely bold short line inside a box such as "Linguistic performance" or
+  "Answer") is a `heading`, with `feature` still naming the region. Reason: a label is
+  not a statement, and tagging it with the region's kind would glue it onto the first
+  sentence of the region. Run-in bold labels followed by text on the same line stay
+  with the region; bold terms in definition panels stay `definition`; table cells are
+  excluded.
+- **Caption title lines** are headings only when the title sits on its own entirely
+  bold line ("Figure 54.4 Predicting ..."); a bare "Figure 5.3" label whose text
+  continues on the same row stays `caption`. Rejected: all figure labels as headings;
+  none.
+- **Chapter-end essays (Sedivy's DIGGING DEEPER) are `body`**, with `feature` kept so
+  `rank` can still see where a clue came from. Rejected: plain body without the
+  feature; keeping them as `box`. Set by hand in `profiles/language_in_mind.toml`
+  (marker role `body`).
+- **Check Your Understanding stays `exercise`** (questions, not facts). Its self-test
+  questions may later serve `rank` as an emphasis signal.
+- **Hand corrections to profiles are committed** in `profiles/<book>.toml`; generated
+  profiles stay in `data/profiles/`. Rejected: keeping them local.
+
+Eval after review and rules: Sedivy 100/100, Myers 46/50 (97.3% overall). Remaining
+misses are text inside figures and charts, tables without panels, unlabeled cartoon
+captions, and a body line in a smaller font. Text inside figures also produces false
+headings (bold axis labels such as "Height in Inches"); not yet handled.
+
+Fixed in the review tool: crops on a page with two sampled lines showed both outlines.

@@ -6,6 +6,8 @@
 db = "data/omnibowl.db"
 qbreader_cache = "data/qbreader_cache"
 profiles = "data/profiles"
+# Hand corrections to profiles: committed, since they are design decisions.
+profile_overrides = "profiles"
 
 [parse]
 # A filled drawing counts as a "panel" (box background) when every RGB channel is
@@ -69,6 +71,11 @@ table = ["table"]
 [tag]
 # Above-body lines longer than this are display prose (chapter openers), not headings.
 heading_max_chars = 60
+# A line set entirely in bold, at most this many words, not ending in sentence
+# punctuation, standing alone on its row, is a heading (inside boxes, and at body
+# size elsewhere). Bold share at or above this counts as "entirely".
+inline_heading_max_words = 8
+inline_heading_min_bold = 0.95
 # Side-stream lines indented at least this far (points) past the chapter's body
 # margin are numbered examples, not continuations of a caption or definition.
 example_min_indent = 12.0

@@ -1,7 +1,7 @@
 # Gold block kinds: 100 lines of language_in_mind, 50 of myers_ap_psych, keyed by lkey (page:y0:x0).
 # sample: U = uniform over chapter lines, B = first/last line of a non-body block.
 # Keys are per book: book slug + lkey.
-# Labeled by Claude from context on 2026-10-06 (Myers: 2026-10-07 sample seed); needs review by Chong. No book text here.
+# Labeled by Claude from context, reviewed by Chong on 2026-10-06. No book text here.
 book	lkey	sample	gold	note
 language_in_mind	581:482:77	U	body	
 language_in_mind	114:363:77	U	body	
@@ -12,7 +12,7 @@ language_in_mind	353:645:108	U	box
 language_in_mind	597:279:77	U	body	
 language_in_mind	250:401:77	U	body	
 language_in_mind	892:336:77	U	body	
-language_in_mind	649:390:77	U	box	
+language_in_mind	649:390:77	U	body	
 language_in_mind	289:614:77	U	body	
 language_in_mind	610:423:85	U	box	
 language_in_mind	716:245:76	U	body	
@@ -51,7 +51,7 @@ language_in_mind	539:174:85	U	box
 language_in_mind	91:299:77	U	body	
 language_in_mind	59:424:77	U	body	
 language_in_mind	765:442:102	U	box	
-language_in_mind	132:395:77	U	box	
+language_in_mind	132:395:77	U	body	
 language_in_mind	816:152:77	U	body	
 language_in_mind	513:641:85	U	dropcap	drop cap letter inside a box panel
 language_in_mind	94:223:85	U	box	
@@ -60,7 +60,7 @@ language_in_mind	1085:259:77	U	body
 language_in_mind	337:114:77	U	body	
 language_in_mind	165:296:77	U	body	
 language_in_mind	457:596:77	U	body	
-language_in_mind	568:300:77	U	box	
+language_in_mind	568:300:77	U	body	
 language_in_mind	284:613:77	U	body	
 language_in_mind	208:494:363	U	table	
 language_in_mind	477:542:77	B	definition	
@@ -68,41 +68,41 @@ language_in_mind	306:678:77	B	definition
 language_in_mind	100:515:84	B	exercise	
 language_in_mind	647:387:77	B	definition	
 language_in_mind	639:516:77	B	definition	
-language_in_mind	25:685:267	B	box	
-language_in_mind	804:587:282	B	exercise	
-language_in_mind	905:284:77	B	box	
+language_in_mind	25:685:267	B	heading	marker/title line (heading rule, 2026-10-06)
+language_in_mind	804:587:282	B	heading	marker/title line (heading rule, 2026-10-06)
+language_in_mind	905:284:77	B	body	Digging Deeper is body (2026-10-06)
 language_in_mind	329:513:77	B	caption	
 language_in_mind	851:392:77	B	definition	
-language_in_mind	284:513:77	B	definition	
+language_in_mind	284:513:77	B	definition	there are two red boxes??
 language_in_mind	177:452:77	B	definition	
 language_in_mind	197:411:77	B	definition	
 language_in_mind	103:413:77	B	definition	
 language_in_mind	536:555:77	B	caption	
 language_in_mind	639:546:77	B	definition	
 language_in_mind	1054:186:77	B	definition	
-language_in_mind	254:240:314	B	box	
-language_in_mind	565:495:212	B	box	
+language_in_mind	254:240:314	B	heading	marker/title line (heading rule, 2026-10-06)
+language_in_mind	565:495:212	B	heading	marker/title line (heading rule, 2026-10-06)
 language_in_mind	946:664:77	B	definition	
 language_in_mind	1073:162:77	B	caption	
 language_in_mind	761:408:77	B	definition	
-language_in_mind	1065:701:386	B	exercise	
+language_in_mind	1065:701:386	B	heading	marker/title line (heading rule, 2026-10-06)
 language_in_mind	470:602:105	B	table	
 language_in_mind	892:598:84	B	exercise	
 language_in_mind	194:163:85	B	box	
 language_in_mind	662:579:95	B	example	
 language_in_mind	924:295:151	B	caption	caption text continues inside a box panel
-language_in_mind	1108:74:154	B	box	
+language_in_mind	1108:74:154	B	heading	marker/title line (heading rule, 2026-10-06)
 language_in_mind	440:286:108	B	box	
 language_in_mind	718:273:114	B	exercise	
-language_in_mind	100:382:393	B	exercise	
+language_in_mind	100:382:393	B	heading	marker/title line (heading rule, 2026-10-06)
 language_in_mind	408:617:309	B	table	
 language_in_mind	384:414:77	B	caption	
 language_in_mind	627:300:85	B	box	
 language_in_mind	263:73:77	B	definition	
-language_in_mind	708:433:313	B	box	
+language_in_mind	708:433:313	B	heading	marker/title line (heading rule, 2026-10-06)
 language_in_mind	639:587:77	B	definition	
 language_in_mind	232:261:77	B	definition	
-language_in_mind	687:406:418	B	exercise	
+language_in_mind	687:406:418	B	heading	marker/title line (heading rule, 2026-10-06)
 myers_ap_psych	690:517:72	U	body	
 myers_ap_psych	1027:387:87	U	body	
 myers_ap_psych	270:265:72	U	body	
@@ -112,10 +112,10 @@ myers_ap_psych	1748:624:89	U	exercise
 myers_ap_psych	1962:499:72	U	body	
 myers_ap_psych	1597:119:97	U	exercise	
 myers_ap_psych	2073:595:258	U	figure	text inside a diagram
-myers_ap_psych	338:404:80	U	exercise	
+myers_ap_psych	338:404:80	U	heading	marker/title line (heading rule, 2026-10-06)
 myers_ap_psych	826:644:72	U	body	
 myers_ap_psych	414:251:87	U	summary	
-myers_ap_psych	1431:98:72	U	summary	
+myers_ap_psych	1431:98:72	U	heading	
 myers_ap_psych	1573:531:87	U	body	
 myers_ap_psych	2090:261:87	U	body	
 myers_ap_psych	339:527:72	U	body	end of a body sentence set in a smaller font
@@ -133,11 +133,11 @@ myers_ap_psych	362:511:72	U	exercise
 myers_ap_psych	921:181:72	U	body	
 myers_ap_psych	1943:240:72	U	body	
 myers_ap_psych	610:510:433	U	table	table cells without a panel
-myers_ap_psych	1607:423:72	B	exercise	
+myers_ap_psych	1607:423:72	B	heading	
 myers_ap_psych	2162:324:81	B	definition	
 myers_ap_psych	1029:422:266	B	caption	cartoon caption without a Figure label
 myers_ap_psych	80:91:102	B	caption	
-myers_ap_psych	1501:538:109	B	caption	
+myers_ap_psych	1501:538:109	B	heading	
 myers_ap_psych	1176:717:87	B	summary	
 myers_ap_psych	245:76:89	B	exercise	
 myers_ap_psych	937:508:102	B	summary	
@@ -148,8 +148,8 @@ myers_ap_psych	223:558:108	B	objective
 myers_ap_psych	127:494:80	B	box	
 myers_ap_psych	210:125:72	B	heading	module title after an exercise marker
 myers_ap_psych	173:272:102	B	caption	
-myers_ap_psych	2025:419:214	B	box	
+myers_ap_psych	2025:419:214	B	heading	
 myers_ap_psych	531:76:87	B	summary	
-myers_ap_psych	1282:105:72	B	exercise	
+myers_ap_psych	1282:105:72	B	heading	marker/title line (heading rule, 2026-10-06)
 myers_ap_psych	249:369:75	B	summary	
 myers_ap_psych	1431:438:87	B	summary	

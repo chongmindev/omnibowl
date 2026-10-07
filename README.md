@@ -30,7 +30,7 @@ reader are not built yet.
 2. **Profile** (`pipeline/omnibowl/profile.py`): discover the book's layout and write
    it to `data/profiles/<book>.auto.toml`: font-size bands, recurring features
    (boxes, exercises, reviews, objectives) with a guessed role, panel styles, page
-   furniture. Corrections go in `data/profiles/<book>.toml` and override the guess.
+   furniture. Corrections go in `profiles/<book>.toml` (committed) and override the guess.
 3. **Tag** (`pipeline/omnibowl/tag.py`): label every line (body, box, caption,
    definition, exercise, objective, summary, table, example, heading, ...) using only
    the profile and generic rules, then group lines into blocks.
@@ -75,6 +75,7 @@ uv run python eval/review_tags.py && open data/review/index.html    # review lab
 pipeline/omnibowl/   pipeline stages and CLI (run.py)
 pipeline/config.toml all thresholds and weights; no magic numbers in code
 pipeline/tests/      pytest suite
+profiles/            hand corrections to generated layout profiles
 eval/                labeled data and metric scripts
 docs/                design notes and decisions.md
 data/                books, database, profiles, caches (gitignored)

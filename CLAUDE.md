@@ -132,7 +132,7 @@ uv run uvicorn server.main:app --reload   # not built yet
 cd web && npm run dev                      # not built yet
 ```
 
-Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `<book>.toml`) -> tag (`tag.py`). `--stage profile` reruns profile and tag; `--stage tag` reruns only tagging. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
+Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`). `--stage profile` reruns profile and tag; `--stage tag` reruns only tagging. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
 
 ## Evaluation
 

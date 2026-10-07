@@ -38,6 +38,7 @@ class Region:
     in_definition: bool = False
     caption_line: object = None
     caption_left: float = 0.0
+    prev_line: object = None
 
 
 def starts_definition(ln) -> bool:
@@ -93,6 +94,24 @@ class Tagger:
         return (self.band(ln["rel_size"]) == "head" and not self.is_dropcap(ln)
                 and (bool(ln["bold_start"]) or len(ln["text"]) <= self.t["heading_max_chars"]))
 
+    def is_inline_heading(self, ln, prev_ln=None) -> bool:
+        """Entirely bold, short, no sentence-ending punctuation, alone on its row."""
+        text = ln["text"]
+        if ln["bold_frac"] < self.t["inline_heading_min_bold"] or not any(c.isalpha() for c in text):
+            return False
+        if self.is_dropcap(ln) or self.is_captioned(ln):
+            return False
+        if len(text.split()) > self.t["inline_heading_max_words"] or text.rstrip()[-1] in ".?!:;,":
+            return False
+        return not (prev_ln is not None and prev_ln["page"] == ln["page"]
+                    and abs(prev_ln["y0"] - ln["y0"]) <= self.t["same_row_tolerance"])
+
+    def is_titled_caption(self, ln) -> bool:
+        """A caption label line that also carries a title, entirely bold
+        ("Figure 54.4 Predicting ..."), as opposed to a bare "Figure 5.3"."""
+        return (self.is_captioned(ln) and ln["bold_frac"] >= self.t["inline_heading_min_bold"]
+                and len(self.caption.sub("", ln["text"]).split()) > 1)
+
     def is_captioned(self, ln) -> bool:
         return bool(ln["bold_start"]) and bool(self.caption.match(ln["text"]))
 
@@ -109,7 +128,17 @@ class Tagger:
 
     # ---- regions
     def in_region(self, r: Region, ln) -> str | None:
-        """Kind for a line inside region r, or None if the line ends the region."""
+        """Kind for a line inside region r, or None if the line ends the region.
+
+        Labels inside the region (title lines after the marker, entirely bold short
+        lines, titled caption labels) are headings; the caller keeps the feature."""
+        prev, r.prev_line = r.prev_line, ln
+        kind = self._in_region(r, ln, prev)
+        if kind in ("caption",) and self.is_titled_caption(ln):
+            return "heading"
+        return kind
+
+    def _in_region(self, r: Region, ln, prev) -> str | None:
         r.since_marker += 1
         b = self.band(ln["rel_size"])
         if self.is_furniture(ln):
@@ -127,6 +156,8 @@ class Tagger:
                 r.mode = "open"
         if r.mode == "panel" and r.panel_seen and ln["panel_id"] is None:
             return None
+        if r.mode == "search" and b == "head" and not ln["bold_start"] and not self.is_dropcap(ln):
+            return "heading"  # title lines between the marker and the content
         if r.mode == "open":
             if self.is_heading(ln) or self.marker(ln) or ln["section_id"] != r.section_id:
                 return None
@@ -139,9 +170,11 @@ class Tagger:
             if r.kind == "exercise" and self.is_captioned(ln):
                 return None
 
+        if r.kind != "table" and prole not in ITEM_ROLES and self.is_inline_heading(ln, prev):
+            return "heading"
         if r.kind == "exercise":
             return r.kind
-        if r.kind in ("box", "summary") and (self.is_captioned(ln) or self.continues_caption(r, ln)):
+        if r.kind in ("box", "summary", "body") and (self.is_captioned(ln) or self.continues_caption(r, ln)):
             if self.is_captioned(ln):
                 r.caption_left = ln["x0"]
             r.caption_line = ln
@@ -178,6 +211,8 @@ class Tagger:
         if prev is not None and abs(ln["y0"] - prev[1]["y0"]) <= self.t["same_row_tolerance"] \
                 and ln["page"] == prev[1]["page"] and b == self.band(prev[1]["rel_size"]):
             return prev[0]
+        if self.is_titled_caption(ln):
+            return "heading"
         prole = self.role_of_panel(ln)
         if prole is not None:
             return prole
@@ -194,6 +229,8 @@ class Tagger:
             return "example"
         if not any(ch.isalnum() for ch in text):
             return "furniture"
+        if self.is_inline_heading(ln, prev[1] if prev else None):
+            return "heading"
         return "body"
 
 
@@ -225,7 +262,7 @@ def run(book_id: int, conn, cfg: dict, profile: dict) -> None:
             continue
         if (m := tagger.marker(ln)) is not None:
             region = m
-            tags.append((m.kind, m.feature, ln["id"]))
+            tags.append(("heading", m.feature, ln["id"]))  # the marker names the region
             continue
         if region is not None:
             kind = tagger.in_region(region, ln)

@@ -2,7 +2,7 @@
 
 Reads only the measurement layer (lines, panels, sections) and writes
 data/profiles/<slug>.auto.toml, regenerated on every run. Corrections go in
-data/profiles/<slug>.toml, which is never overwritten and overrides the auto
+profiles/<slug>.toml (committed), which is never overwritten and overrides the auto
 profile key by key (sizes and furniture by key, markers by pattern, panel styles by
 fill).
 
@@ -27,7 +27,7 @@ from . import config
 ROMAN_RE = re.compile(r"(?<=\s)[IVXLC]+(?![\w])")
 NUM_RE = re.compile(r"\d+")
 URL_RE = re.compile(r"https?://|www\.|\.com\b|\.org\b")
-ROLES = ("box", "exercise", "objective", "summary", "table", "caption", "definition", "heading")
+ROLES = ("body", "box", "exercise", "objective", "summary", "table", "caption", "definition", "heading")
 
 
 def normalize(text: str) -> str:
@@ -39,8 +39,8 @@ def normalize(text: str) -> str:
 
 
 def profile_paths(slug: str, cfg: dict) -> tuple[Path, Path]:
-    d = config.ROOT / cfg["paths"]["profiles"]
-    return d / f"{slug}.auto.toml", d / f"{slug}.toml"
+    return (config.ROOT / cfg["paths"]["profiles"] / f"{slug}.auto.toml",
+            config.ROOT / cfg["paths"]["profile_overrides"] / f"{slug}.toml")
 
 
 # ---------------------------------------------------------------------------- sizes
@@ -253,7 +253,7 @@ def _val(v) -> str:
 
 def to_toml(p: dict) -> str:
     out = [f"# Auto-generated layout profile for {p['book']}. Regenerated on every run;",
-           f"# put corrections in {p['book']}.toml (same keys; markers by pattern, panel",
+           f"# put corrections in profiles/{p['book']}.toml (same keys; markers by pattern, panel",
            "# styles by fill). Roles: " + ", ".join(ROLES) + ".", "",
            f"book = {_val(p['book'])}", ""]
     for table in ("sizes", "furniture", "side_bold"):
