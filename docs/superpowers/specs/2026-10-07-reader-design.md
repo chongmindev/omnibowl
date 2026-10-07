@@ -18,6 +18,10 @@ replace the stand-ins without changes to the reader.
 - The textbook is fixed. A "Change" control is shown disabled with a hover note.
 - The scoreboard is a ranked player table; solo play is one row, so rooms (later) need
   no redesign. Multiplayer itself is out of scope.
+- Player name: `guest####` (four random digits) on first visit, with a one-time note
+  under your scoreboard row; click the row to type your own (1 to 20 characters). Kept
+  in `localStorage` and sent with each judged buzz as `player_name`, so rooms can use
+  it later. No shape or color picker for now.
 - Speed changes only via the slider. Keys: Space buzz, Enter submit, → next/skip.
 - A yellow time bar runs the buzz window after the question ends and the answer window
   after a buzz. No progress indicator while reading.
@@ -75,6 +79,7 @@ Two tables join the schema in `pipeline/omnibowl/db.py` (CLAUDE.md data model):
 | `id` | INTEGER PK | |
 | `tossup_id` | TEXT | |
 | `session_id` | TEXT | random per page load |
+| `player_name` | TEXT | the name shown in the scoreboard |
 | `word_index` | INTEGER | null if never buzzed |
 | `word_count` | INTEGER | |
 | `given_answer` | TEXT | |
@@ -110,8 +115,8 @@ All JSON. The answer is never sent before the tossup is judged or skipped.
 |---|---|---|
 | `GET /api/textbook` | none | `{title, author, edition, year, chapters: [{number, title, tossups}]}` |
 | `GET /api/tossups/next` | `chapters=1,3,13`, `exclude=<ids>` | `{id, words: [...], chapter, section, source, set}`; 404 with `{reason}` when none. For `source = 'qbreader'`, `chapter`/`section` are where it is filed, and the header labels it QBReader with the set name and year (`DESIGN.md`, Header). |
-| `POST /api/tossups/{id}/judge` | `{given_answer, word_index, word_count, finished, wpm, session_id}` | `{directive, directed_prompt, points, answer, checked_offline}` |
-| `POST /api/tossups/{id}/reveal` | `{word_count, wpm, session_id}` (skip or time out) | `{answer, points: 0}` |
+| `POST /api/tossups/{id}/judge` | `{given_answer, word_index, word_count, finished, wpm, session_id, player_name}` | `{directive, directed_prompt, points, answer, checked_offline}` |
+| `POST /api/tossups/{id}/reveal` | `{word_count, wpm, session_id, player_name}` (skip or time out) | `{answer, points: 0}` |
 
 `judge` behavior:
 - Calls QBReader `check-answer` with `answerline` = stored `answer` and `givenAnswer`.
@@ -138,11 +143,13 @@ Modules (each one file, one job, testable alone):
   (tick, buzz, submit, result, timeout, next) it returns the next state.
 - `clock.ts`: word-reveal timer from wpm, and the time-bar timers. Paused on buzz.
 - `score.ts`: points from directive and finished flag; the session scoreboard.
+- `player.ts`: the player name: guest default, validation, saving.
 - `view/*.ts`: renders header, question, answer row, verdict, log, time bar, footer,
   and the sidebar sections from state. No logic.
 - `main.ts`: wires keys and pointer events to the state machine.
 
-Session state (score, log, chapters, wpm) lives in memory; chapters and wpm also go to
+Session state (score, log, chapters, wpm, name) lives in memory; chapters, wpm, the
+name and whether the first-visit note was shown also go to
 `localStorage` (wrapped in try/catch) so they survive a reload.
 
 Timings (constants in `web/src/config.ts`, tunable): default speed 240 wpm, slider

@@ -130,6 +130,11 @@ everything else.
     ink bar. Shows words per minute.
   - Chapters: a list of square checkboxes (11px, 2px ink border, filled ink when on),
     chapter number in mono, title.
+- **Your name.** You start as `guest` plus four random digits (e.g. `guest4821`). On the
+  first visit only, a black note under your scoreboard row reads "You're guest4821.
+  Click to rename." Clicking your row opens an editor under it: a mono text field and a
+  hint line ("5 of 20 characters"), with Enter to save and Esc to cancel. Names are 1 to
+  20 characters, trimmed; empty reverts to the previous name. Saved on the device.
 - **Disabled control.** `--faint` text, `not-allowed` cursor, a black hover note in mono.
 
 ## Motion
