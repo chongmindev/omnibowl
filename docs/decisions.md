@@ -233,3 +233,37 @@ count as misses):
 | multi-word, by mentions (baseline) | 34 / 37 / 22 | 44 / 48 / 37 |
 | multi-word, PMI | 20 / 16 / 13 | 8 / 9 / 11 |
 | multi-word, local MI | 58 / 46 / 26 | 52 / 54 / 43 |
+
+## candidates: coverage, classes, variants, citations (2026-10-08)
+
+- **Coverage: B** (counts plus spread). `coverage` = distinct sentences; `n_chapters`
+  and `spread` = how many chapters mention the term. Rejected: A (counts only, cannot
+  see "too broad"); C (only sentences about the term: that is the clues stage's job).
+- **Class lines: X** (hand-set; tune against labels, option Y, only if these fail).
+  Kept the strict setting **4 / 100** after comparing 3.5 / 75 and 3 / 50:
+
+  | lines | Sedivy answers / labeled / glossary recall | Myers |
+  |---|---|---|
+  | 4 / 100 (chosen) | 519 / 36% / 28% | 669 / 46% / 32% |
+  | 3.5 / 75 | 759 / 31% / 33% | 1,009 / 41% / 43% |
+  | 3 / 50 | 1,052 / 26% / 39% | 1,478 / 37% / 56% |
+
+  Classes: too_broad (10+ of 13 chapters), answer (5+ sentences, log ratio >= 4 or
+  local MI >= 100), clue_only (above the floor 2 / 50), not_term (new; below the floor,
+  so everyday words are not called clue_only). Revisit once `assemble` shows which
+  answers make good tossups (near-misses: Ganong effect, lexical bias, natural classes).
+- **Variant grouping: A + B.** Same content words in any order or form, plus synonym
+  heads from config ("color terms" ~ "color words" ~ "color names"). Rejected for now:
+  C (shared-context clustering; could merge N400 and P600).
+- **Common-link tossups** ("blue": "shades of blue", "the blue divide") are a planned
+  separate format after regular tossups work (CLAUDE.md, Scope). Grouping does not
+  conflict: it merges synonyms of one concept; link answers keep shared words separate.
+- **Citation authors** added as a person source ("Saffran et al., 1996"): author recall
+  27% -> 54% (Sedivy), 22% -> 43% (Myers).
+- Extraction fixes: phrases opening with determiner-like adjectives dropped ("other
+  languages"); phrases with initials dropped ("J. Mem."); fragments dropped when 90% of
+  their mentions sit inside a longer term; stoplist matched on singular forms.
+
+Known noise in answers: characters from example stories ("Mr. Biggs") and foreign
+example words ("goluboy"); left for the clues stage, which sees whether a term has
+real facts.

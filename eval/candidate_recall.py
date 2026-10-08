@@ -46,7 +46,7 @@ def main() -> None:
             if not terms:
                 continue
             if role == "author_index":
-                hits = [t for t in terms if t.split(",")[0].strip().lower() in people]
+                hits = [t for t in terms if t.split(",")[0].strip().lower().split()[-1] in people]
             else:
                 clean = [re.sub(r"\s*\([^)]*\)\s*$", "", t) for t in terms]
                 keys = [concept_key(d[:]) if len(d) else "" for d in nlp.pipe(clean)]

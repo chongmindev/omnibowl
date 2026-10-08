@@ -28,7 +28,7 @@ def label_keys(conn, bid, nlp) -> tuple[set, set]:
         (bid,))]
     clean = [c for t in terms if (c := re.sub(r"\s*\([^)]*\)\s*$", "", t).strip())]
     concepts = {concept_key(d) for d in nlp.pipe(clean)}
-    people = {r[0].split(",")[0].strip().lower() for r in conn.execute(
+    people = {r[0].split(",")[0].strip().lower().split()[-1] for r in conn.execute(
         "SELECT term FROM labels WHERE book_id = ? AND role = 'author_index'", (bid,))}
     return concepts, people
 

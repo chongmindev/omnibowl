@@ -153,7 +153,9 @@ CREATE TABLE IF NOT EXISTS terms (
     forms       TEXT NOT NULL,
     keyness     REAL,
     keyness_kind TEXT,             -- log_ratio (one word, people) | local_mi (multi-word)
-    coverage    REAL,
+    coverage    REAL,              -- distinct sentences mentioning the term
+    n_chapters  INTEGER,           -- distinct chapters mentioning it
+    spread      REAL,              -- n_chapters / chapters in the book
     class       TEXT,
     UNIQUE (book_id, kind, norm)
 );

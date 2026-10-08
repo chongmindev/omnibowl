@@ -39,3 +39,30 @@ def test_max_words(nlp):
 def test_people_grouped_by_surname(nlp):
     doc = nlp("Paul Broca examined a patient in 1861.")
     assert [key for _, key in person_spans(doc)] == ["broca"]
+
+
+def test_group_key_variants():
+    from omnibowl.candidates import group_key
+    syn = {"word": "term", "name": "term", "term": "term"}
+    assert group_key("color term", syn) == group_key("color word", syn) == group_key("term for color", syn)
+    assert group_key("word order", syn) == group_key("order of word", syn)   # modifier "word" not mapped
+    assert group_key("word order", syn) != group_key("term order", syn)
+    assert group_key("phoneme", syn) == "phoneme"
+
+
+def test_drop_subsumed_fragments():
+    from omnibowl.candidates import drop_subsumed
+    found = {("concept", "head-turn preference paradigm"): [(1, 0, 29, ""), (2, 0, 29, "")],
+             ("concept", "turn preference paradigm"): [(1, 5, 29, ""), (2, 5, 29, "")],
+             ("concept", "paradigm"): [(1, 21, 29, ""), (3, 0, 8, "")]}
+    kept = drop_subsumed(found, 0.9)
+    assert ("concept", "turn preference paradigm") not in kept
+    assert ("concept", "head-turn preference paradigm") in kept
+    assert ("concept", "paradigm") in kept          # single words are judged by keyness
+
+
+def test_leading_modifier_and_initials(nlp):
+    from omnibowl.candidates import concept_key, concept_spans
+    ks = {concept_key(s) for s in concept_spans(nlp("Other languages differ, see J. Mem. Lang."), 5, frozenset({"other"}))}
+    assert "other language" not in ks and "language" in ks
+    assert not any("mem" in k for k in ks)

@@ -130,6 +130,40 @@ spacy_batch_size = 256
 log_ratio_smoothing = 1.0
 # Candidates containing any of these (as whole words) are dropped: academic and
 # idiomatic boilerplate common in every textbook (general English, not book-specific).
-phrase_stoplist = ["et", "al", "et al", "ibid", "other hand", "same time", "first place", "other words",
+phrase_stoplist = ["et", "al", "et al", "ibid", "other hand", "same time", "first place", "other word",
+                   "month of age", "year-old", "period of time",
                    "such case", "most case", "many case", "some case", "this case",
                    "the end", "long way", "great deal", "large number", "small number"]
+# Capitalized words that can sit before a year without being an author ("In 1861",
+# "Since 2010"). English function words and months, not book-specific.
+citation_name_stopwords = ["In", "By", "Since", "From", "Until", "Till", "Before", "After",
+  "During", "The", "This", "That", "These", "Those", "As", "Of", "On", "At", "To", "For",
+  "And", "Or", "But", "With", "Between", "Around", "About", "Circa", "Ca", "Only", "Around",
+  "Early", "Late", "Mid", "Fall", "Spring", "Summer", "Winter", "Figure", "Table", "Box",
+  "Chapter", "Section", "Unit", "Module", "Age", "Ages", "Year", "Years", "Today", "Then",
+  "January", "February", "March", "April", "May", "June", "July", "August", "September",
+  "October", "November", "December", "U.S.", "US", "UK", "Census"]
+# A phrase opening with one of these determiner-like adjectives is dropped (the phrase
+# without it is kept): "other languages" -> "languages". General English.
+leading_modifiers = ["other", "different", "many", "same", "such", "various", "several",
+  "certain", "specific", "particular", "new", "more", "most", "few", "own", "first",
+  "second", "last", "next", "previous", "following", "typical", "general", "similar",
+  "whole", "entire", "single", "real", "actual", "important", "possible", "simple",
+  "large", "small", "good", "great", "main", "major", "key", "common", "usual"]
+# A multi-word term whose mentions sit at least this often inside a longer term's
+# mentions is a fragment of it and is dropped.
+subsumed_share = 0.9
+# Head words treated as one when grouping variants ("color terms" ~ "color words").
+# The first word of each list names the group. General English, not book-specific.
+synonym_heads = [["term", "word", "name", "label", "vocabulary"],
+                 ["study", "experiment"],
+                 ["effect", "phenomenon"]]
+
+[candidates.classes]
+# Hand-set lines (decision X, 2026-10-08); tune against labels (Y) only if these fail.
+too_broad_min_chapters = 10
+answer_min_sentences = 5
+answer_log_ratio = 4.0
+answer_local_mi = 100.0
+floor_log_ratio = 2.0
+floor_local_mi = 50.0

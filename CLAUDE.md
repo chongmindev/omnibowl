@@ -8,6 +8,8 @@ The developer (Chong) is building this partly to design the algorithms himself. 
 
 **v0 (build this):** one textbook (see "v0 book" below), tossups only, single player, fully algorithmic generation, a minimal web reader.
 
+**Planned next, after regular tossups work end to end:** common-link tossups, where the answer is an everyday word ("blue") and each clue is a different key phrase containing it ("shades of blue", "the blue divide"). Candidate rule: an everyday word inside at least N distinct key phrases; the referent ("this color") is the hard part.
+
 **Later (do not build unless asked):** the LLM rewrite stage, mixing in real QBReader tossups, multiplayer rooms (any path after the domain is a room, as on protobowl), bonuses, power marks, non-textbook sources, using buzz data to re-rank clues.
 
 ## Ground rules
