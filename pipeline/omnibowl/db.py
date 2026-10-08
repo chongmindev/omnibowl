@@ -171,13 +171,47 @@ CREATE TABLE IF NOT EXISTS mentions (
 );
 CREATE INDEX IF NOT EXISTS mentions_term ON mentions(term_id);
 CREATE INDEX IF NOT EXISTS mentions_sentence ON mentions(sentence_id);
+
+-- Coreference chains from a local model, per text unit. Offsets are inside the sentence.
+CREATE TABLE IF NOT EXISTS coref (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    unit        INTEGER NOT NULL,
+    chain       INTEGER NOT NULL,
+    sentence_id INTEGER NOT NULL REFERENCES sentences(id),
+    start_char  INTEGER NOT NULL,
+    end_char    INTEGER NOT NULL,
+    text        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS coref_sentence ON coref(sentence_id);
+CREATE INDEX IF NOT EXISTS coref_chain ON coref(book_id, unit, chain);
+
+-- One fact about one answer. sentence_ids grounds it; start/end are the clause's
+-- character range in that sentence. via: named | coref. shared: the sentence also
+-- names another answer.
+CREATE TABLE IF NOT EXISTS clues (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    term_id     INTEGER NOT NULL REFERENCES terms(id),
+    sentence_ids TEXT NOT NULL,
+    section_id  INTEGER REFERENCES sections(id),
+    kind        TEXT NOT NULL,
+    via         TEXT NOT NULL,
+    shared      INTEGER NOT NULL,
+    start_char  INTEGER NOT NULL,
+    end_char    INTEGER NOT NULL,
+    text        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS clues_term ON clues(term_id);
 """
 
-PARSE_TABLES = ["mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
 LABEL_TABLES = ["labels"]
-CANDIDATE_TABLES = ["mentions", "terms"]
+CANDIDATE_TABLES = ["clues", "mentions", "terms"]
+COREF_TABLES = ["coref"]
+CLUE_TABLES = ["clues"]
 
 
 def connect(path: Path) -> sqlite3.Connection:

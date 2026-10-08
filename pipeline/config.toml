@@ -167,3 +167,20 @@ answer_log_ratio = 4.0
 answer_local_mi = 100.0
 floor_log_ratio = 2.0
 floor_local_mi = 50.0
+
+[coref]
+# Local pretrained coreference model (decision 2026-10-08): fastcoref's F-coref, MIT
+# license, pinned to a revision. Downloaded once to ~/.cache/huggingface.
+model = "biu-nlp/f-coref"
+revision = "e91dfff12879495d882ba9460d0c5d5dd44ade59"
+device = "auto"            # mps on Apple silicon, else cpu
+max_tokens_in_batch = 4000
+
+[clues]
+# Sentence kinds that can be clues. Exercises, objectives and examples never are.
+sentence_kinds = ["body", "box", "summary", "definition", "caption"]
+# Terms that get clues: answers now; clue_only terms can be added later as sources of
+# clues about other answers.
+term_classes = ["answer"]
+# A clause shorter than this many words is not a clue on its own.
+min_words = 5
