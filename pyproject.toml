@@ -7,6 +7,7 @@ dependencies = [
     "en-core-web-sm",
     "pymupdf>=1.28.2",
     "spacy>=3.8.16",
+    "wordfreq>=3.1.1",
 ]
 
 [build-system]

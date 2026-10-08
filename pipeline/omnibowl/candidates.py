@@ -1,7 +1,7 @@
 """Stage 2: candidate answers.
 
-Step 1 (this file so far): extract candidate terms and every mention of them.
-Scoring (keyness, coverage) and the answer / clue_only / too_broad class come next.
+Step 1: extract candidate terms and every mention of them.
+Step 2: keyness. Coverage and the answer / clue_only / too_broad class come next.
 
 Extraction (decision "candidates: extraction", option C):
   - Concepts: part-of-speech patterns over spaCy's tags, after Justeson & Katz (1995):
@@ -15,12 +15,16 @@ Terms are grouped by a normalized key: lowercase, last word lemmatized
 """
 
 import json
+import math
 import re
 from collections import Counter, defaultdict
 
 import spacy
+from wordfreq import word_frequency
 
 from . import db
+
+WORD_RE = re.compile(r"[a-z0-9]+(?:['’][a-z]+)?")
 
 # One letter per token for pattern matching.
 #   A adjective (or participle used as one)   N noun / proper noun
@@ -117,8 +121,11 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
             found["person", key].append((row["id"], ent.start_char, ent.end_char, ent.text.strip()))
 
     section_of = {r["id"]: r["section_id"] for r in rows}
+    stop = [p.lower() for p in ccfg["phrase_stoplist"]]
     for (kind, key), ms in sorted(found.items()):
         if len(ms) < ccfg["min_mentions"]:
+            continue
+        if kind == "concept" and any(re.search(rf"(?<![a-z]){re.escape(p)}(?![a-z])", key) for p in stop):
             continue
         forms = Counter(m[3] for m in ms)
         # People: prefer the fullest common form ("Paul Broca" over "Broca").
@@ -132,4 +139,46 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
         conn.executemany(
             "INSERT INTO mentions (book_id, term_id, sentence_id, start_char, end_char) VALUES (?, ?, ?, ?, ?)",
             [(book_id, cur.lastrowid, s, a, b) for s, a, b, _ in ms])
+    conn.commit()
+    keyness(book_id, conn, cfg)
+
+
+# --------------------------------------------------------------------------- keyness
+
+def keyness(book_id: int, conn, cfg: dict) -> None:
+    """Keyness (decision "candidates: keyness", option A with phrase option 3).
+
+    One-word terms and people: smoothed log ratio of per-million frequency in the book
+    against everyday English (wordfreq), log2((book + k) / (english + k)).
+    Multi-word terms: wordfreq has no phrase data, so they are scored inside the book by
+    local mutual information (Evert 2005): mentions x PMI, where PMI = log2(P(phrase) /
+    product of P(word)) says how much more often the words occur together than their
+    separate frequencies predict. Plain PMI rewards phrases seen twice; weighting by
+    mentions fixes that (eval/candidate_ranking.py).
+    The two scores are on different scales; `keyness_kind` says which one a term has.
+    """
+    ccfg = cfg["candidates"]
+    texts = [r[0].lower() for r in conn.execute(
+        f"""SELECT text FROM sentences WHERE book_id = ?
+            AND kind IN ({','.join('?' * len(ccfg['sentence_kinds']))})""",
+        (book_id, *ccfg["sentence_kinds"]))]
+    counts = Counter(w for t in texts for w in WORD_RE.findall(t))
+    total = sum(counts.values())
+    k = ccfg["log_ratio_smoothing"]
+    updates = []
+    for t in conn.execute("SELECT id, kind, norm, n_mentions, forms FROM terms WHERE book_id = ?", (book_id,)):
+        words = WORD_RE.findall(t["norm"])
+        if t["kind"] == "person" or len(words) <= 1:
+            surfaces = {f.lower() for f, _ in json.loads(t["forms"])} | {t["norm"]}
+            if t["kind"] == "person":
+                surfaces = {t["norm"]}
+            english = sum(word_frequency(f, "en") for f in surfaces) * 1e6
+            book = t["n_mentions"] / total * 1e6
+            updates.append((math.log2((book + k) / (english + k)), "log_ratio", t["id"]))
+        else:
+            p_phrase = t["n_mentions"] / total
+            p_words = math.prod(max(counts[w], 1) / total for w in words)
+            pmi = math.log2(p_phrase / p_words)
+            updates.append((t["n_mentions"] * pmi, "local_mi", t["id"]))
+    conn.executemany("UPDATE terms SET keyness = ?, keyness_kind = ? WHERE id = ?", updates)
     conn.commit()

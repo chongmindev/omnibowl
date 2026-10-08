@@ -49,7 +49,7 @@ def main() -> None:
                 hits = [t for t in terms if t.split(",")[0].strip().lower() in people]
             else:
                 clean = [re.sub(r"\s*\([^)]*\)\s*$", "", t) for t in terms]
-                keys = [concept_key(d[:]) for d in nlp.pipe(clean)]
+                keys = [concept_key(d[:]) if len(d) else "" for d in nlp.pipe(clean)]
                 hits = [t for t, k in zip(terms, keys) if k in concepts]
                 missed = [t for t, k in zip(terms, keys) if k not in concepts]
             print(f"  {role:<14} {len(hits):>5}/{len(terms):<5} = {len(hits) / len(terms):.1%}")

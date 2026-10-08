@@ -124,3 +124,12 @@ max_words = 5
 # A term must be mentioned at least this many times to be kept at all.
 min_mentions = 2
 spacy_batch_size = 256
+# Keyness log ratio: add this many per million to both frequencies, so terms unseen in
+# everyday English do not divide by zero (Kilgarriff's "simple maths" N; larger values
+# favor more frequent terms).
+log_ratio_smoothing = 1.0
+# Candidates containing any of these (as whole words) are dropped: academic and
+# idiomatic boilerplate common in every textbook (general English, not book-specific).
+phrase_stoplist = ["et", "al", "et al", "ibid", "other hand", "same time", "first place", "other words",
+                   "such case", "most case", "many case", "some case", "this case",
+                   "the end", "long way", "great deal", "large number", "small number"]

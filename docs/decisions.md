@@ -205,3 +205,31 @@ Recall before scoring (Sedivy): glossary 246/275 (89.5%), subject index 76.4%,
 author index 26.7%. Glossary misses: adjective terms (bilabial, velar), terms over 5
 words, rare terms tagged inconsistently, "-ing" nouns tagged as verbs. Authors are
 weak because spaCy misses surnames in citations; citation patterns are a proposed fix.
+
+## candidates: keyness (2026-10-07/08)
+
+**Chosen: A, smoothed log ratio** against everyday English (`wordfreq`, approved with
+this choice), for one-word terms and people: log2((book per million + 1) / (English per
+million + 1)), Kilgarriff's "simple maths". Rejected: B, log-likelihood (no intuitive
+scale); C, C-value (cannot tell common words from technical ones, ignores single words).
+Closest real system: Sketch Engine term extraction (POS patterns + smoothed ratio).
+
+**Phrases: option 3, scored inside the book.** wordfreq's phrase estimate is built from
+word frequencies ("garden path sentence" 15.9 per million), so multi-word terms would all
+look ordinary. Rejected: 1 (that estimate), 2 (independence estimate: every phrase key).
+Within option 3, plain PMI ranked worse than mention counts (it rewards phrases seen
+twice); **local mutual information (mentions x PMI, Evert 2005)** was chosen over
+PMI x log2(mentions) (tied below the top 100, LMI best at the top).
+
+A whole-word stoplist of boilerplate ("et al", "other hand", ...) in config.
+
+Precision at k against glossary + index labels (a lower bound: unlabeled real terms
+count as misses):
+
+| | Sedivy P@50 / P@100 / P@500 | Myers P@50 / P@100 / P@500 |
+|---|---|---|
+| one-word, by mentions (baseline) | 28 / 17 / 15 | 40 / 38 / 27 |
+| one-word, log ratio | 40 / 35 / 25 | 58 / 46 / 36 |
+| multi-word, by mentions (baseline) | 34 / 37 / 22 | 44 / 48 / 37 |
+| multi-word, PMI | 20 / 16 / 13 | 8 / 9 / 11 |
+| multi-word, local MI | 58 / 46 / 26 | 52 / 54 / 43 |

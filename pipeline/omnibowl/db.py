@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS terms (
     n_sections  INTEGER NOT NULL,
     forms       TEXT NOT NULL,
     keyness     REAL,
+    keyness_kind TEXT,             -- log_ratio (one word, people) | local_mi (multi-word)
     coverage    REAL,
     class       TEXT,
     UNIQUE (book_id, kind, norm)
