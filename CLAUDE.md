@@ -14,7 +14,7 @@ The developer (Chong) is building this partly to design the algorithms himself. 
 
 ## Ground rules
 
-1. **No LLM or hosted-model calls in the pipeline**, except in the `rewrite` stage, which is off by default and out of scope for v0. Do not suggest an LLM or embedding API as a shortcut for any other stage. Local classical NLP (spaCy models, wordfreq, regex, statistics) is fine.
+1. **No LLM or hosted-model calls in the pipeline**, except in the `rewrite` stage, which is off by default and out of scope for v0. Do not suggest an LLM or embedding API as a shortcut for any other stage. Local classical NLP (spaCy models, wordfreq, regex, statistics) is fine. Local pretrained task models (e.g. a Hugging Face coreference model) are allowed when they run on the machine, are free, have a permissive license, and are pinned to a version; adopt one only after measuring it on the eval set (decision 2026-10-08).
 2. **Chong designs the algorithms.** For any scoring function, threshold, ranking rule, or heuristic: propose two or three options with tradeoffs and wait for a choice. Do not silently pick one. Plumbing (I/O, schema, CLI, tests, the reader UI) can be implemented without asking.
 3. **Every clue is grounded.** A clue record must point to the sentence id(s) it came from. No fact appears in a generated tossup unless it is in the textbook.
 4. **No magic numbers in code.** Thresholds and weights live in `pipeline/config.toml`.
