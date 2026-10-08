@@ -128,6 +128,9 @@ def concept_spans(doc, max_words: int, skip_first: frozenset = frozenset()):
                 continue
             if any(re.fullmatch(r"[A-Z]\.", t.text) for t in span):
                 continue  # initials belong to names and citations ("J. Mem."), not terms
+            if (j - i == 1 and span[0].pos_ == "PROPN" and j < len(doc)
+                    and doc[j].tag_ == "POS"):
+                continue  # "Broca" in "Broca's area": only the full phrase is a term
             words = sum(1 for t in span if classes[t.i] in "ANP"
                         and not (t.i > 0 and classes[t.i - 1] == "H"))
             if words > max_words or (i, j) in seen:
@@ -224,6 +227,20 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
         members.sort(key=lambda km: -len(km[1]))
         merged[kind, members[0][0]] = [m for _, ms in members for m in ms]
     found = drop_subsumed(merged, ccfg["subsumed_share"])
+    # A name inside an established possessive term ("Broca" in "Broca's area") is not a
+    # mention of the person; a one-off phrase ("Tomasello's terminology") still is.
+    possessive = defaultdict(list)
+    for (kind, key), ms in found.items():
+        if kind == "concept" and len(ms) >= ccfg["min_mentions"] and re.search(r"['’]s\b", key):
+            for sid, a, b, _ in ms:
+                possessive[sid].append((a, b))
+    for (kind, key) in [k for k in found if k[0] == "person"]:
+        found[kind, key] = [m for m in found[kind, key]
+                            if not any(a <= m[1] and m[2] <= b for a, b in possessive[m[0]])]
+    # A one-word proper noun that is also a person's surname is that person ("Broca").
+    people = {k for (kind, k) in found if kind == "person"}
+    for (kind, key) in [k for k in found if k[0] == "concept" and k[1] in people]:
+        found["person", key] = found["person", key] + found.pop((kind, key))
     for (kind, key), ms in sorted(found.items()):
         if len(ms) < ccfg["min_mentions"]:
             continue

@@ -187,7 +187,8 @@ CREATE INDEX IF NOT EXISTS coref_sentence ON coref(sentence_id);
 CREATE INDEX IF NOT EXISTS coref_chain ON coref(book_id, unit, chain);
 
 -- One fact about one answer. sentence_ids grounds it; start/end are the clause's
--- character range in that sentence. via: named | coref. shared: the sentence also
+-- character range in that sentence. via: named | coref | definition (a later sentence
+-- of the answer's own definition). shared: the sentence also
 -- names another answer.
 CREATE TABLE IF NOT EXISTS clues (
     id          INTEGER PRIMARY KEY,

@@ -272,3 +272,32 @@ Myers 632, 48% labeled.
 Known noise in answers: characters from example stories ("Mr. Biggs") and foreign
 example words ("goluboy"); left for the clues stage, which sees whether a term has
 real facts.
+
+## clues: first version and golden set (2026-10-08)
+
+- **Coreference: local model** (fastcoref F-coref, MIT, pinned), after a spike on
+  chapter 3 (19 s; linked "He considered language..." to Broca). Chosen over rules
+  (option B) on Chong's call that ML is the better tool for coreference; CLAUDE.md rule
+  1 now allows local pretrained task models. Chains link to an answer only through a
+  named mention of that exact answer (leading "the"/"this" allowed).
+- **One fact per clue: B with A as fallback.** Split at "; " and between clauses with
+  their own subjects; ", which" splits dropped (they produced "Which provided...").
+- Candidates fixes found while building the gold set: one-word proper nouns that are a
+  person's surname merge into the person; a name inside an established possessive term
+  ("Broca" in "Broca's area") is not a mention of the person; in clues, possessives that
+  name a thing ("Broca's and Wernicke's areas") are dropped for the person.
+- All sentences of an answer's own definition are clues (`via = definition`).
+
+Golden set `eval/clues.tsv`: 20 Sedivy answers (5 people, 15 concepts), 237 sentences,
+132 true clues; Claude-labeled, to be reviewed. Scores (`eval/clue_accuracy.py`):
+
+| step | precision | recall | F1 |
+|---|---|---|---|
+| first version | 79% | 83% | 81% |
+| + possessive terms | 82% | 82% | 82% |
+| + whole definitions | 82% | 83% | 83% |
+
+Known gap: a person's naming clue ("another of Hockett's features, productivity") is
+lost when the name sits inside an established term; one such clue per person could be
+kept later. Remaining misses: unlinked pronouns/descriptions (~14 of 22), other word
+forms ("bilingual advantage", "gazed").

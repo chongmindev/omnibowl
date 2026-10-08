@@ -50,6 +50,31 @@ def linked_chains(conn, book_id: int, term_id: int, mentions) -> set[tuple[int, 
     return out
 
 
+def possessive_heads(conn, book_id: int, person) -> set[str]:
+    """Head nouns of established terms named after this person ("area" and "aphasia"
+    for Broca, from "Broca's area" and "Broca's aphasia")."""
+    heads = set()
+    for (norm,) in conn.execute(
+            "SELECT norm FROM terms WHERE book_id = ? AND kind = 'concept' AND norm LIKE ?",
+            (book_id, f"%{person['norm']}%")):
+        m = re.search(rf"\b{re.escape(person['norm'])}['’]s\s+(.+)$", norm)
+        if m:
+            heads.add(m.group(1).split()[-1])
+    return heads
+
+
+def names_a_thing(text: str, start: int, end: int, heads: set[str]) -> bool:
+    """The mention at start..end is a possessive naming a thing, not the person:
+    "Broca's area", "Broca's and Wernicke's areas" (the possessive may fall inside the
+    mention, as in a coreference mention "Broca's area, which ...")."""
+    m = re.search(r"['’]s\b", text[start:end + 2])
+    if not m:
+        return False
+    rest = text[start + m.start():start + m.start() + 60]
+    pat = rf"^['’]s(?:\s+(?:and|or)\s+[A-Z][\w-]+['’]s)?\s+(?:{'|'.join(map(re.escape, heads))})s?\b"
+    return bool(re.match(pat, rest, re.I))
+
+
 def clause_parts(doc) -> list[tuple[int, int]]:
     """Character ranges of the clauses a sentence splits into (option B), or the whole
     sentence when no split is clean (option A)."""
@@ -91,7 +116,7 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
     db.clear(conn, book_id, db.CLUE_TABLES)
     kinds = set(c["sentence_kinds"])
     sent = {r["id"]: r for r in conn.execute(
-        "SELECT id, kind, section_id, text FROM sentences WHERE book_id = ?", (book_id,))}
+        "SELECT id, kind, section_id, unit, ord, text FROM sentences WHERE book_id = ?", (book_id,))}
     terms = answer_terms(conn, book_id, c["term_classes"])
     term_ids = {t["id"] for t in terms}
     named_by_sentence = defaultdict(set)
@@ -115,20 +140,37 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
             for cm in chain_mentions[key]:
                 if not any(a <= cm["start_char"] < b for a, b, _ in spots[cm["sentence_id"]]):
                     spots[cm["sentence_id"]].append((cm["start_char"], cm["end_char"], "coref"))
+        # A definition of the answer is about it in every sentence, not just the one
+        # naming the term ("Here, small differences between sounds ... are not perceived").
+        for sid in list(spots):
+            s0 = sent.get(sid)
+            if s0 is not None and s0["kind"] == "definition" and s0["ord"] == 0:
+                for (rest,) in conn.execute(
+                        "SELECT id FROM sentences WHERE book_id = ? AND unit = ? AND ord > 0",
+                        (book_id, s0["unit"])):
+                    if rest not in spots:
+                        spots[rest].append((0, 0, "definition"))
+        heads = possessive_heads(conn, book_id, t) if t["kind"] == "person" else set()
         for sid, marks in sorted(spots.items()):
             s = sent.get(sid)
             if s is None or s["kind"] not in kinds:
                 continue
+            if heads:
+                marks = [m for m in marks if not names_a_thing(s["text"], m[0], m[1], heads)]
+                if not marks:
+                    continue
             doc = parse_cache.get(sid) or parse_cache.setdefault(sid, nlp(s["text"]))
             shared = len(named_by_sentence[sid] - {t["id"]}) > 0
-            for a, b in clause_parts(doc):
-                inside = [m for m in marks if a <= m[0] < b]
+            whole = any(m[2] == "definition" for m in marks)
+            for a, b in ([(0, len(s["text"]))] if whole else clause_parts(doc)):
+                inside = marks if whole else [m for m in marks if a <= m[0] < b]
                 if not inside:
                     continue
                 text = clean(s["text"][a:b])
                 if len(text.split()) < c["min_words"]:
                     continue
-                via = "named" if any(m[2] == "named" for m in inside) else "coref"
+                via = ("named" if any(m[2] == "named" for m in inside)
+                       else "definition" if whole else "coref")
                 rows.append((book_id, t["id"], json.dumps([sid]), s["section_id"], s["kind"], via,
                              int(shared), a, b, text))
     conn.executemany(
