@@ -145,6 +145,16 @@ CITATION_RE = re.compile(
     r"(?:'s|’s)?,?\s+\(?(?:19|20)\d{2}[a-z]?\b")
 
 
+CITATION_PAREN_RE = re.compile(r"\([^()]*\b(?:19|20)\d{2}[a-z]?\b[^()]*\)")
+
+
+def citation_parens(text: str) -> list[tuple[int, int]]:
+    """Character ranges of parentheticals that contain a year: citations and source
+    notes ("(Saffran et al., 1996)", "(Adapted from ..., 2001, J. Mem. Lang.)"). Their
+    words are references, not facts, so concepts and spaCy names there are skipped."""
+    return [m.span() for m in CITATION_PAREN_RE.finditer(text)]
+
+
 def citation_people(text: str, stopwords: set[str]):
     """(start, end, surname) for each author named in a citation."""
     for m in CITATION_RE.finditer(text):
@@ -186,10 +196,15 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
     synonyms = {w: grp[0] for grp in ccfg["synonym_heads"] for w in grp}
     found = defaultdict(list)          # (kind, key) -> [(sentence_id, start, end, surface)]
     for row, doc in zip(rows, nlp.pipe((r["text"] for r in rows), batch_size=ccfg["spacy_batch_size"])):
+        refs = citation_parens(row["text"])
+        in_ref = lambda a, b: any(r0 <= a and b <= r1 for r0, r1 in refs)
         for span in concept_spans(doc, ccfg["max_words"], skip_first):
-            found["concept", concept_key(span)].append((row["id"], span.start_char, span.end_char, surface(span)))
+            if not in_ref(span.start_char, span.end_char):
+                found["concept", concept_key(span)].append((row["id"], span.start_char, span.end_char, surface(span)))
         taken = set()
         for ent, key in person_spans(doc):
+            if in_ref(ent.start_char, ent.end_char):
+                continue
             found["person", key].append((row["id"], ent.start_char, ent.end_char, ent.text.strip()))
             taken.add(ent.start_char)
         for a, b, key, name in citation_people(row["text"], stop_names):

@@ -264,6 +264,11 @@ count as misses):
   languages"); phrases with initials dropped ("J. Mem."); fragments dropped when 90% of
   their mentions sit inside a longer term; stoplist matched on singular forms.
 
+Citation parentheticals (parentheses containing a year) are skipped for concepts and
+spaCy names: journal abbreviations from source notes ("J. Mem. Lang.") had become
+answers ("Mem", "Cogn", "Psychol"). After the fix: Sedivy 496 answers, 38% labeled;
+Myers 632, 48% labeled.
+
 Known noise in answers: characters from example stories ("Mr. Biggs") and foreign
 example words ("goluboy"); left for the clues stage, which sees whether a term has
 real facts.

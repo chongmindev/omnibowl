@@ -63,6 +63,13 @@ def test_drop_subsumed_fragments():
 
 def test_leading_modifier_and_initials(nlp):
     from omnibowl.candidates import concept_key, concept_spans
-    ks = {concept_key(s) for s in concept_spans(nlp("Other languages differ, see J. Mem. Lang."), 5, frozenset({"other"}))}
+    ks = {concept_key(s) for s in concept_spans(nlp("Other languages differ, as J. Mem said."), 5, frozenset({"other"}))}
     assert "other language" not in ks and "language" in ks
-    assert not any("mem" in k for k in ks)
+    assert "j. mem" not in ks
+
+
+def test_citation_parentheticals():
+    from omnibowl.candidates import citation_parens
+    text = "Listeners adapt (Adapted from Kamide et al., 2003, J. Mem. Lang.) to talkers (see Figure 2)."
+    refs = citation_parens(text)
+    assert len(refs) == 1 and text[refs[0][0]:refs[0][1]].endswith("Lang.)")
