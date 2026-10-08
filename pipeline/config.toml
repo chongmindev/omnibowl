@@ -114,3 +114,13 @@ spacy_batch_size = 64
 subentry_min_indent = 8.0
 # The part's left edge is the leftmost x shared by at least this share of its lines.
 margin_min_share = 0.05
+
+[candidates]
+# Sentence kinds that count as text about a term. Exercises, objectives and examples
+# are left out (prompts and stimulus sentences, not facts).
+sentence_kinds = ["body", "box", "summary", "definition", "caption"]
+# Longest candidate, in words (adjectives, nouns, "of").
+max_words = 5
+# A term must be mentioned at least this many times to be kept at all.
+min_mentions = 2
+spacy_batch_size = 256

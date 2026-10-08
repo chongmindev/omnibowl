@@ -189,3 +189,19 @@ Results: Sedivy 275 glossary terms (all in text), 2,441 subject index entries (1
 sub-entries), 796 authors (779 found). Myers 1,361 glossary entries (715 in text),
 8,049 subject index entries, 438 authors. One hand correction: Myers' Appendix E (an
 answer key) set to `other`.
+
+## candidates: extraction (2026-10-07)
+
+**Chosen: C.** Concepts from part-of-speech patterns (Justeson and Katz: adjectives and
+nouns ending in a noun, optional "noun of noun", hyphenated compounds and possessive 's
+inside, nested matches kept, up to 5 words); people from spaCy PERSON entities grouped
+by surname. Rejected: A (spaCy noun chunks: run long, split terms), B alone (misses
+people).
+
+**Single words allowed** (2026-10-07): 34% of Sedivy's and 44% of Myers' glossary terms
+are single words; keyness is meant to filter common ones. CLAUDE.md updated.
+
+Recall before scoring (Sedivy): glossary 246/275 (89.5%), subject index 76.4%,
+author index 26.7%. Glossary misses: adjective terms (bilabial, velar), terms over 5
+words, rare terms tagged inconsistently, "-ing" nouns tagged as verbs. Authors are
+weak because spaCy misses surnames in citations; citation patterns are a proposed fix.

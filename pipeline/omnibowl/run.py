@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import backmatter, config, db, parse, profile, sentences, tag
+from . import backmatter, candidates, config, db, parse, profile, sentences, tag
 
 
 def book_id_for(conn, book: Path) -> int:
@@ -49,11 +49,15 @@ def run_backmatter(book, conn, cfg):
     backmatter.run(book_id_for(conn, book), conn, cfg, profile.load(book.stem, cfg))
 
 
+def run_candidates(book, conn, cfg):
+    candidates.run(book_id_for(conn, book), conn, cfg)
+
+
 # parse = measure (parse.py) -> profile (profile.py) -> tag (tag.py) -> sentences
 # (sentences.py) -> back matter (backmatter.py). Each later stage name reruns from that step on, reading what the
 # earlier steps stored; "tag" uses the saved profile plus any hand corrections.
 STAGES = {"parse": run_parse, "profile": run_profile, "tag": run_tag, "sentences": run_sentences,
-          "backmatter": run_backmatter}
+          "backmatter": run_backmatter, "candidates": run_candidates}
 ORDER = ["parse", "candidates", "clues", "rank", "assemble"]
 
 

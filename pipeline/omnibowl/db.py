@@ -137,12 +137,44 @@ CREATE TABLE IF NOT EXISTS labels (
     line_id     INTEGER NOT NULL REFERENCES lines(id)
 );
 CREATE INDEX IF NOT EXISTS labels_book ON labels(book_id, role);
+
+-- Candidate answers (stage: candidates). kind: concept | person. norm groups surface
+-- forms; forms is a JSON list of [surface, count]. Scores and class are filled by the
+-- scoring step.
+CREATE TABLE IF NOT EXISTS terms (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    kind        TEXT NOT NULL,
+    norm        TEXT NOT NULL,
+    display     TEXT NOT NULL,
+    n_mentions  INTEGER NOT NULL,
+    n_sentences INTEGER NOT NULL,
+    n_sections  INTEGER NOT NULL,
+    forms       TEXT NOT NULL,
+    keyness     REAL,
+    coverage    REAL,
+    class       TEXT,
+    UNIQUE (book_id, kind, norm)
+);
+
+-- Every place a term appears: sentence and character offsets within its text.
+CREATE TABLE IF NOT EXISTS mentions (
+    id          INTEGER PRIMARY KEY,
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    term_id     INTEGER NOT NULL REFERENCES terms(id),
+    sentence_id INTEGER NOT NULL REFERENCES sentences(id),
+    start_char  INTEGER NOT NULL,
+    end_char    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS mentions_term ON mentions(term_id);
+CREATE INDEX IF NOT EXISTS mentions_sentence ON mentions(sentence_id);
 """
 
-PARSE_TABLES = ["labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
 LABEL_TABLES = ["labels"]
+CANDIDATE_TABLES = ["mentions", "terms"]
 
 
 def connect(path: Path) -> sqlite3.Connection:
