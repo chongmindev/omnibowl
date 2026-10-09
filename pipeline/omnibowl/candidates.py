@@ -78,6 +78,72 @@ def classify(doc) -> str:
     return "".join(cls)
 
 
+SHORT_RE = re.compile(r"\(([A-Za-z][A-Za-z0-9-]{1,9}s?)\)")
+LONG_PAREN_RE = re.compile(r"\b([A-Z][A-Za-z0-9-]{1,9}s?)\s+\(([^()]{3,80})\)")
+
+
+def long_form(short: str, words_before: str) -> str | None:
+    """Schwartz & Hearst (2003): the shortest span ending right before the parenthesis
+    whose words contain the short form's letters in order, the first letter starting a
+    word. "voice onset time (VOT)" -> "voice onset time"."""
+    short = short[:-1] if short.endswith("s") and short[:-1].isupper() else short
+    letters = [ch.lower() for ch in short if ch.isalnum()]
+    words = words_before.split()[-min(len(letters) + 5, 2 * len(letters)):]
+    text = " ".join(words)
+    si, li = len(letters) - 1, len(text) - 1
+    while si >= 0:
+        c = letters[si]
+        while li >= 0 and (text[li].lower() != c or (si == 0 and li > 0 and text[li - 1].isalnum())):
+            li -= 1
+        if li < 0:
+            return None
+        si, li = si - 1, li - 1
+    start = text.rfind(" ", 0, li + 1) + 1
+    long = text[start:].strip(" ,;:")
+    return long if len(long.split()) >= 2 and long.lower() != short.lower() else None
+
+
+def abbreviation_pairs(texts) -> Counter:
+    """(short, long) pairs the book defines: "long form (SHORT)" or "SHORT (long form)"."""
+    pairs = Counter()
+    for t in texts:
+        for m in SHORT_RE.finditer(t):
+            lf = long_form(m.group(1), t[:m.start()])
+            if lf:
+                pairs[m.group(1).rstrip("s") if m.group(1)[:-1].isupper() else m.group(1), lf] += 1
+        for m in LONG_PAREN_RE.finditer(t):
+            short, inner = m.group(1), m.group(2)
+            if short.isupper() or short[:-1].isupper():
+                lf = long_form(short, inner + " ")
+                if lf and inner.strip().lower().startswith(lf.lower().split()[0]):
+                    pairs[short.rstrip("s") if short[:-1].isupper() else short, lf] += 1
+    return pairs
+
+
+def merge_abbreviations(found: dict, texts) -> dict:
+    """Merge a short form and its long form into one term ("VOT" = "voice onset time"),
+    and a plural acronym into its singular ("ERPs" = "ERP"). Only pairs the book
+    itself defines are merged. The more mentioned form names the merged term."""
+    def key_for(surface: str) -> tuple | None:
+        low = surface.lower()
+        cands = [k for k in found if k[0] == "concept" and (k[1] == low or k[1] == low.rstrip("s")
+                 or k[1] == re.sub(r"s$", "", low))]
+        return max(cands, key=lambda k: len(found[k])) if cands else None
+
+    for (short, long), _ in abbreviation_pairs(texts).most_common():
+        a, b = key_for(short), key_for(long)
+        if not a or not b or a == b:
+            continue
+        keep, drop = (a, b) if len(found[a]) >= len(found[b]) else (b, a)
+        found[keep] = found[keep] + found.pop(drop)
+    for k in [k for k in found if k[0] == "concept" and re.fullmatch(r"[a-z0-9]+s", k[1])]:
+        single = ("concept", k[1][:-1])
+        surfaces = {m[3] for m in found[k]}
+        if single in found and any(sf[:-1].isupper() for sf in surfaces):
+            found[single] = found[single] + found.pop(k)
+    return found
+
+
 def drop_subsumed(found: dict, share: float) -> dict:
     """Drop a concept when at least `share` of its mentions sit inside mentions of a
     longer concept ("turn preference paradigm" inside "head-turn preference paradigm"),
@@ -226,7 +292,8 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
     for (kind, _g), members in groups.items():
         members.sort(key=lambda km: -len(km[1]))
         merged[kind, members[0][0]] = [m for _, ms in members for m in ms]
-    found = drop_subsumed(merged, ccfg["subsumed_share"])
+    found = merge_abbreviations(merged, [r["text"] for r in rows])
+    found = drop_subsumed(found, ccfg["subsumed_share"])
     # A name inside an established possessive term ("Broca" in "Broca's area") is not a
     # mention of the person; a one-off phrase ("Tomasello's terminology") still is.
     possessive = defaultdict(list)
@@ -288,7 +355,9 @@ def keyness(book_id: int, conn, cfg: dict) -> None:
     for t in conn.execute("SELECT id, kind, norm, n_mentions, forms FROM terms WHERE book_id = ?", (book_id,)):
         words = WORD_RE.findall(t["norm"])
         if t["kind"] == "person" or len(words) <= 1:
-            surfaces = {f.lower() for f, _ in json.loads(t["forms"])} | {t["norm"]}
+            # One-word surface forms only: a merged long form ("American Sign Language")
+            # would add wordfreq's inflated phrase estimate to an acronym.
+            surfaces = {f.lower() for f, _ in json.loads(t["forms"]) if " " not in f} | {t["norm"]}
             if t["kind"] == "person":
                 surfaces = {t["norm"]}
             english = sum(word_frequency(f, "en") for f in surfaces) * 1e6

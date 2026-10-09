@@ -73,3 +73,19 @@ def test_citation_parentheticals():
     text = "Listeners adapt (Adapted from Kamide et al., 2003, J. Mem. Lang.) to talkers (see Figure 2)."
     refs = citation_parens(text)
     assert len(refs) == 1 and text[refs[0][0]:refs[0][1]].endswith("Lang.)")
+
+
+def test_abbreviations_merge():
+    from omnibowl.candidates import abbreviation_pairs, long_form, merge_abbreviations
+    assert long_form("VOT", "a continuous dimension of voice onset time") == "voice onset time"
+    assert long_form("XYZ", "nothing matching here") is None
+    texts = ["We measured voice onset time (VOT) for each sound.", "ERPs (event-related potentials) were recorded."]
+    pairs = abbreviation_pairs(texts)
+    assert ("VOT", "voice onset time") in pairs and ("ERP", "event-related potentials") in pairs
+    found = {("concept", "vot"): [(1, 0, 3, "VOT")] * 3,
+             ("concept", "voice onset time"): [(2, 0, 16, "voice onset time")],
+             ("concept", "erp"): [(3, 0, 3, "ERP")], ("concept", "erps"): [(4, 0, 4, "ERPs")],
+             ("concept", "event-related potential"): [(5, 0, 23, "event-related potentials")]}
+    merged = merge_abbreviations(found, texts)
+    assert ("concept", "voice onset time") not in merged and len(merged["concept", "vot"]) == 4
+    assert ("concept", "erps") not in merged and len(merged["concept", "erp"]) == 3

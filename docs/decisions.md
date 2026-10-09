@@ -301,3 +301,20 @@ Known gap: a person's naming clue ("another of Hockett's features, productivity"
 lost when the name sits inside an established term; one such clue per person could be
 kept later. Remaining misses: unlinked pronouns/descriptions (~14 of 22), other word
 forms ("bilingual advantage", "gazed").
+
+## candidates: abbreviations; clues gold review (2026-10-09)
+
+- **Abbreviations merged (Schwartz & Hearst 2003)**: pairs the book defines, "long form
+  (SHORT)" or "SHORT (long form)", where the short form's letters appear in order in
+  the long form starting a word. Plural acronyms join their singular. Before: VOT and
+  "voice onset time", ASL and "American Sign Language", ERP and "event-related
+  potential" were separate answers. Keyness looks up everyday-English frequency on
+  one-word forms only, so a merged long form does not make an acronym look common.
+- Chong reviewed the clue gold set for the first 10 answers: 13 labels changed, mostly
+  counting a person's own work and studies as clues ("Shortly after Broca's
+  discovery", the pointer to Hockett's design features). Rule adopted: a sentence is a
+  clue for a person when it says what they proposed, found, made or argued, including
+  through something named after them; not when it describes the named thing with
+  others' findings. Scores with the reviewed labels: precision 85%, recall 82%.
+- Found in review: a bracketed body-size example glued to the next sentences (the open
+  decision on body-size indented lines from the tagging review).

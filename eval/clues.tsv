@@ -3,242 +3,242 @@
 # gold: yes = the sentence on its own states a usable fact about the answer itself.
 # Facts about Broca's area are not facts about Broca. Meta-text, questions, citations,
 # fragments that need the previous sentence, and example sentences are 'no'.
-# Labeled by Claude from context; needs review by Chong. Sentence = first line lkey + char offset. No book text.
-book	answer	sentence	sample	gold
-language_in_mind	broca	147:278:77+55	P	yes
-language_in_mind	broca	147:443:92+0	P	yes
-language_in_mind	broca	148:152:92+0	P	no
-language_in_mind	broca	151:155:77+49	P	no
-language_in_mind	broca	151:617:77+21	N	no
-language_in_mind	broca	152:178:92+0	P	no
-language_in_mind	broca	152:239:77+66	P	yes
-language_in_mind	broca	152:360:77+12	N	no
-language_in_mind	broca	182:461:77+0	P	no
-language_in_mind	broca	222:350:88+0	N	no
-language_in_mind	broca	222:380:77+21	N	no
-language_in_mind	broca	561:419:77+9	N	no
-language_in_mind	wernicke	148:233:77+21	N	yes
-language_in_mind	wernicke	148:296:92+0	P	yes
-language_in_mind	wernicke	150:576:92+0	P	no
-language_in_mind	wernicke	150:637:77+21	N	no
-language_in_mind	wernicke	150:698:77+36	N	no
-language_in_mind	wernicke	155:74:77+15	N	no
-language_in_mind	wernicke	157:195:77+0	P	no
-language_in_mind	wernicke	158:641:77+0	P	no
-language_in_mind	wernicke	172:312:77+75	N	no
-language_in_mind	wernicke	183:198:77+0	P	no
-language_in_mind	wernicke	183:667:77+32	P	no
-language_in_mind	wernicke	193:533:85+7	P	no
-language_in_mind	hockett	48:117:92+0	P	yes
-language_in_mind	hockett	48:178:77+31	N	no
-language_in_mind	hockett	48:305:77+43	N	no
-language_in_mind	hockett	49:360:85+0	P	no
-language_in_mind	hockett	54:296:77+0	P	yes
-language_in_mind	hockett	57:404:92+0	N	no
-language_in_mind	hockett	72:155:77+52	P	yes
-language_in_mind	hockett	89:595:77+56	P	yes
-language_in_mind	hockett	106:405:102+0	P	yes
-language_in_mind	hockett	106:632:85+13	P	yes
-language_in_mind	hockett	501:671:107+0	N	yes
-language_in_mind	hockett	501:692:107+66	N	yes
-language_in_mind	tomasello	61:236:77+9	N	no
-language_in_mind	tomasello	61:296:77+55	N	no
-language_in_mind	tomasello	61:337:77+55	P	yes
-language_in_mind	tomasello	69:271:77+16	N	no
-language_in_mind	tomasello	449:583:77+62	P	yes
-language_in_mind	tomasello	450:670:77+63	P	yes
-language_in_mind	tomasello	451:136:137+0	P	yes
-language_in_mind	tomasello	466:639:111+7	P	no
-language_in_mind	tomasello	466:689:108+0	N	no
-language_in_mind	tomasello	928:485:77+18	P	yes
-language_in_mind	tomasello	928:545:77+53	N	no
-language_in_mind	tomasello	929:157:77+0	P	yes
-language_in_mind	saffran	245:317:77+27	N	yes
-language_in_mind	saffran	246:178:77+44	N	yes
-language_in_mind	saffran	247:387:137+0	P	yes
-language_in_mind	saffran	247:417:77+87	N	yes
-language_in_mind	saffran	248:100:77+0	P	no
-language_in_mind	saffran	248:346:77+10	N	no
-language_in_mind	saffran	249:488:77+21	P	yes
-language_in_mind	saffran	253:647:77+48	P	yes
-language_in_mind	saffran	296:118:85+41	P	yes
-language_in_mind	saffran	296:429:85+0	P	yes
-language_in_mind	saffran	298:371:151+0	P	yes
-language_in_mind	saffran	309:88:77+67	N	no
-language_in_mind	foxp2	119:320:92+0	P	yes
-language_in_mind	foxp2	119:340:77+37	P	yes
-language_in_mind	foxp2	119:421:77+16	N	yes
-language_in_mind	foxp2	120:74:92+0	P	yes
-language_in_mind	foxp2	120:175:77+22	P	yes
-language_in_mind	foxp2	120:236:77+10	P	yes
-language_in_mind	foxp2	120:320:92+0	P	yes
-language_in_mind	foxp2	120:340:77+38	N	yes
-language_in_mind	foxp2	120:360:77+53	N	no
-language_in_mind	foxp2	120:485:92+0	P	yes
-language_in_mind	foxp2	120:606:77+7	N	no
-language_in_mind	aphasia	145:573:85+10	P	yes
-language_in_mind	aphasia	145:621:85+32	N	no
-language_in_mind	aphasia	148:337:77+24	P	yes
-language_in_mind	aphasia	148:398:77+57	P	yes
-language_in_mind	aphasia	148:597:77+0	P	yes
-language_in_mind	aphasia	148:612:77+44	P	no
-language_in_mind	aphasia	150:124:77+0	P	no
-language_in_mind	aphasia	150:157:77+33	N	no
-language_in_mind	aphasia	159:369:102+0	N	no
-language_in_mind	aphasia	160:225:85+84	N	no
-language_in_mind	aphasia	591:641:77+56	P	yes
-language_in_mind	aphasia	591:681:77+35	N	yes
-language_in_mind	n400	205:354:77+57	N	no
-language_in_mind	n400	210:332:77+10	N	no
-language_in_mind	n400	210:353:77+67	P	yes
-language_in_mind	n400	206:227:142+62	P	yes
-language_in_mind	n400	211:114:77+12	P	yes
-language_in_mind	n400	211:195:77+7	N	no
-language_in_mind	n400	213:134:77+34	P	yes
-language_in_mind	n400	212:118:85+71	P	yes
-language_in_mind	n400	695:556:76+0	P	yes
-language_in_mind	n400	883:462:85+42	N	no
-language_in_mind	n400	884:88:85+71	N	no
-language_in_mind	n400	884:118:85+26	P	yes
-language_in_mind	head-turn preference paradigm	231:485:92+0	P	yes
-language_in_mind	head-turn preference paradigm	235:212:92+0	P	yes
-language_in_mind	head-turn preference paradigm	232:485:111+0	P	yes
-language_in_mind	head-turn preference paradigm	232:530:85+32	P	yes
-language_in_mind	head-turn preference paradigm	234:514:145+0	P	yes
-language_in_mind	head-turn preference paradigm	234:514:145+62	N	yes
-language_in_mind	head-turn preference paradigm	238:188:137+0	N	no
-language_in_mind	head-turn preference paradigm	241:412:77+46	P	yes
-language_in_mind	head-turn preference paradigm	241:513:77+0	N	no
-language_in_mind	head-turn preference paradigm	254:323:111+0	P	yes
-language_in_mind	head-turn preference paradigm	286:401:77+31	N	no
-language_in_mind	head-turn preference paradigm	296:388:85+51	N	no
-language_in_mind	categorical perception	511:530:92+0	P	yes
-language_in_mind	categorical perception	511:590:77+21	N	yes
-language_in_mind	categorical perception	513:215:77+7	P	yes
-language_in_mind	categorical perception	513:256:77+48	N	no
-language_in_mind	categorical perception	508:487:77+83	N	yes
-language_in_mind	categorical perception	519:657:85+27	P	no
-language_in_mind	categorical perception	562:313:77+38	N	no
-language_in_mind	categorical perception	567:361:88+0	P	yes
-language_in_mind	categorical perception	568:423:88+0	P	yes
-language_in_mind	categorical perception	568:453:77+81	P	yes
-language_in_mind	categorical perception	1070:369:77+67	P	yes
-language_in_mind	categorical perception	1070:511:77+9	N	no
-language_in_mind	vot	266:626:77+11	P	yes
-language_in_mind	vot	268:704:77+0	P	yes
-language_in_mind	vot	308:334:88+0	N	no
-language_in_mind	vot	512:182:92+0	P	yes
-language_in_mind	vot	512:283:77+39	N	no
-language_in_mind	vot	512:572:92+0	N	no
-language_in_mind	vot	518:216:77+19	P	yes
-language_in_mind	vot	514:165:85+49	P	yes
-language_in_mind	vot	514:288:96+0	P	yes
-language_in_mind	vot	516:291:137+0	P	yes
-language_in_mind	vot	542:195:77+43	N	no
-language_in_mind	vot	564:621:96+0	N	no
-language_in_mind	cohort competitor	614:511:77+36	N	yes
-language_in_mind	cohort competitor	615:73:77+0	P	yes
-language_in_mind	cohort competitor	615:248:77+30	N	yes
-language_in_mind	cohort competitor	616:74:92+0	P	yes
-language_in_mind	cohort competitor	618:178:77+20	P	yes
-language_in_mind	cohort competitor	620:383:85+85	P	yes
-language_in_mind	cohort competitor	621:422:96+0	P	yes
-language_in_mind	cohort competitor	624:468:142+39	P	yes
-language_in_mind	cohort competitor	624:513:77+32	N	no
-language_in_mind	cohort competitor	711:654:76+68	P	yes
-language_in_mind	cohort competitor	711:704:76+24	N	no
-language_in_mind	cohort competitor	712:90:76+39	N	no
-language_in_mind	prosody	686:393:83+0	P	yes
-language_in_mind	prosody	686:414:92+0	N	no
-language_in_mind	prosody	686:427:83+9	N	no
-language_in_mind	prosody	686:427:83+44	P	yes
-language_in_mind	prosody	686:440:83+6	N	yes
-language_in_mind	prosody	686:616:83+0	P	yes
-language_in_mind	prosody	686:657:108+28	N	no
-language_in_mind	prosody	686:693:83+0	N	no
-language_in_mind	prosody	687:138:83+110	P	yes
-language_in_mind	prosody	687:203:83+64	P	yes
-language_in_mind	prosody	687:267:92+0	P	yes
-language_in_mind	prosody	687:280:83+80	P	yes
-language_in_mind	garden path sentence	656:164:89+0	P	yes
-language_in_mind	garden path sentence	656:300:76+61	P	yes
-language_in_mind	garden path sentence	658:197:89+0	P	no
-language_in_mind	garden path sentence	656:360:76+109	N	yes
-language_in_mind	garden path sentence	665:86:83+71	P	no
-language_in_mind	garden path sentence	665:111:83+23	N	no
-language_in_mind	garden path sentence	670:508:76+43	N	no
-language_in_mind	garden path sentence	710:219:76+53	P	yes
-language_in_mind	garden path sentence	711:586:89+0	P	yes
-language_in_mind	garden path sentence	715:154:76+0	N	no
-language_in_mind	garden path sentence	715:293:89+0	P	yes
-language_in_mind	garden path sentence	861:114:77+33	N	no
-language_in_mind	speech error	725:230:77+41	N	no
-language_in_mind	speech error	725:537:77+46	N	no
-language_in_mind	speech error	740:134:77+25	P	yes
-language_in_mind	speech error	741:488:120+0	P	yes
-language_in_mind	speech error	775:481:113+0	P	no
-language_in_mind	speech error	775:526:85+46	N	no
-language_in_mind	speech error	786:473:92+0	P	no
-language_in_mind	speech error	790:103:85+5	P	yes
-language_in_mind	speech error	795:137:77+54	N	yes
-language_in_mind	speech error	795:218:77+7	N	no
-language_in_mind	speech error	802:178:77+72	P	yes
-language_in_mind	speech error	803:390:85+0	P	yes
-language_in_mind	tip-of-the-tongue state	747:686:77+0	P	yes
-language_in_mind	tip-of-the-tongue state	748:155:77+31	N	yes
-language_in_mind	tip-of-the-tongue state	748:283:92+0	P	yes
-language_in_mind	tip-of-the-tongue state	748:323:77+61	N	yes
-language_in_mind	tip-of-the-tongue state	748:364:77+18	N	yes
-language_in_mind	tip-of-the-tongue state	748:226:77+0	P	yes
-language_in_mind	tip-of-the-tongue state	775:481:113+0	P	no
-language_in_mind	tip-of-the-tongue state	800:589:77+59	P	yes
-language_in_mind	tip-of-the-tongue state	800:650:77+55	N	no
-language_in_mind	tip-of-the-tongue state	801:74:77+11	N	no
-language_in_mind	mental model	824:582:77+46	P	yes
-language_in_mind	mental model	827:94:77+48	N	no
-language_in_mind	mental model	817:311:77+0	P	yes
-language_in_mind	mental model	820:241:85+0	N	no
-language_in_mind	mental model	833:174:77+42	N	no
-language_in_mind	mental model	846:206:77+62	N	no
-language_in_mind	mental model	846:387:77+55	P	yes
-language_in_mind	mental model	848:581:77+0	N	no
-language_in_mind	mental model	850:74:92+0	P	no
-language_in_mind	mental model	856:400:77+0	P	no
-language_in_mind	mental model	875:699:77+65	P	no
-language_in_mind	mental model	877:530:77+10	P	yes
-language_in_mind	scalar implicature	952:333:77+0	P	yes
-language_in_mind	scalar implicature	956:603:92+0	P	yes
-language_in_mind	scalar implicature	957:418:77+37	N	no
-language_in_mind	scalar implicature	958:423:92+0	P	yes
-language_in_mind	scalar implicature	958:464:77+72	N	no
-language_in_mind	scalar implicature	1007:118:77+18	P	no
-language_in_mind	scalar implicature	1007:470:88+0	P	no
-language_in_mind	scalar implicature	1007:500:77+49	N	no
-language_in_mind	scalar implicature	1008:637:77+68	P	yes
-language_in_mind	scalar implicature	1009:410:77+48	P	no
-language_in_mind	scalar implicature	1009:485:77+71	N	no
-language_in_mind	scalar implicature	1010:511:77+95	N	no
-language_in_mind	bilingual	219:379:108+0	P	no
-language_in_mind	bilingual	622:524:85+19	P	yes
-language_in_mind	bilingual	719:394:76+56	N	yes
-language_in_mind	bilingual	719:406:76+112	P	yes
-language_in_mind	bilingual	719:483:76+101	N	no
-language_in_mind	bilingual	721:240:76+93	N	yes
-language_in_mind	bilingual	721:317:76+56	N	no
-language_in_mind	bilingual	721:508:76+88	P	yes
-language_in_mind	bilingual	1096:278:77+43	P	yes
-language_in_mind	bilingual	1096:322:92+0	N	no
-language_in_mind	bilingual	1100:199:77+0	P	yes
-language_in_mind	bilingual	1102:610:77+70	P	no
-language_in_mind	eye movement	371:299:77+27	P	yes
-language_in_mind	eye movement	618:178:77+20	P	yes
-language_in_mind	eye movement	622:509:145+0	P	yes
-language_in_mind	eye movement	697:228:76+70	N	no
-language_in_mind	eye movement	712:90:76+39	P	yes
-language_in_mind	eye movement	755:531:77+37	P	yes
-language_in_mind	eye movement	756:158:77+63	P	yes
-language_in_mind	eye movement	756:586:77+48	N	yes
-language_in_mind	eye movement	760:144:77+59	P	yes
-language_in_mind	eye movement	857:381:77+12	N	no
-language_in_mind	eye movement	863:650:136+0	N	no
-language_in_mind	eye movement	1083:587:77+31	N	no
+# Labeled by Claude from context; Chong reviewed the first 10 answers (Broca through categorical perception) on 2026-10-09: 13 changes. Sentence = first line lkey + char offset. No book text.
+book	answer	sentence	sample	gold	note
+language_in_mind	broca	147:278:77+55	P	yes	
+language_in_mind	broca	147:443:92+0	P	yes	
+language_in_mind	broca	148:152:92+0	P	yes	
+language_in_mind	broca	151:155:77+49	P	no	
+language_in_mind	broca	151:617:77+21	N	no	
+language_in_mind	broca	152:178:92+0	P	no	
+language_in_mind	broca	152:239:77+66	P	yes	
+language_in_mind	broca	152:360:77+12	N	no	
+language_in_mind	broca	182:461:77+0	P	no	
+language_in_mind	broca	222:350:88+0	N	no	
+language_in_mind	broca	222:380:77+21	N	no	
+language_in_mind	broca	561:419:77+9	N	no	
+language_in_mind	wernicke	148:233:77+21	N	no	
+language_in_mind	wernicke	148:296:92+0	P	yes	
+language_in_mind	wernicke	150:576:92+0	P	yes	
+language_in_mind	wernicke	150:637:77+21	N	no	
+language_in_mind	wernicke	150:698:77+36	N	no	
+language_in_mind	wernicke	155:74:77+15	N	no	
+language_in_mind	wernicke	157:195:77+0	P	no	
+language_in_mind	wernicke	158:641:77+0	P	no	
+language_in_mind	wernicke	172:312:77+75	N	no	
+language_in_mind	wernicke	183:198:77+0	P	no	
+language_in_mind	wernicke	183:667:77+32	P	no	
+language_in_mind	wernicke	193:533:85+7	P	no	
+language_in_mind	hockett	48:117:92+0	P	yes	
+language_in_mind	hockett	48:178:77+31	N	yes	
+language_in_mind	hockett	48:305:77+43	N	yes	
+language_in_mind	hockett	49:360:85+0	P	no	
+language_in_mind	hockett	54:296:77+0	P	yes	
+language_in_mind	hockett	57:404:92+0	N	no	
+language_in_mind	hockett	72:155:77+52	P	yes	
+language_in_mind	hockett	89:595:77+56	P	yes	
+language_in_mind	hockett	106:405:102+0	P	yes	
+language_in_mind	hockett	106:632:85+13	P	yes	
+language_in_mind	hockett	501:671:107+0	N	yes	
+language_in_mind	hockett	501:692:107+66	N	yes	
+language_in_mind	tomasello	61:236:77+9	N	yes	
+language_in_mind	tomasello	61:296:77+55	N	no	
+language_in_mind	tomasello	61:337:77+55	P	yes	
+language_in_mind	tomasello	69:271:77+16	N	no	
+language_in_mind	tomasello	449:583:77+62	P	no	
+language_in_mind	tomasello	450:670:77+63	P	yes	
+language_in_mind	tomasello	451:136:137+0	P	no	whys this so long
+language_in_mind	tomasello	466:639:111+7	P	yes	
+language_in_mind	tomasello	466:689:108+0	N	no	
+language_in_mind	tomasello	928:485:77+18	P	yes	
+language_in_mind	tomasello	928:545:77+53	N	no	
+language_in_mind	tomasello	929:157:77+0	P	yes	
+language_in_mind	saffran	245:317:77+27	N	yes	
+language_in_mind	saffran	246:178:77+44	N	yes	
+language_in_mind	saffran	247:387:137+0	P	yes	
+language_in_mind	saffran	247:417:77+87	N	yes	
+language_in_mind	saffran	248:100:77+0	P	yes	
+language_in_mind	saffran	248:346:77+10	N	no	
+language_in_mind	saffran	249:488:77+21	P	yes	
+language_in_mind	saffran	253:647:77+48	P	yes	
+language_in_mind	saffran	296:118:85+41	P	yes	
+language_in_mind	saffran	296:429:85+0	P	yes	
+language_in_mind	saffran	298:371:151+0	P	yes	
+language_in_mind	saffran	309:88:77+67	N	yes	
+language_in_mind	foxp2	119:320:92+0	P	yes	
+language_in_mind	foxp2	119:340:77+37	P	yes	
+language_in_mind	foxp2	119:421:77+16	N	yes	
+language_in_mind	foxp2	120:74:92+0	P	yes	
+language_in_mind	foxp2	120:175:77+22	P	yes	
+language_in_mind	foxp2	120:236:77+10	P	yes	
+language_in_mind	foxp2	120:320:92+0	P	yes	
+language_in_mind	foxp2	120:340:77+38	N	yes	
+language_in_mind	foxp2	120:360:77+53	N	no	
+language_in_mind	foxp2	120:485:92+0	P	yes	
+language_in_mind	foxp2	120:606:77+7	N	no	
+language_in_mind	aphasia	145:573:85+10	P	yes	
+language_in_mind	aphasia	145:621:85+32	N	no	
+language_in_mind	aphasia	148:337:77+24	P	yes	
+language_in_mind	aphasia	148:398:77+57	P	yes	
+language_in_mind	aphasia	148:597:77+0	P	yes	
+language_in_mind	aphasia	148:612:77+44	P	yes	
+language_in_mind	aphasia	150:124:77+0	P	no	
+language_in_mind	aphasia	150:157:77+33	N	no	
+language_in_mind	aphasia	159:369:102+0	N	no	
+language_in_mind	aphasia	160:225:85+84	N	no	
+language_in_mind	aphasia	591:641:77+56	P	yes	
+language_in_mind	aphasia	591:681:77+35	N	yes	
+language_in_mind	n400	205:354:77+57	N	no	
+language_in_mind	n400	210:332:77+10	N	no	
+language_in_mind	n400	210:353:77+67	P	yes	
+language_in_mind	n400	206:227:142+62	P	yes	
+language_in_mind	n400	211:114:77+12	P	yes	
+language_in_mind	n400	211:195:77+7	N	no	
+language_in_mind	n400	213:134:77+34	P	yes	
+language_in_mind	n400	212:118:85+71	P	yes	
+language_in_mind	n400	695:556:76+0	P	yes	
+language_in_mind	n400	883:462:85+42	N	no	
+language_in_mind	n400	884:88:85+71	N	yes	
+language_in_mind	n400	884:118:85+26	P	yes	
+language_in_mind	head-turn preference paradigm	231:485:92+0	P	yes	
+language_in_mind	head-turn preference paradigm	235:212:92+0	P	yes	
+language_in_mind	head-turn preference paradigm	232:485:111+0	P	yes	
+language_in_mind	head-turn preference paradigm	232:530:85+32	P	yes	
+language_in_mind	head-turn preference paradigm	234:514:145+0	P	yes	
+language_in_mind	head-turn preference paradigm	234:514:145+62	N	yes	
+language_in_mind	head-turn preference paradigm	238:188:137+0	N	no	
+language_in_mind	head-turn preference paradigm	241:412:77+46	P	yes	
+language_in_mind	head-turn preference paradigm	241:513:77+0	N	no	
+language_in_mind	head-turn preference paradigm	254:323:111+0	P	yes	
+language_in_mind	head-turn preference paradigm	286:401:77+31	N	no	
+language_in_mind	head-turn preference paradigm	296:388:85+51	N	no	
+language_in_mind	categorical perception	511:530:92+0	P	yes	
+language_in_mind	categorical perception	511:590:77+21	N	yes	
+language_in_mind	categorical perception	513:215:77+7	P	yes	
+language_in_mind	categorical perception	513:256:77+48	N	no	
+language_in_mind	categorical perception	508:487:77+83	N	yes	
+language_in_mind	categorical perception	519:657:85+27	P	no	
+language_in_mind	categorical perception	562:313:77+38	N	no	
+language_in_mind	categorical perception	567:361:88+0	P	yes	
+language_in_mind	categorical perception	568:423:88+0	P	yes	
+language_in_mind	categorical perception	568:453:77+81	P	yes	
+language_in_mind	categorical perception	1070:369:77+67	P	yes	
+language_in_mind	categorical perception	1070:511:77+9	N	no	
+language_in_mind	vot	266:626:77+11	P	yes	
+language_in_mind	vot	268:704:77+0	P	yes	
+language_in_mind	vot	308:334:88+0	N	no	
+language_in_mind	vot	512:182:92+0	P	yes	
+language_in_mind	vot	512:283:77+39	N	no	
+language_in_mind	vot	512:572:92+0	N	no	
+language_in_mind	vot	518:216:77+19	P	yes	
+language_in_mind	vot	514:165:85+49	P	yes	
+language_in_mind	vot	514:288:96+0	P	yes	
+language_in_mind	vot	516:291:137+0	P	yes	
+language_in_mind	vot	542:195:77+43	N	no	
+language_in_mind	vot	564:621:96+0	N	no	
+language_in_mind	cohort competitor	614:511:77+36	N	yes	
+language_in_mind	cohort competitor	615:73:77+0	P	yes	
+language_in_mind	cohort competitor	615:248:77+30	N	yes	
+language_in_mind	cohort competitor	616:74:92+0	P	yes	
+language_in_mind	cohort competitor	618:178:77+20	P	yes	
+language_in_mind	cohort competitor	620:383:85+85	P	yes	
+language_in_mind	cohort competitor	621:422:96+0	P	yes	
+language_in_mind	cohort competitor	624:468:142+39	P	yes	
+language_in_mind	cohort competitor	624:513:77+32	N	no	
+language_in_mind	cohort competitor	711:654:76+68	P	yes	
+language_in_mind	cohort competitor	711:704:76+24	N	no	
+language_in_mind	cohort competitor	712:90:76+39	N	no	
+language_in_mind	prosody	686:393:83+0	P	yes	
+language_in_mind	prosody	686:414:92+0	N	no	
+language_in_mind	prosody	686:427:83+9	N	no	
+language_in_mind	prosody	686:427:83+44	P	yes	
+language_in_mind	prosody	686:440:83+6	N	yes	
+language_in_mind	prosody	686:616:83+0	P	yes	
+language_in_mind	prosody	686:657:108+28	N	no	
+language_in_mind	prosody	686:693:83+0	N	no	
+language_in_mind	prosody	687:138:83+110	P	yes	
+language_in_mind	prosody	687:203:83+64	P	yes	
+language_in_mind	prosody	687:267:92+0	P	yes	
+language_in_mind	prosody	687:280:83+80	P	yes	
+language_in_mind	garden path sentence	656:164:89+0	P	yes	
+language_in_mind	garden path sentence	656:300:76+61	P	yes	
+language_in_mind	garden path sentence	658:197:89+0	P	no	
+language_in_mind	garden path sentence	656:360:76+109	N	yes	
+language_in_mind	garden path sentence	665:86:83+71	P	no	
+language_in_mind	garden path sentence	665:111:83+23	N	no	
+language_in_mind	garden path sentence	670:508:76+43	N	no	
+language_in_mind	garden path sentence	710:219:76+53	P	yes	
+language_in_mind	garden path sentence	711:586:89+0	P	yes	
+language_in_mind	garden path sentence	715:154:76+0	N	no	
+language_in_mind	garden path sentence	715:293:89+0	P	yes	
+language_in_mind	garden path sentence	861:114:77+33	N	no	
+language_in_mind	speech error	725:230:77+41	N	no	
+language_in_mind	speech error	725:537:77+46	N	no	
+language_in_mind	speech error	740:134:77+25	P	yes	
+language_in_mind	speech error	741:488:120+0	P	yes	
+language_in_mind	speech error	775:481:113+0	P	no	
+language_in_mind	speech error	775:526:85+46	N	no	
+language_in_mind	speech error	786:473:92+0	P	no	
+language_in_mind	speech error	790:103:85+5	P	yes	
+language_in_mind	speech error	795:137:77+54	N	yes	
+language_in_mind	speech error	795:218:77+7	N	no	
+language_in_mind	speech error	802:178:77+72	P	yes	
+language_in_mind	speech error	803:390:85+0	P	yes	
+language_in_mind	tip-of-the-tongue state	747:686:77+0	P	yes	
+language_in_mind	tip-of-the-tongue state	748:155:77+31	N	yes	
+language_in_mind	tip-of-the-tongue state	748:283:92+0	P	yes	
+language_in_mind	tip-of-the-tongue state	748:323:77+61	N	yes	
+language_in_mind	tip-of-the-tongue state	748:364:77+18	N	yes	
+language_in_mind	tip-of-the-tongue state	748:226:77+0	P	yes	
+language_in_mind	tip-of-the-tongue state	775:481:113+0	P	no	
+language_in_mind	tip-of-the-tongue state	800:589:77+59	P	yes	
+language_in_mind	tip-of-the-tongue state	800:650:77+55	N	no	
+language_in_mind	tip-of-the-tongue state	801:74:77+11	N	no	
+language_in_mind	mental model	824:582:77+46	P	yes	
+language_in_mind	mental model	827:94:77+48	N	no	
+language_in_mind	mental model	817:311:77+0	P	yes	
+language_in_mind	mental model	820:241:85+0	N	no	
+language_in_mind	mental model	833:174:77+42	N	no	
+language_in_mind	mental model	846:206:77+62	N	no	
+language_in_mind	mental model	846:387:77+55	P	yes	
+language_in_mind	mental model	848:581:77+0	N	no	
+language_in_mind	mental model	850:74:92+0	P	no	
+language_in_mind	mental model	856:400:77+0	P	no	
+language_in_mind	mental model	875:699:77+65	P	no	
+language_in_mind	mental model	877:530:77+10	P	yes	
+language_in_mind	scalar implicature	952:333:77+0	P	yes	
+language_in_mind	scalar implicature	956:603:92+0	P	yes	
+language_in_mind	scalar implicature	957:418:77+37	N	no	
+language_in_mind	scalar implicature	958:423:92+0	P	yes	
+language_in_mind	scalar implicature	958:464:77+72	N	no	
+language_in_mind	scalar implicature	1007:118:77+18	P	no	
+language_in_mind	scalar implicature	1007:470:88+0	P	no	
+language_in_mind	scalar implicature	1007:500:77+49	N	no	
+language_in_mind	scalar implicature	1008:637:77+68	P	yes	
+language_in_mind	scalar implicature	1009:410:77+48	P	no	
+language_in_mind	scalar implicature	1009:485:77+71	N	no	
+language_in_mind	scalar implicature	1010:511:77+95	N	no	
+language_in_mind	bilingual	219:379:108+0	P	no	
+language_in_mind	bilingual	622:524:85+19	P	yes	
+language_in_mind	bilingual	719:394:76+56	N	yes	
+language_in_mind	bilingual	719:406:76+112	P	yes	
+language_in_mind	bilingual	719:483:76+101	N	no	
+language_in_mind	bilingual	721:240:76+93	N	yes	
+language_in_mind	bilingual	721:317:76+56	N	no	
+language_in_mind	bilingual	721:508:76+88	P	yes	
+language_in_mind	bilingual	1096:278:77+43	P	yes	
+language_in_mind	bilingual	1096:322:92+0	N	no	
+language_in_mind	bilingual	1100:199:77+0	P	yes	
+language_in_mind	bilingual	1102:610:77+70	P	no	
+language_in_mind	eye movement	371:299:77+27	P	yes	
+language_in_mind	eye movement	618:178:77+20	P	yes	
+language_in_mind	eye movement	622:509:145+0	P	yes	
+language_in_mind	eye movement	697:228:76+70	N	no	
+language_in_mind	eye movement	712:90:76+39	P	yes	
+language_in_mind	eye movement	755:531:77+37	P	yes	
+language_in_mind	eye movement	756:158:77+63	P	yes	
+language_in_mind	eye movement	756:586:77+48	N	yes	
+language_in_mind	eye movement	760:144:77+59	P	yes	
+language_in_mind	eye movement	857:381:77+12	N	no	
+language_in_mind	eye movement	863:650:136+0	N	no	
+language_in_mind	eye movement	1083:587:77+31	N	no	
