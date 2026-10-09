@@ -10,6 +10,8 @@ The developer (Chong) is building this partly to design the algorithms himself. 
 
 **Planned next, after regular tossups work end to end:** common-link tossups, where the answer is an everyday word ("blue") and each clue is a different key phrase containing it ("shades of blue", "the blue divide"). Candidate rule: an everyday word inside at least N distinct key phrases; the referent ("this color") is the hard part.
 
+**v1 exception (2026-10-09):** for the v0 book only, the algorithmic draft pool (`assemble --pool`) is rewritten into quizbowl wording in Claude Code sessions, one batch at a time, and every rewrite is checked by `tools/verify_rewrites.py` against its source sentences. The pipeline still chooses all answers and facts. Rewrites stay in `data/rewrites/` (gitignored). Process and rules: `docs/rewrite-v1.md`.
+
 **Later (do not build unless asked):** the LLM rewrite stage, mixing in real QBReader tossups, multiplayer rooms (any path after the domain is a room, as on protobowl), bonuses, power marks, non-textbook sources, using buzz data to re-rank clues.
 
 ## Ground rules

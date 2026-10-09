@@ -210,7 +210,7 @@ function judge(g){
  S.state='judged';S.i=S.words.length;qText(S.words.join(' '));$('ansWrap').classList.remove('open');
  const r=$('res');r.style.background=p>0?'var(--blue)':'var(--red)';r.textContent=g===null?'0 · no buzz':p>0?'+10 · correct':p<0?'−5 · incorrect':'0 · incorrect';
  $('aline').innerHTML='Answer: '+S.t.a+(g!==null&&g!==''?`<span style="color:var(--mute)"> · you said “${$('ans').value.replace(/</g,'&lt;')}”</span>`:'');
- $('src').textContent='clues from '+S.t.secs;$('verWrap').classList.add('open');
+ $('src').textContent=(S.t.rw?'rewritten · ':'draft · ')+'clues from '+S.t.secs;$('verWrap').classList.add('open');
  S.log.unshift({num:S.num,ans:S.t.a.replace(/<[^>]+>/g,''),p});renderLog();renderSide();
  setAct('next','→ · next');hint('→ · next');
 }

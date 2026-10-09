@@ -205,6 +205,14 @@ generic_categories = ["thing", "way", "term", "word", "kind", "type", "part", "c
                       "lot", "number", "set", "form", "fact", "idea", "notion", "one", "bit", "sort",
                       "pattern", "process", "property", "phenomenon", "aspect", "feature", "region"]
 
+# Pool mode (`--stage assemble --pool`): drafts for the v1 hand-assisted rewrite.
+# Grounding, leak checks and pronoun resolution stay; two strict wording rules relax,
+# because the rewrite step sees each clue's source and previous sentence.
+[assemble.pool]
+min_topicality = 0.3
+allow_unresolved_pronouns = true
+skip_generic_referents = false     # the rewrite step chooses a proper referent
+
 [assemble.topicality]
 subject = 1.0
 predicate = 0.8
@@ -255,6 +263,10 @@ frame_patterns = ["The general idea is that", "The idea is that", "There(?:'s|â€
 drop_parentheticals = true
 # A clause more than this share quoted speech is an example, not a fact.
 max_quoted_share = 0.4
+# Answer filters (proposed 2026-10-09, on by default; turn off to compare).
+skip_generic_referents = true
+persons_need_citation_or_title = true
+allow_unresolved_pronouns = false
 category = "Social Science"
 subcategory = "Psychology"
 set_year = 0

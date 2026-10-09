@@ -181,6 +181,9 @@ quoted text.
 | `eval/candidate_classes.py` | labeled share per class | answers 41% labeled |
 | `eval/clue_accuracy.py` | clues vs. a 20-answer golden set | precision 85%, recall 82% |
 
+For v1 of the v0 book, drafts can be rewritten into quizbowl wording in Claude Code
+sessions and verified against their sources (`docs/rewrite-v1.md`).
+
 `uv run python tools/play.py && open data/play/index.html` loads the generated tossups
 into the clickable prototype player (local only, since it holds book text).
 

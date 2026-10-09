@@ -219,6 +219,8 @@ def render_clue(raw: str, doc, ref_spans, other_coref, chain_name, concrete_span
         key = next((v for (x, y), v in other_coref.items() if x <= tok.idx < y), None)
         name = chain_name(*key) if key else None
         if not name:
+            if a.get("allow_unresolved_pronouns"):
+                continue  # pool mode: the rewrite step sees the previous sentence
             DROPS["rule 1: unresolved pronoun"] += 1
             return None
         if low in POSSESSIVE:
@@ -266,8 +268,25 @@ def render_clue(raw: str, doc, ref_spans, other_coref, chain_name, concrete_span
     return text
 
 
-def run(book_id: int, conn, cfg: dict) -> None:
-    a = cfg["assemble"]
+def cited(conn, term) -> bool:
+    """A person cited somewhere in the book: "Surname (1996)", "Surname et al., 1996"."""
+    surname = term["norm"].split()[-1]
+    for (text,) in conn.execute(
+            "SELECT s.text FROM mentions m JOIN sentences s ON s.id = m.sentence_id WHERE m.term_id = ?",
+            (term["id"],)):
+        if re.search(rf"\b{re.escape(surname)}\b(?:\s+et al\.?|\s+(?:and|&)\s+[A-Z][\w-]+)?,?\s*\(?(?:19|20)\d\d",
+                     text, re.I):
+            return True
+    return False
+
+
+def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
+    """mode "strict" applies the wording rules as set; "pool" applies the overrides in
+    [assemble.pool] to draft more tossups for the v1 rewrite (docs/rewrite-v1.md)."""
+    a = dict(cfg["assemble"])
+    if mode == "pool":
+        a.update(cfg["assemble"]["pool"])
+    pver = a["pipeline_version"] + ("-pool" if mode == "pool" else "")
     nlp = spacy.load(cfg["sentences"]["spacy_model"], exclude=["ner", "lemmatizer"])
     source_re = re.compile("|".join(a["source_patterns"]))
 
@@ -306,10 +325,17 @@ def run(book_id: int, conn, cfg: dict) -> None:
 
     number = 0
     for t in conn.execute(
-            """SELECT t.*, m.referent, m.plural, m.giveaway, m.main_chapter FROM terms t
+            """SELECT t.*, m.referent, m.plural, m.giveaway, m.main_chapter, m.referent_source FROM terms t
                JOIN answer_meta m ON m.term_id = t.id WHERE t.book_id = ? ORDER BY t.id""", (book_id,)):
         forms = [f for f, _ in json.loads(t["forms"])]
         ref, many = t["referent"], bool(t["plural"])
+        if a["skip_generic_referents"] and t["referent_source"] == "generic":
+            DROPS["answer: generic referent"] += 1
+            continue
+        if a["persons_need_citation_or_title"] and t["kind"] == "person" and t["referent_source"] != "book" \
+                and not cited(conn, t):
+            DROPS["answer: person never cited or titled"] += 1
+            continue
         answer_chains = linked_chains(conn, book_id, t["id"], conn.execute(
             "SELECT sentence_id, start_char, end_char FROM mentions WHERE term_id = ?", (t["id"],)).fetchall())
         stems = answer_stems(forms, ref, cfg["rank"])
@@ -396,5 +422,5 @@ def run(book_id: int, conn, cfg: dict) -> None:
              json.dumps({"name": book["title"], "year": a["set_year"]}),
              "generated", book_id, t["id"],
              json.dumps(sorted({c["section_id"] for c, _ in picked})),
-             json.dumps([c["id"] for c, _ in picked]), a["pipeline_version"]))
+             json.dumps([c["id"] for c, _ in picked]), pver))
     conn.commit()

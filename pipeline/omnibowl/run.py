@@ -65,8 +65,8 @@ def run_rank(book, conn, cfg):
     rank.run(book_id_for(conn, book), conn, cfg)
 
 
-def run_assemble(book, conn, cfg):
-    assemble.run(book_id_for(conn, book), conn, cfg)
+def run_assemble(book, conn, cfg, pool=False):
+    assemble.run(book_id_for(conn, book), conn, cfg, "pool" if pool else "strict")
 
 
 # parse = measure (parse.py) -> profile (profile.py) -> tag (tag.py) -> sentences
@@ -85,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--all", action="store_true")
     ap.add_argument("--book", required=True, type=Path)
     ap.add_argument("--db", type=Path, help="override [paths].db")
+    ap.add_argument("--pool", action="store_true", help="assemble: draft pool for the v1 rewrite")
     args = ap.parse_args(argv)
 
     cfg = config.load()
@@ -97,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
                 break
             return 1
         print(f"[{name}] running")
-        fn(args.book, conn, cfg)
+        fn(args.book, conn, cfg, **({"pool": args.pool} if name == "assemble" else {}))
     return 0
 
 

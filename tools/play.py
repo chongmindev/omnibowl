@@ -34,6 +34,13 @@ def main() -> None:
         if r["number"].isdigit()]
     secnum = {r["id"]: r["number"] or "" for r in conn.execute(
         "SELECT id, number FROM sections WHERE book_id = ?", (book["id"],))}
+    # v1 hand-assisted rewrites (docs/rewrite-v1.md): used when they passed verification.
+    rewrites, rdir = {}, ROOT / "data" / "rewrites"
+    verified = json.loads((rdir / "verified.json").read_text()) if (rdir / "verified.json").exists() else {}
+    for out in sorted(rdir.glob("out_*.json")):
+        for r in json.loads(out.read_text()):
+            if verified.get(r["id"], {}).get("ok"):
+                rewrites[r["id"]] = r["question"]
     tossups = []
     for t in conn.execute("SELECT * FROM tossups WHERE book_id = ? ORDER BY number", (book["id"],)):
         term = conn.execute("SELECT display, forms FROM terms WHERE id = ?", (t["term_id"],)).fetchone()
@@ -44,7 +51,8 @@ def main() -> None:
         secs = [secnum.get(s, "") for s in json.loads(t["section_ids"])]
         tossups.append({"ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
                         "secs": ", ".join(s for s in secs if s) or "the book",
-                        "q": t["question"], "a": t["answer"], "acc": [a for a in accept if a], "prompt": []})
+                        "q": rewrites.get(t["id"], t["question"]), "a": t["answer"],
+                        "acc": [a for a in accept if a], "prompt": [], "rw": t["id"] in rewrites})
     page = (ROOT / "tools" / "play_template.html").read_text()
     page = (page.replace("__CHAPTERS__", json.dumps(chapters, ensure_ascii=False))
                 .replace("__TOSSUPS__", json.dumps(tossups, ensure_ascii=False))
@@ -52,7 +60,7 @@ def main() -> None:
     out = ROOT / "data" / "play" / "index.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)
-    print(f"wrote {out} ({len(tossups)} tossups)")
+    print(f"wrote {out} ({len(tossups)} tossups, {sum(x['rw'] for x in tossups)} rewritten)")
 
 
 if __name__ == "__main__":
