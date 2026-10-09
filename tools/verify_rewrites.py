@@ -28,7 +28,7 @@ COMMON_ZIPF = 4.0
 
 
 def stem(w: str) -> str:
-    w = w.lower().replace("’", "'")
+    w = re.sub(r"'(?:s|re|ve|ll|d)$", "", w.lower().replace("’", "'"))
     return w[:max(4, len(w) - 3)] if len(w) > 4 else w
 
 
