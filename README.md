@@ -102,8 +102,8 @@ the chains. About two minutes per book.
 ### clues (`clues.py`)
 
 For each answer: sentences that name it, plus sentences reached through a coreference
-chain that contains a named mention of exactly that answer ("He considered language
-to be a good test case..." for Broca), plus every sentence of the answer's own
+chain that contains a named mention of exactly that answer (a sentence starting "He
+argued..." right after one naming the researcher), plus every sentence of the answer's own
 definition. Sentences are split into one-fact clauses at semicolons and between clauses
 with their own subjects; otherwise the whole sentence is kept. Possessives that name a
 thing ("Broca's area") are not mentions of the person. Each clue records its sentence
@@ -201,10 +201,21 @@ data/                books, database, profiles, caches (gitignored)
 ```
 
 Every algorithm choice, with the options rejected and the measurements behind it, is
-in `docs/decisions.md`.
+in `docs/decisions.md`. A proposed optional LLM layer (grounded rewording with
+verification; not built) is described in `docs/llm-layer-plan.md`.
 
 ## Content policy
 
 Textbook content never enters the repository: PDFs, extracted text, the database and
-review pages stay in `data/`. Questions generated from a copyrighted textbook are for
-personal study.
+review pages stay in `data/`. Use a textbook you are licensed to use. Generated
+questions contain its text and are for personal study unless the book's license allows
+sharing (openly licensed books, such as OpenStax titles under CC BY, can be shared with
+attribution).
+
+## License
+
+Omnibowl is licensed under the GNU Affero General Public License v3.0 (`LICENSE`).
+It depends on PyMuPDF, which is itself AGPL-3.0; the other dependencies are permissive
+(spaCy, en_core_web_sm, fastcoref and the F-coref model: MIT; transformers, wordfreq
+code: Apache-2.0; PyTorch: BSD; wordfreq's frequency data: CC BY-SA 4.0, installed by
+users, not redistributed here).

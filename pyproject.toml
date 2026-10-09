@@ -2,6 +2,7 @@
 name = "omnibowl"
 version = "0.0.1"
 description = "Turn a textbook into quizbowl tossups."
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
     "en-core-web-sm",

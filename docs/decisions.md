@@ -148,7 +148,7 @@ Stitching before splitting (plumbing, in `sentences.py`):
   all real compounds; a print-layout PDF would hyphenate ordinary words. Deciding from
   the book's own vocabulary covers both.
 - A definition's bold term always stays with the sentence after it (spaCy splits
-  "phonetics The study of..." and "placebo [pluh-SEE-bo] effect ...").
+  a term followed by a capitalized definition, or a term with a bracketed pronunciation).
 
 Tagging fixes found while stitching: a run of 3+ non-bold above-body lines is display
 prose (chapter openers), not headings (`display_prose_min_lines`, replacing the
@@ -276,12 +276,12 @@ real facts.
 ## clues: first version and golden set (2026-10-08)
 
 - **Coreference: local model** (fastcoref F-coref, MIT, pinned), after a spike on
-  chapter 3 (19 s; linked "He considered language..." to Broca). Chosen over rules
+  chapter 3 (19 s; linked a following "He ..." sentence to Broca). Chosen over rules
   (option B) on Chong's call that ML is the better tool for coreference; CLAUDE.md rule
   1 now allows local pretrained task models. Chains link to an answer only through a
   named mention of that exact answer (leading "the"/"this" allowed).
 - **One fact per clue: B with A as fallback.** Split at "; " and between clauses with
-  their own subjects; ", which" splits dropped (they produced "Which provided...").
+  their own subjects; ", which" splits dropped (they produced fragments starting "Which ...").
 - Candidates fixes found while building the gold set: one-word proper nouns that are a
   person's surname merge into the person; a name inside an established possessive term
   ("Broca" in "Broca's area") is not a mention of the person; in clues, possessives that
@@ -297,7 +297,7 @@ Golden set `eval/clues.tsv`: 20 Sedivy answers (5 people, 15 concepts), 237 sent
 | + possessive terms | 82% | 82% | 82% |
 | + whole definitions | 82% | 83% | 83% |
 
-Known gap: a person's naming clue ("another of Hockett's features, productivity") is
+Known gap: a person's naming clue (one of Hockett's design features, named) is
 lost when the name sits inside an established term; one such clue per person could be
 kept later. Remaining misses: unlinked pronouns/descriptions (~14 of 22), other word
 forms ("bilingual advantage", "gazed").
@@ -311,8 +311,8 @@ forms ("bilingual advantage", "gazed").
   potential" were separate answers. Keyness looks up everyday-English frequency on
   one-word forms only, so a merged long form does not make an acronym look common.
 - Chong reviewed the clue gold set for the first 10 answers: 13 labels changed, mostly
-  counting a person's own work and studies as clues ("Shortly after Broca's
-  discovery", the pointer to Hockett's design features). Rule adopted: a sentence is a
+  counting a person's own work and studies as clues (a reference to Broca's discovery,
+  the pointer to Hockett's design features). Rule adopted: a sentence is a
   clue for a person when it says what they proposed, found, made or argued, including
   through something named after them; not when it describes the named thing with
   others' findings. Scores with the reviewed labels: precision 85%, recall 82%.
