@@ -204,15 +204,57 @@ CREATE TABLE IF NOT EXISTS clues (
     text        TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS clues_term ON clues(term_id);
+
+-- Stage rank: per answer, the referent ("this ERP") and giveaway; per clue, difficulty.
+CREATE TABLE IF NOT EXISTS answer_meta (
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    term_id     INTEGER PRIMARY KEY REFERENCES terms(id),
+    referent    TEXT NOT NULL,
+    plural      INTEGER NOT NULL,
+    referent_source TEXT NOT NULL,     -- book | definition | head | generic
+    giveaway    TEXT,                  -- definition text after its head noun
+    main_chapter INTEGER
+);
+CREATE TABLE IF NOT EXISTS clue_scores (
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    clue_id     INTEGER PRIMARY KEY REFERENCES clues(id),
+    difficulty  REAL NOT NULL,         -- 0 easy .. 1 hard
+    emphasis    REAL NOT NULL,
+    specificity REAL NOT NULL
+);
+
+-- Stage assemble: tossups in the QBReader shape plus Omnibowl fields.
+CREATE TABLE IF NOT EXISTS tossups (
+    id          TEXT PRIMARY KEY,
+    question    TEXT NOT NULL,
+    question_sanitized TEXT NOT NULL,
+    answer      TEXT NOT NULL,
+    answer_sanitized TEXT NOT NULL,
+    category    TEXT,
+    subcategory TEXT,
+    alternate_subcategory TEXT,
+    difficulty  INTEGER,
+    number      INTEGER,
+    packet_json TEXT,
+    set_json    TEXT,
+    source      TEXT NOT NULL,         -- generated | qbreader
+    book_id     INTEGER,
+    term_id     INTEGER,
+    section_ids TEXT NOT NULL,
+    clue_ids    TEXT NOT NULL,
+    pipeline_version TEXT
+);
 """
 
-PARSE_TABLES = ["clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["tossups", "clue_scores", "answer_meta", "clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
 LABEL_TABLES = ["labels"]
-CANDIDATE_TABLES = ["clues", "mentions", "terms"]
+CANDIDATE_TABLES = ["tossups", "clue_scores", "answer_meta", "clues", "mentions", "terms"]
 COREF_TABLES = ["coref"]
-CLUE_TABLES = ["clues"]
+CLUE_TABLES = ["tossups", "clue_scores", "answer_meta", "clues"]
+RANK_TABLES = ["tossups", "clue_scores", "answer_meta"]
+ASSEMBLE_TABLES = ["tossups"]
 
 
 def connect(path: Path) -> sqlite3.Connection:

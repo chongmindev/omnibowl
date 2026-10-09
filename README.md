@@ -21,8 +21,8 @@ discovered into a profile rather than hard-coded.
 | `candidates` | answer terms with keyness, coverage and a class | done |
 | `coref` | coreference chains | done |
 | `clues` | one-fact clues per answer, grounded in sentence ids | first version; being tuned |
-| `rank` | referent, giveaway, clue difficulty | not started |
-| `assemble` | tossups, ordered hard to easy | not started |
+| `rank` | referent, giveaway, clue difficulty | rough first version |
+| `assemble` | tossups, ordered hard to easy | rough first version (219 tossups for the v0 book) |
 | reader | web app that reveals tossups and records buzzes | designed (`DESIGN.md`, spec in `docs/superpowers/specs/`); not built |
 
 Tested on two textbooks with different layouts: a single-column psycholinguistics text
@@ -109,6 +109,23 @@ with their own subjects; otherwise the whole sentence is kept. Possessives that 
 thing ("Broca's area") are not mentions of the person. Each clue records its sentence
 ids, section, kind of text, and how it was found (named, coref, definition).
 
+### rank (`rank.py`)
+
+Clue difficulty = textbook emphasis (definitions, summaries and bold introductions are
+easy; boxes, captions, coreference-only and off-chapter clues are harder) combined with
+specificity (how rare the clue's most distinctive words are in the book). Referent: the
+kind of thing the book calls the answer ("X is a gene", "linguist Charles Hockett"),
+else the head noun of its definition, else its own head word, else "this term". The
+definition, after its head noun, becomes the giveaway.
+
+### assemble (`assemble.py`)
+
+Replaces the answer with the referent ("this effect"), dangling pronouns with the name
+from their coreference chain, and skips clues where the answer is a modifier, a value,
+coordinated with another name, or still leaks. Picks clues hardest first within 4 to 7
+sentences and 500 to 700 characters, ends with "For 10 points, name this ...", and
+stores tossups in QBReader's format with source, sections and clue ids.
+
 ## Libraries
 
 | Library | Used for |
@@ -142,6 +159,8 @@ uv run python -m omnibowl.run --stage parse --book data/books/<file>.pdf        
 uv run python -m omnibowl.run --stage candidates --book data/books/<file>.pdf
 uv run python -m omnibowl.run --stage coref --book data/books/<file>.pdf
 uv run python -m omnibowl.run --stage clues --book data/books/<file>.pdf
+uv run python -m omnibowl.run --stage rank --book data/books/<file>.pdf
+uv run python -m omnibowl.run --stage assemble --book data/books/<file>.pdf
 uv run pytest
 ```
 

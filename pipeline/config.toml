@@ -184,3 +184,51 @@ sentence_kinds = ["body", "box", "summary", "definition", "caption"]
 term_classes = ["answer"]
 # A clause shorter than this many words is not a clue on its own.
 min_words = 5
+
+[rank]
+# Difficulty = w_emphasis * emphasis + w_specificity * specificity (decision C, rough).
+w_emphasis = 0.6
+w_specificity = 0.4
+# Emphasis by where the clue sits: 0 = the book makes it easy, 1 = buried.
+coref_penalty = 0.1
+off_chapter_penalty = 0.15
+# Specificity: mean of the top N inverse sentence frequencies of the clue's words.
+specificity_top_words = 3
+specificity_stopwords = ["the", "and", "that", "this", "with", "from", "have", "were", "which",
+  "their", "they", "them", "there", "these", "those", "been", "being", "into", "about", "than",
+  "then", "when", "what", "while", "would", "could", "should", "also", "such", "more", "most",
+  "some", "other", "only", "very", "just", "even", "both", "each", "many", "much", "over"]
+generic_person = "researcher"
+generic_concept = "term"
+# Words too vague to be a referent ("this thing").
+generic_categories = ["thing", "way", "term", "word", "kind", "type", "part", "case", "example",
+                      "lot", "number", "set", "form", "fact", "idea", "notion", "one", "bit", "sort",
+                      "pattern", "process", "property", "phenomenon", "aspect", "feature", "region"]
+
+[rank.emphasis]
+definition = 0.0
+summary = 0.2
+bold_intro = 0.15
+body = 0.5
+box = 0.7
+caption = 0.7
+
+[assemble]
+# Quizbowl conventions (CLAUDE.md): 4 to 7 sentences, about 500 to 700 characters.
+min_sentences = 4
+max_sentences = 7
+min_chars = 350
+max_chars = 750
+max_clue_chars = 300
+max_per_section = 3
+# Clauses matching any of these address the reader or point at the book; not facts.
+meta_patterns = ["\\byou\\b", "\\byour\\b", "\\bsee (?:figure|table|box|chapter|section|method)",
+                 "\\bthis (?:chapter|section|subsection|book)\\b", "\\bas we(?:'ll| will)? see\\b",
+                 "\\bwe(?:'ve| have) seen\\b", "\\bearlier in\\b", "\\blater in\\b"]
+# Source lines and citations are not clues: "Smith & Jones, 1968", "(ed.)", "et al.".
+source_patterns = ["\\bet al\\b", "\\(eds?\\.\\)", "&\\s*[A-Z][a-z]+,?\\s*\\d{4}",
+                   "\\b(?:Adapted|Reprinted|Courtesy|Data) (?:from|of)\\b"]
+category = "Social Science"
+subcategory = "Psychology"
+set_year = 0
+pipeline_version = "0.1-rough"

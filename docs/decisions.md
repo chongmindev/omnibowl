@@ -318,3 +318,33 @@ forms ("bilingual advantage", "gazed").
   others' findings. Scores with the reviewed labels: precision 85%, recall 82%.
 - Found in review: a bracketed body-size example glued to the next sentences (the open
   decision on body-size indented lines from the tagging review).
+
+## rank and assemble: rough end-to-end (2026-10-09)
+
+Approved bundle (rough first version): **difficulty C** (textbook emphasis + clue
+specificity, weights in config); **referent A then B then C** (book's own words, then
+the answer's head word, then "this term"/"this researcher"); clues picked hardest first
+within the length budget, at most 3 per section, ordered hard to easy; the definition
+(or the easiest clue whose subject is the answer) becomes the giveaway; answerline =
+display name + merged forms as alternates.
+
+Fixes after reading the first tossups (all in config or code comments):
+- referents from how the book names the answer ("X is a gene", "the FOXP2 gene"); a
+  person's title only before a full name ("linguist Charles Hockett"), checked with the
+  parser; vague heads ("pattern", "region") fall back to the answer's head word;
+- the answer must be its own noun phrase: not a modifier ("N400 activity"), not after
+  an adjective or "a" ("a bigger N400"), not coordinated ("Broca and Wernicke"), not in
+  parentheses, not a value ("a VOT of 0 ms");
+- source lines and quote lead-ins (ending in ":") are not clues;
+- a clue opening with a pronoun that is not the answer gets the fullest noun-phrase
+  mention from its coreference chain ("They found" -> the researchers); "This would
+  reduce..." (pointing at an event) is skipped;
+- the book's title word is absorbed ("linguist Charles Hockett" -> "this linguist");
+  people take "who" in the giveaway.
+
+Sedivy: 219 tossups from 499 answers (330 before the fixes, many unreadable).
+Known gaps: answers whose clues mostly contain related terms are lost to the leak check
+(garden path sentences: "garden path theory"); FOXP2 and the head-turn preference
+paradigm lose clues to the meta-text filter and coreference-only clues that are not
+yet masked; coordinated possessives still slip through ("This researcher and
+Wernicke's attempts"); 161 answers still use a generic referent.
