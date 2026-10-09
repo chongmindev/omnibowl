@@ -181,6 +181,9 @@ quoted text.
 | `eval/candidate_classes.py` | labeled share per class | answers 41% labeled |
 | `eval/clue_accuracy.py` | clues vs. a 20-answer golden set | precision 85%, recall 82% |
 
+`uv run python tools/play.py && open data/play/index.html` loads the generated tossups
+into the clickable prototype player (local only, since it holds book text).
+
 `eval/review_tags.py` and `eval/review_clues.py` build local review pages (written to
 `data/review/`, since they contain book text) for checking labels by eye.
 
