@@ -205,6 +205,13 @@ generic_categories = ["thing", "way", "term", "word", "kind", "type", "part", "c
                       "lot", "number", "set", "form", "fact", "idea", "notion", "one", "bit", "sort",
                       "pattern", "process", "property", "phenomenon", "aspect", "feature", "region"]
 
+[assemble.topicality]
+subject = 1.0
+predicate = 0.8
+object = 0.6
+prepositional = 0.3
+other = 0.5
+
 [rank.emphasis]
 definition = 0.0
 summary = 0.2
@@ -224,10 +231,30 @@ max_per_section = 3
 # Clauses matching any of these address the reader or point at the book; not facts.
 meta_patterns = ["\\byou\\b", "\\byour\\b", "\\bsee (?:figure|table|box|chapter|section|method)",
                  "\\bthis (?:chapter|section|subsection|book)\\b", "\\bas we(?:'ll| will)? see\\b",
-                 "\\bwe(?:'ve| have) seen\\b", "\\bearlier in\\b", "\\blater in\\b"]
+                 "\\bwe(?:'ve| have) seen\\b", "\\bearlier in\\b", "\\blater in\\b",
+                 "\\bI\\b", "\\bmy\\b", "\\bas (?:noted|mentioned|discussed|described) (?:earlier|above|before|previously)\\b",
+                 "\\bthis (?:little )?(?:exercise|example|hypothetical|figure)\\b", "\\bhypothetical\\b"]
 # Source lines and citations are not clues: "Smith & Jones, 1968", "(ed.)", "et al.".
 source_patterns = ["\\bet al\\b", "\\(eds?\\.\\)", "&\\s*[A-Z][a-z]+,?\\s*\\d{4}",
                    "\\b(?:Adapted|Reprinted|Courtesy|Data) (?:from|of)\\b"]
+# Wording rules (2026-10-09).
+# Rule 1: a chain's name is its longest noun-phrase mention of at most this many words.
+max_name_words = 8
+# Rule 2: the answer's role in the clause; clauses below `min_topicality` are dropped.
+min_topicality = 0.6
+# Rule 3: trimmed from the start of a clue (regex alternatives, then a comma if any).
+leading_connectives = ["But", "And", "So", "Thus", "Hence", "However", "Moreover", "Furthermore",
+  "In fact", "Indeed", "Interestingly", "Importantly", "Crucially", "Notably", "Remarkably",
+  "Surprisingly", "For instance", "For example", "In other words", "Of course", "Still", "Yet",
+  "Also", "Similarly", "Likewise", "In addition", "Instead", "Ultimately", "Overall", "Finally",
+  "Again", "Nevertheless", "Nonetheless", "As a result", "In short", "In turn", "Then",
+  "At the same time", "On the other hand", "In contrast", "By contrast", "Specifically"]
+frame_patterns = ["The general idea is that", "The idea is that", "There(?:'s|’s| is) (?:also )?(?:good |some |strong )?evidence that",
+  "It turns out that", "It seems that", "It appears that", "This means that", "What this means is that",
+  "The (?:basic|key|main) (?:point|insight|claim) is that", "In this view,"]
+drop_parentheticals = true
+# A clause more than this share quoted speech is an example, not a fact.
+max_quoted_share = 0.4
 category = "Social Science"
 subcategory = "Psychology"
 set_year = 0

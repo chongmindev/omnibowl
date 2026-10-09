@@ -348,3 +348,30 @@ Known gaps: answers whose clues mostly contain related terms are lost to the lea
 paradigm lose clues to the meta-text filter and coreference-only clues that are not
 yet masked; coordinated possessives still slip through ("This researcher and
 Wernicke's attempts"); 161 answers still use a generic referent.
+
+## assemble: wording rules 1-4 (2026-10-09)
+
+Chong's direction: pronouns are confusing and should almost never appear; clue wording
+must improve without an LLM (the API layer was declined because it bills separately).
+1. **Pronouns**: mentions of the answer (named or via its coreference chain) become the
+   referent; every other pronoun becomes its chain's longest noun-phrase mention; a
+   pronoun with no named antecedent drops the clue. Expletive "it" is kept; "it's"
+   becomes "this X is".
+2. **The answer must be central**: subject 1.0, predicate noun 0.8, object 0.6, inside
+   a verb-attached prepositional phrase 0.3; minimum 0.6. A preposition attached to a
+   noun is climbed ("Damage to Broca's area causes...": the answer belongs to the
+   subject).
+3. **Trimming**: leading connectives and hedging frames and parenthetical asides
+   removed; kept only if the result is still a clause; a parenthetical right after a
+   preposition drops the clue instead.
+4. **Concrete item required**: a name, a number, or another key term besides the answer.
+Plus fixes: determiner agreement ("these tests"), possessives kept, coordinated
+possessives rejected, no determiner after "our"/"readers'", quoted dialogue skipped,
+more meta-text patterns.
+
+Effect (Sedivy): 219 -> 86 tossups; pronouns in 6 of 95 at the midpoint (from 160 of
+219). Clue drops by rule in one run: answer not central 1,325; unresolved pronoun 915;
+nothing concrete 405. A sample of rule-2 drops were all bystander mentions.
+Open: answers that are noise ("Birdie", "waveforms") and generic referents ("this
+term"); proposed: no tossup for a generic referent; a person answer must be cited or
+titled somewhere in the book.
