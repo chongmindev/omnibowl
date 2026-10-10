@@ -44,8 +44,17 @@ def main() -> None:
             if verified.get(r["id"], {}).get("ok"):
                 rewrites[r["id"]] = r["question"]
     tossups = []
+    # Extra tossups on the same answer ("<id>-v2", "-v3") reuse the first one's row.
+    variants = {}
+    for vid in rewrites:
+        if "-v" in vid:
+            variants.setdefault(vid.rsplit("-v", 1)[0], []).append(vid)
+    rows = []
     for t in conn.execute("SELECT * FROM tossups WHERE book_id = ? ORDER BY number", (book["id"],)):
-        if rewrites and not args.all and t["id"] not in rewrites:
+        rows.append((t["id"], t))
+        rows += [(vid, t) for vid in sorted(variants.get(t["id"], []))]
+    for rid, t in rows:
+        if rewrites and not args.all and rid not in rewrites:
             continue
         term = conn.execute("SELECT display, forms FROM terms WHERE id = ?", (t["term_id"],)).fetchone()
         forms = [term["display"]] + [f for f, _ in json.loads(term["forms"])]
@@ -55,8 +64,8 @@ def main() -> None:
         secs = [secnum.get(s, "") for s in json.loads(t["section_ids"])]
         tossups.append({"ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
                         "secs": ", ".join(s for s in secs if s) or "the book",
-                        "q": rewrites.get(t["id"], t["question"]), "a": t["answer"],
-                        "acc": [a for a in accept if a], "prompt": [], "rw": t["id"] in rewrites})
+                        "q": rewrites.get(rid, t["question"]), "a": t["answer"],
+                        "acc": [a for a in accept if a], "prompt": [], "rw": rid in rewrites})
     page = (ROOT / "tools" / "play_template.html").read_text()
     page = (page.replace("__CHAPTERS__", json.dumps(chapters, ensure_ascii=False))
                 .replace("__TOSSUPS__", json.dumps(tossups, ensure_ascii=False))

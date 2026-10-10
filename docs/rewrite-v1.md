@@ -74,3 +74,18 @@ everything else shows the algorithmic draft.
 Check your plan's usage before and after batch 1; that difference is the cost of one
 batch on your plan. Expected size: the batch file is roughly 10-15k tokens, the output
 a few thousand, plus the session's own reasoning.
+
+## More tossups per strong answer (variant packs)
+
+```
+uv run python tools/variant_batches.py --size 20 --max-extra 2
+```
+
+For each answer whose first tossup passed verification, the clue sentences the first
+tossup did not use are sorted by difficulty and dealt into up to two packs ("<id>-v2",
+"-v3"), so each pack spans hard to easy and no two tossups on one answer share a
+sentence. Packs draw on all of the answer's clue sentences, broader than the strict
+assemble rules. Items have `"draft": null` and a `first_tossup` field: the rewrite must
+use different facts (the giveaway may repeat the definition). Verification and the
+player treat them like any other rewrite; the player reuses the first tossup's answer
+line and chapter.
