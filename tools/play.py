@@ -25,6 +25,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--book", default="language_in_mind")
     ap.add_argument("--db", type=Path, default=ROOT / "data" / "omnibowl.db")
+    ap.add_argument("--all", action="store_true",
+                    help="include unrewritten drafts (default: only verified rewrites, when any exist)")
     args = ap.parse_args()
     conn = sqlite3.connect(args.db)
     conn.row_factory = sqlite3.Row
@@ -43,6 +45,8 @@ def main() -> None:
                 rewrites[r["id"]] = r["question"]
     tossups = []
     for t in conn.execute("SELECT * FROM tossups WHERE book_id = ? ORDER BY number", (book["id"],)):
+        if rewrites and not args.all and t["id"] not in rewrites:
+            continue
         term = conn.execute("SELECT display, forms FROM terms WHERE id = ?", (t["term_id"],)).fetchone()
         forms = [term["display"]] + [f for f, _ in json.loads(term["forms"])]
         accept = sorted({norm(f) for f in forms} | {norm(f).rstrip("s") for f in forms}

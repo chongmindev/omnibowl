@@ -53,7 +53,7 @@ def check(item: dict, rewrite: str) -> list[str]:
                 issues.append(f"not in sources: '{w}'")
     answer_stems = {stem(w) for f in [item["answer"], *item["accept"]] for w in WORD.findall(f)
                     if len(w) > 3 and w.lower() not in item["referent"].lower()}
-    for w in WORD.findall(rewrite):
+    for w in WORD.findall(re.sub(r"For 10 points, name\b", "", rewrite)):
         if stem(w) in answer_stems:
             issues.append(f"names the answer: '{w}'")
     if not sentences or not sentences[-1].startswith("For 10 points"):
