@@ -76,7 +76,7 @@ What this means for the pipeline:
 - A tossup is one paragraph of four to seven sentences, about 500 to 700 characters (limits in `config.toml`). If an answer has too few good clues, it gets no tossup.
 - It is pyramidal: the hardest clue comes first and the easiest (the giveaway) last. No drop-back clues: clue difficulty never rises again later in the question.
 - The lead-in (first clue) must uniquely identify the answer. No vague clues that could fit several answers, and no hostage clues that leave a guess between two named options.
-- The answer is never named. It is referred to by one consistent referent ("this psychologist", "this effect"), and the referent appears in the first sentence so the answer type is clear from the start.
+- The answer is never named. The first sentence refers to it with a vague but accurate handle ("this man", "this effect") so the answer type is clear from the start; later sentences may use more specific descriptors ("this French physician"), each supported by the book, sharpening toward the end like the clues themselves, and always unambiguously the same answer. The giveaway uses the most specific descriptor (decision 2026-10-09).
 - The last sentence starts "For 10 points," and asks for the answer with the easiest clue.
 - Tossups only: no bonuses. No pronunciation guides.
 - The reader reveals words one at a time at an adjustable speed. A buzz stops the reveal. Record the word index of every buzz.

@@ -39,9 +39,14 @@ Write one tossup per input, as JSON: `[{"id": "...", "question": "..."}, ...]`.
 2. **Pyramidal.** Order clues from hardest (most obscure detail, specific study,
    numbers) to easiest. End with: `For 10 points, name this <referent> <easiest fact>.`
    using the definition when there is one.
-3. **One referent, used consistently.** Use `referent` ("this ERP"); if
-   `referent_is_generic` is true, choose a specific noun the sources support ("this
-   ERP component", "this linguist"). The first sentence must contain it.
+3. **Referents that sharpen.** Open with a vague but accurate handle in the first
+   sentence ("this man", "this researcher", "this phenomenon", "this component"), so
+   the answer type is clear immediately. Later sentences may use more specific
+   descriptors ("this neurologist", "this ERP component"), each supported by the
+   sources, never more specific than the clues around it, and always unambiguously the
+   same answer. The giveaway uses the most specific descriptor. `referent` is a
+   suggestion; use "this man/woman" only if the sources refer to the person with
+   he/his or she/her, otherwise "this researcher"/"this scientist".
 4. **No pronouns.** Never "he/she/it/they/his/its/their". Repeat the referent or name
    the thing.
 5. **Never name the answer** or any word that shares its stem.
@@ -49,7 +54,8 @@ Write one tossup per input, as JSON: `[{"id": "...", "question": "..."}, ...]`.
    textbook framing ("researchers have found that", "as we saw", "for instance"). Keep
    attributions that carry information ("In a 2007 study by Moll and Tomasello, ...").
 7. **One fact per sentence**, and each clue should identify this answer, not something
-   general.
+   general. No generic sentences ("Various factors can affect this property") and no
+   circular ones ("two sounds are these sounds").
 8. If the sources cannot support at least four good clues, return the draft unchanged
    with `"skip": true`.
 
