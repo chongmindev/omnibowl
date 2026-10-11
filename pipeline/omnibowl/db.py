@@ -223,6 +223,15 @@ CREATE TABLE IF NOT EXISTS clue_scores (
     specificity REAL NOT NULL
 );
 
+-- Stage rank (uniqueness.py): rank of the true answer when the clue is a query.
+CREATE TABLE IF NOT EXISTS clue_uniqueness (
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    clue_id     INTEGER PRIMARY KEY REFERENCES clues(id),
+    rank        INTEGER NOT NULL,      -- 1 = the clue's answer fits it best
+    margin      REAL NOT NULL,         -- > 0: its answer wins; < 0: another fits better (uniqueness.py)
+    query_words INTEGER NOT NULL
+);
+
 -- Stage assemble: tossups in the QBReader shape plus Omnibowl fields.
 CREATE TABLE IF NOT EXISTS tossups (
     id          TEXT PRIMARY KEY,
@@ -246,14 +255,14 @@ CREATE TABLE IF NOT EXISTS tossups (
 );
 """
 
-PARSE_TABLES = ["tossups", "clue_scores", "answer_meta", "clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
 LABEL_TABLES = ["labels"]
-CANDIDATE_TABLES = ["tossups", "clue_scores", "answer_meta", "clues", "mentions", "terms"]
+CANDIDATE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "mentions", "terms"]
 COREF_TABLES = ["coref"]
-CLUE_TABLES = ["tossups", "clue_scores", "answer_meta", "clues"]
-RANK_TABLES = ["tossups", "clue_scores", "answer_meta"]
+CLUE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues"]
+RANK_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta"]
 ASSEMBLE_TABLES = ["tossups"]
 
 

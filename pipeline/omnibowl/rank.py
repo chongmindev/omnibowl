@@ -25,7 +25,7 @@ from collections import Counter, defaultdict
 
 import spacy
 
-from . import db
+from . import db, uniqueness
 
 WORD = re.compile(r"[A-Za-z][A-Za-z'’-]+|\d+")
 
@@ -202,6 +202,7 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
             "INSERT INTO clue_scores (book_id, clue_id, difficulty, emphasis, specificity) VALUES (?, ?, ?, ?, ?)",
             rows)
     conn.commit()
+    uniqueness.run(book_id, conn, cfg)
 
 
 def _bold_intro(conn, clue, term) -> bool:

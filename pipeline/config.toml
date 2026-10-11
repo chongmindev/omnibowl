@@ -245,6 +245,20 @@ body = 0.5
 box = 0.7
 caption = 0.7
 
+[uniqueness]
+# Clue uniqueness as a retrieval test (decision "clue uniqueness", C): BM25 over each
+# answer's clue sentences. Standard settings (mu 2000, k1 1.2, b 0.75); words shorter
+# than min_chars are ignored.
+# model: "lm" (query likelihood, Dirichlet smoothing) or "bm25".
+model = "lm"
+lm_mu = 2000.0
+# The clue's own sentence is left out of "all" documents, or of the "others" only (then
+# the test asks whether other answers' sentences share the clue's words).
+leave_out = "others"
+bm25_k1 = 1.2
+bm25_b = 0.75
+min_chars = 3
+
 [assemble]
 # Quizbowl conventions (CLAUDE.md): 4 to 7 sentences, about 500 to 700 characters.
 min_sentences = 4

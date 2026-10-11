@@ -403,3 +403,31 @@ frontal lobes, syllable, ambiguity. A-only is mostly noise ("researchers", "Modu
 vocabulary). B also lets in vague index heads ("effect", "case", "range", "means").
 What breaks on another book: a book with no index and generic headings ("Introduction",
 "Overview") gives B little; the furniture filter only catches repeated headings.
+
+## rank: clue uniqueness (2026-10-10)
+
+Options: (A) count other answers named in the clue (`shared`); (B) word association
+(PMI) between the clue's words and the answer; (C) a retrieval test: the clue, minus
+the answer's words, is a query over every answer's clue sentences, and the clue is
+unique if its answer ranks first. **Chosen: C** (`uniqueness.py`, table
+`clue_uniqueness`: rank and margin per clue).
+Measured on Sedivy, against the rewrite sessions' skips (AUC = chance a written answer
+scores above a skipped one; answer score = share of its clues ranked first):
+| ranking | leave clue's sentence out of | clues ranked 1st | AUC |
+|---|---|---|---|
+| BM25 | all answers | 10% | 0.63 |
+| query likelihood (Dirichlet) | all answers | 8% | 0.63 |
+| BM25 | other answers only | 52% | 0.60 |
+| **query likelihood** | **other answers only** | **60%** | **0.55** |
+Leaving the sentence out of its own answer measured repetition, not uniqueness (a fact
+is usually stated once), so the sentence stays in its own answer's document and the
+question is whether *other* answers' sentences share its words. BM25 let the longest
+documents ("language", "words") win on length; query likelihood scores shares.
+Overall AUC is weak because most skips are junk answers ("n't", "head"), which
+uniqueness does not measure. Where it should work, it does: broad answers written vs
+skipped separate cleanly (conversation .94, music .89, ambiguity .85, memory .81 written;
+categories .53, meaning .44, sounds .32, sentence .31, language .24, words .13 skipped;
+speech .41 the one written exception). Myers: behavior .34, brain .41 lowest; eye .82,
+vision .84. Not yet used by assemble or the packs: thresholds are an open choice.
+What breaks on another book: nothing book-specific; very small books give answers
+few sentences, so ranks get noisy.

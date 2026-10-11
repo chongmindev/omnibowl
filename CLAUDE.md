@@ -158,6 +158,6 @@ Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, wri
 - Answer vs. clue-only vs. too-broad thresholds: TBD, to be tuned against the index and glossary.
 - How much weight QBReader signals get relative to textbook signals in `rank`: TBD.
 - How clue difficulty is scored (textbook emphasis, mention counts, QBReader signals): TBD.
-- How clue uniqueness is measured, and the threshold a lead-in must pass: TBD. The same measure drops vague clues.
+- How clue uniqueness is measured: decided (retrieval test, `uniqueness.py`, 2026-10-10). The threshold a lead-in must pass, and how it drops vague clues: TBD.
 - How the referent ("this hypothesis") is chosen: TBD.
 - How hostage clues (a guess between two named options) are detected without an LLM: TBD.
