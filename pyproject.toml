@@ -6,10 +6,12 @@ license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
 dependencies = [
     "en-core-web-sm",
+    "fastapi>=0.143.0",
     "fastcoref>=2.1.6",
     "pymupdf>=1.28.2",
     "spacy>=3.8.16",
     "transformers<5",
+    "uvicorn[standard]>=0.54.0",
     "wordfreq>=3.1.1",
 ]
 
@@ -24,7 +26,7 @@ module-root = "pipeline"
 en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
 
 [tool.pytest.ini_options]
-testpaths = ["pipeline/tests"]
+testpaths = ["pipeline/tests", "server/tests"]
 pythonpath = ["pipeline/tests"]
 filterwarnings = ["ignore:builtin type .* has no __module__ attribute:DeprecationWarning"]
 
