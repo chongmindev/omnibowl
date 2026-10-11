@@ -10,11 +10,13 @@ tossup when it:
   - names the answer or a stem of it;
   - does not end with a "For 10 points, name ..." sentence, or has fewer than 4 or more
     than 7 sentences.
+Style warning only (the rewrite still passes): a giveaway longer than 20 words.
 Writes data/rewrites/verified.json: {tossup id: {"ok": bool, "issues": [...]}}.
 """
 
 import json
 import re
+import sys
 from pathlib import Path
 
 from wordfreq import zipf_frequency
@@ -25,6 +27,10 @@ PRONOUNS = {"he", "she", "it", "they", "him", "her", "them", "his", "its", "thei
             "theirs", "himself", "herself", "itself", "themselves"}
 # Words this common in everyday English are not "new facts" (zipf scale: 4 = 10 per million).
 COMMON_ZIPF = 4.0
+# Style warnings are reported but do not fail a rewrite (it stays playable).
+STYLE = "style: "
+# A giveaway is short: "For 10 points, name this <descriptor> that <one easy fact>."
+GIVEAWAY_MAX_WORDS = 20
 
 
 def stem(w: str) -> str:
@@ -60,10 +66,13 @@ def check(item: dict, rewrite: str) -> list[str]:
         issues.append("last sentence does not start 'For 10 points'")
     if not 4 <= len(sentences) <= 7:
         issues.append(f"{len(sentences)} sentences (want 4-7)")
+    if sentences and len(sentences[-1].split()) > GIVEAWAY_MAX_WORDS:
+        issues.append(f"{STYLE}giveaway has {len(sentences[-1].split())} words (want {GIVEAWAY_MAX_WORDS} or fewer)")
     return sorted(set(issues))
 
 
 def main() -> None:
+    show_style = "--style" in sys.argv
     d = ROOT / "data" / "rewrites"
     results = {}
     for batch in sorted(d.glob("batch_*.json")):
@@ -79,12 +88,13 @@ def main() -> None:
                 results[r["id"]] = {"ok": False, "issues": ["skipped by the rewriter"]}
                 continue
             issues = check(item, r["question"])
-            results[r["id"]] = {"ok": not issues, "issues": issues}
+            results[r["id"]] = {"ok": not any(not i.startswith(STYLE) for i in issues), "issues": issues}
     (d / "verified.json").write_text(json.dumps(results, indent=1))
     ok = sum(v["ok"] for v in results.values())
-    print(f"{ok}/{len(results)} rewrites pass")
+    style = sum(v["ok"] and bool(v["issues"]) for v in results.values())
+    print(f"{ok}/{len(results)} rewrites pass ({style} of them with style warnings: --style lists them)")
     for tid, v in results.items():
-        if not v["ok"]:
+        if not v["ok"] or (show_style and v["issues"]):
             print(f"  {tid}: " + "; ".join(v["issues"]))
 
 

@@ -38,7 +38,9 @@ Write one tossup per input, as JSON: `[{"id": "...", "question": "..."}, ...]`.
    to. No outside knowledge, no new names, numbers or terms.
 2. **Pyramidal.** Order clues from hardest (most obscure detail, specific study,
    numbers) to easiest. End with: `For 10 points, name this <referent> <easiest fact>.`
-   using the definition when there is one.
+   using the definition when there is one. The giveaway is short: 20 words at most,
+   one easy fact, no stacked clauses ("For 10 points, name this language disruption
+   caused by brain damage."). The verifier warns (does not fail) above 20 words.
 3. **Referents that sharpen.** Open with a vague but accurate handle in the first
    sentence ("this man", "this researcher", "this phenomenon", "this component"), so
    the answer type is clear immediately. Later sentences may use more specific
@@ -106,3 +108,11 @@ verified rewrite and is in no batch yet: its most central sentences (answer as s
 first), at most 3 per section (2 per chapter for broad answers), 5 to 12 sentences,
 hardest first, strongest answers first. Items have `"pack": true` and `"draft": null`;
 rewrite them with the broad-pack prompt (rule 10: pick the 4 to 6 best sentences).
+
+## Shortening long giveaways
+
+`uv run python tools/giveaway_trims.py export` writes the giveaways over 20 words to
+`data/rewrites/trim_in.json` (with the rest of each tossup and the definition). A session
+writes `trim_out.json` (`{id: new last sentence}`); `giveaway_trims.py apply` splices
+each one in only if it starts "For 10 points, name", has 20 words or fewer, and the whole
+tossup still passes the verifier.
