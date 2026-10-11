@@ -65,9 +65,11 @@ broadcasts.
   out for the tossup and reading resumes for the rest, as on protobowl. The tossup ends
   on a correct answer, when everyone present has buzzed, or when the 5 s buzz window
   after the last word runs out.
-- **Judging:** on the server, the same local match as the prototype player (normalized
-  answer equals the answerline or an accepted alternate; a prompt form asks once). The
-  answerline reaches the page only after the tossup ends.
+- **Judging:** on the server (`server/judge.py`), with the same rules as the single-player
+  page (`tools/judge.js`): the answerline or an accepted alternate, ignoring case,
+  punctuation, articles and word order; small typos unless another book term is as
+  close; a prompt on the last words of a multi-word answer, once per buzz (decision
+  "answer judging"). The answerline reaches the page only after the tossup ends.
 - **Scores:** +10 correct, −5 wrong before the last word, 0 wrong after it. If the answer
   window runs out, whatever was typed is submitted.
 - **Next / skip:** after a tossup, → (or the yellow Next button) starts the next one for

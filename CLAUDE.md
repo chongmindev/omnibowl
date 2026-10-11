@@ -12,7 +12,9 @@ The developer (Chong) is building this partly to design the algorithms himself. 
 
 **v1 exception (2026-10-09):** for the v0 book only, the algorithmic draft pool (`assemble --pool`) is rewritten into quizbowl wording in Claude Code sessions, one batch at a time, and every rewrite is checked by `tools/verify_rewrites.py` against its source sentences. The pipeline still chooses all answers and facts. Rewrites stay in `data/rewrites/` (gitignored). Process and rules: `docs/rewrite-v1.md`.
 
-**Later (do not build unless asked):** the LLM rewrite stage, mixing in real QBReader tossups, multiplayer rooms (any path after the domain is a room, as on protobowl), bonuses, power marks, non-textbook sources, using buzz data to re-rank clues.
+**Built on request (2026-10-10):** multiplayer v0, protobowl-style rooms (any path after the domain is a room), private link only, never deployed publicly. See `docs/multiplayer.md`.
+
+**Later (do not build unless asked):** the LLM rewrite stage, mixing in real QBReader tossups, bonuses, power marks, non-textbook sources, using buzz data to re-rank clues.
 
 ## Ground rules
 
@@ -103,7 +105,7 @@ For generated tossups, `set.name` is the book title and `packet` is the chapter.
   - `GET /query`: find real tossups by answerline (answer validation, referent mining, clue-position signals).
   - `GET /frequency-list`: most frequent answers for a subcategory (prior for what makes a good answer).
   - `GET /question-stats/tossup`: aggregated play statistics for a tossup.
-  - `GET /check-answer`: judges an answer as correct, incorrect, or prompt given an answerline. The reader uses this in v0.
+  - `GET /check-answer`: judges an answer as correct, incorrect, or prompt given an answerline. Not used yet: v0 judges answers locally (decision "answer judging").
 - Cache every response under `data/qbreader_cache/` and read from the cache first. Do not bulk-download the database.
 - Coverage of this book's topics will be partial. The relevant questions are probably under Social Science (linguistics, psychology) and Science (biology, for the brain); confirm the exact category and subcategory names in the docs. Every stage must work when QBReader has nothing on an answer.
 - QBReader questions are other people's writing. Use them as signals and, later, as attributed mix-ins. Never present one as generated.
@@ -111,17 +113,18 @@ For generated tossups, `set.name` is the book title and `packet` is the chapter.
 ## Stack (proposed defaults; change here if they change)
 
 - Pipeline: Python 3.12, uv, PyMuPDF, spaCy (en_core_web_sm), wordfreq, fastcoref (transformers < 5, PyTorch), SQLite, pytest.
-- Server: FastAPI. Serves tossups, proxies `check-answer`, logs buzzes. WebSocket rooms come later.
-- Web: Vite and TypeScript, no framework in v0.
+- Server: FastAPI and uvicorn. WebSocket rooms; serves tossups from `data/play/tossups.json`; judges answers locally (`server/judge.py`, same rules as `tools/judge.js`). Buzzes are kept in memory per room and not yet written to the `buzzes` table. QBReader `check-answer` is not used yet.
+- Web: plain HTML and JavaScript, no build step (`web/index.html` for rooms, `tools/play_template.html` for single player).
 
 ## Layout
 
 ```
-pipeline/omnibowl/   parse.py profile.py tag.py sentences.py backmatter.py candidates.py coref.py clues.py rank.py assemble.py rewrite.py run.py
+pipeline/omnibowl/   parse.py profile.py tag.py sentences.py backmatter.py candidates.py coref.py clues.py rank.py uniqueness.py assemble.py run.py
 pipeline/config.toml
 pipeline/tests/
-server/
-web/
+server/              room server (main.py, room.py), judge.py, tossups.py, tests/
+web/                 room page (index.html)
+tools/               play.py (player export), v1 rewrite batches, verify_rewrites.py, judge.js
 eval/                golden answers and clues, metric scripts
 docs/                one design note per stage, plus decisions.md
 data/                gitignored
@@ -135,11 +138,12 @@ Create these to match, then keep this section accurate.
 uv run python -m omnibowl.run --stage <name> --book data/books/<file>.pdf
 uv run python -m omnibowl.run --all --book data/books/<file>.pdf
 uv run pytest
-uv run uvicorn server.main:app --reload   # not built yet
-cd web && npm run dev                      # not built yet
+uv run python tools/play.py               # writes data/play/ (single-player page + tossups.json)
+uv run python -m server                   # multiplayer rooms on 0.0.0.0:8000, prints private links
+uv run uvicorn server.main:create_app --factory --reload   # server development, localhost
 ```
 
-Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`) -> sentences (`sentences.py`, spaCy) -> back matter (`backmatter.py`: glossary and index entries into `labels`). `--stage profile`, `--stage tag`, `--stage sentences` and `--stage backmatter` rerun from that step on. Then `--stage candidates`, `--stage coref` (local F-coref model, about 2 minutes per book), `--stage clues`, `--stage rank` and `--stage assemble` (writes `tossups`). Evals: `eval/tag_accuracy.py`, `eval/sentence_accuracy.py`, `eval/candidate_recall.py`, `eval/candidate_ranking.py`, `eval/candidate_classes.py`, `eval/clue_accuracy.py`. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
+Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`) -> sentences (`sentences.py`, spaCy) -> back matter (`backmatter.py`: glossary and index entries into `labels`). `--stage profile`, `--stage tag`, `--stage sentences` and `--stage backmatter` rerun from that step on. Then `--stage candidates`, `--stage coref` (local F-coref model, about 2 minutes per book), `--stage clues`, `--stage rank` (also writes `clue_uniqueness`) and `--stage assemble` (writes `tossups`). Evals: `eval/tag_accuracy.py`, `eval/sentence_accuracy.py`, `eval/candidate_recall.py`, `eval/candidate_ranking.py`, `eval/candidate_classes.py`, `eval/clue_accuracy.py`, `eval/clue_uniqueness.py`. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
 
 ## Evaluation
 

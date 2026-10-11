@@ -4,7 +4,8 @@ Turn a textbook into quizbowl tossups, so a class can be studied in the style of
 [protobowl](https://protobowl.com) and [QBReader](https://www.qbreader.org).
 
 A build pipeline reads a textbook PDF and writes pyramidal tossups to a database. A
-reader app reveals them word by word and lets you buzz. Every clue points back to the
+player reveals them word by word and lets you buzz, alone or in a protobowl-style room
+with friends. Every clue points back to the
 textbook sentence it came from, so nothing appears in a question that the book does not
 say.
 
@@ -21,9 +22,14 @@ discovered into a profile rather than hard-coded.
 | `candidates` | answer terms with keyness, coverage and a class | done |
 | `coref` | coreference chains | done |
 | `clues` | one-fact clues per answer, grounded in sentence ids | first version; being tuned |
-| `rank` | referent, giveaway, clue difficulty | rough first version |
-| `assemble` | tossups, ordered hard to easy | rough first version (219 tossups for the v0 book) |
-| reader | web app that reveals tossups and records buzzes | designed (`DESIGN.md`, spec in `docs/superpowers/specs/`); not built |
+| `rank` | referent, giveaway, clue difficulty, clue uniqueness | rough first version |
+| `assemble` | tossups, ordered hard to easy | rough first version (455 drafts for the v0 book) |
+| single-player page | static page that reveals tossups, judges answers, keeps score | working (local only) |
+| multiplayer rooms | protobowl-style rooms on a FastAPI WebSocket server | v0 working (private link, LAN or tunnel) |
+
+For the v0 book, drafts are rewritten into quizbowl wording in Claude Code sessions and
+checked against their source sentences by a classical verifier (`docs/rewrite-v1.md`);
+the pipeline still chooses every answer and fact. 266 verified tossups are in the player.
 
 Tested on two textbooks with different layouts: a single-column psycholinguistics text
 and a converted AP psychology ebook (three-level outline, panels, two-column glossary).
@@ -82,7 +88,9 @@ tables, so any stage can be rerun alone.
 - **Variants merged**: same words in any order or form; synonym head words from config
   ("color terms" = "color words"); abbreviations the book defines, found with the
   Schwartz & Hearst (2003) algorithm ("VOT" = "voice onset time"); a surname that is
-  also a one-word noun joins the person. Fragments inside longer terms and phrases
+  also a one-word noun joins the person. An answer that is another answer of the same
+  kind plus light trailing nouns ("N400 effect") becomes a variant of the shorter one
+  and plays as it. Fragments inside longer terms and phrases
   starting with determiner-like adjectives ("other languages") are dropped.
 - **Keyness.** One-word terms and people: smoothed log ratio of frequency in the book
   against everyday English from `wordfreq` (Kilgarriff's "simple maths"). Multi-word
@@ -118,6 +126,11 @@ kind of thing the book calls the answer ("X is a gene", "linguist Charles Hocket
 else the head noun of its definition, else its own head word, else "this term". The
 definition, after its head noun, becomes the giveaway.
 
+Clue uniqueness (`uniqueness.py`) is a retrieval test: each answer's clue sentences form
+a document, each clue minus the answer's words is a query, and every answer is ranked
+against it by query likelihood. A clue is unique when its own answer ranks first. Stored
+per clue as rank and margin; not yet used to pick clues.
+
 ### assemble (`assemble.py`)
 
 Replaces the answer with the referent ("this effect"), dangling pronouns with the name
@@ -135,10 +148,12 @@ stores tossups in QBReader's format with source, sections and clue ids.
 | [wordfreq](https://github.com/rspeer/wordfreq) | everyday-English word frequencies for keyness |
 | [fastcoref](https://github.com/shon-otmazgin/fastcoref) (`transformers` < 5, PyTorch) | coreference chains (F-coref model) |
 | SQLite (standard library) | all pipeline data |
+| [FastAPI](https://fastapi.tiangolo.com) + [uvicorn](https://www.uvicorn.org) | multiplayer room server (HTTP and WebSockets) |
 | pytest | tests |
 
-Planned for the reader: FastAPI and uvicorn (server), Vite and TypeScript (web), and
-QBReader's public API for answer checking.
+The player pages are plain HTML and JavaScript with no build step. Answers are judged
+locally (same rules in `server/judge.py` and `tools/judge.js`); QBReader's API is not
+used yet.
 
 ## Setup
 
@@ -164,6 +179,18 @@ uv run python -m omnibowl.run --stage assemble --book data/books/<file>.pdf
 uv run pytest
 ```
 
+Play the generated tossups (both write and read only `data/`, since they hold book text):
+
+```
+uv run python tools/play.py && open data/play/index.html    # single player
+uv run python -m server                                      # multiplayer: prints private links
+```
+
+The server binds port 8000 on all interfaces and prints a link for this machine and one
+for the same Wi-Fi, each with a private key. Any path is a room (`/lobby`, `/psych101`).
+Playing across networks (Tailscale, cloudflared) and the room rules are in
+`docs/multiplayer.md`.
+
 `--stage profile`, `tag`, `sentences` and `backmatter` rerun parse from that step on.
 Output goes to `data/omnibowl.db`.
 
@@ -180,12 +207,7 @@ quoted text.
 | `eval/candidate_ranking.py` | precision at k of keyness rankings vs. labels | see `docs/decisions.md` |
 | `eval/candidate_classes.py` | labeled share per class | answers 41% labeled |
 | `eval/clue_accuracy.py` | clues vs. a 20-answer golden set | precision 85%, recall 82% |
-
-For v1 of the v0 book, drafts can be rewritten into quizbowl wording in Claude Code
-sessions and verified against their sources (`docs/rewrite-v1.md`).
-
-`uv run python tools/play.py && open data/play/index.html` loads the generated tossups
-into the clickable prototype player (local only, since it holds book text).
+| `eval/clue_uniqueness.py` | whether clue uniqueness predicts answers the rewrite skipped | AUC 0.55 overall; see `docs/decisions.md` |
 
 `eval/review_tags.py` and `eval/review_clues.py` build local review pages (written to
 `data/review/`, since they contain book text) for checking labels by eye.
@@ -196,9 +218,12 @@ into the clickable prototype player (local only, since it holds book text).
 pipeline/omnibowl/   pipeline stages and CLI (run.py)
 pipeline/config.toml all thresholds and weights; no magic numbers in code
 pipeline/tests/      pytest suite
+server/              multiplayer room server (FastAPI), answer judge, tests
+web/                 room page (plain HTML/JS)
+tools/               player export (play.py), v1 rewrite batches and verifier
 profiles/            hand corrections to generated layout profiles
 eval/                labeled data and metric scripts
-docs/                design notes, decisions.md, reader spec
+docs/                design notes, decisions.md, reader spec, multiplayer.md
 DESIGN.md            visual and interaction system for the reader
 data/                books, database, profiles, caches (gitignored)
 ```
