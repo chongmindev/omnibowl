@@ -443,3 +443,14 @@ and its tossups play as the head. Rejected: B (keep separate, dedupe at play tim
 Broca and "alveolar ridge" into alveolar, hence the word list and the same-kind check.
 Sedivy: 15 variants, Myers: 12 (e.g. "placebo effect" -> placebo, "James-Lange theory" ->
 James-Lange). The player's surname-only accept now applies to people only.
+
+## play: answer judging (2026-10-11, P1 + S1)
+
+Judging was exact after normalization, with no prompts. Chosen: P1, prompt on the last
+words of a multi-word answer ("cortex" for "cerebral cortex"; not for people, not across
+"of"); S1, accept typos by length (none under 5 letters, 1 up to 8, 2 beyond), ignoring
+"the/a/an" and word order, but refuse a typo match when another book term is as close
+("morpheme" is not a typo of "phoneme"). Rejected: P2 (prompt on any inner term), S2
+(sound-alike matching), S3 (per-word typos). One rule set in two places, server/judge.py
+and tools/judge.js, held together by server/tests/judge_cases.json (the test runs both).
+Limits in `[judge]`; tools/play.py writes them and the guard terms into tossups.json.

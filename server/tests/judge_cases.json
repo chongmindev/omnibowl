@@ -1,0 +1,211 @@
+{
+ "rules": {
+  "ignore_words": [
+   "the",
+   "a",
+   "an"
+  ],
+  "typo_free_below": 5,
+  "one_typo_up_to": 8,
+  "long_typos": 2,
+  "terms": [
+   "phoneme",
+   "morpheme",
+   "aphasia",
+   "working memory",
+   "memory",
+   "lexical decision",
+   "broca"
+  ]
+ },
+ "cases": [
+  [
+   "phoneme",
+   [
+    "phoneme"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "Phonemes!",
+   [
+    "phoneme",
+    "phonemes"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "phonme",
+   [
+    "phoneme"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "morpheme",
+   [
+    "phoneme"
+   ],
+   [],
+   false,
+   "reject"
+  ],
+  [
+   "phonemee",
+   [
+    "phoneme"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "erp",
+   [
+    "erp"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "erq",
+   [
+    "erp"
+   ],
+   [],
+   false,
+   "reject"
+  ],
+  [
+   "wernikes area",
+   [
+    "wernickes area"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "wernikes aera",
+   [
+    "wernickes area"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "wrnks area",
+   [
+    "wernickes area"
+   ],
+   [],
+   false,
+   "reject"
+  ],
+  [
+   "the working memory",
+   [
+    "working memory"
+   ],
+   [
+    "memory"
+   ],
+   false,
+   "accept"
+  ],
+  [
+   "memory working",
+   [
+    "working memory"
+   ],
+   [
+    "memory"
+   ],
+   false,
+   "accept"
+  ],
+  [
+   "memory",
+   [
+    "working memory"
+   ],
+   [
+    "memory"
+   ],
+   false,
+   "prompt"
+  ],
+  [
+   "memory",
+   [
+    "working memory"
+   ],
+   [
+    "memory"
+   ],
+   true,
+   "reject"
+  ],
+  [
+   "aphasia",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   false,
+   "prompt"
+  ],
+  [
+   "aphasai",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   false,
+   "prompt"
+  ],
+  [
+   "broca",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   false,
+   "reject"
+  ],
+  [
+   "",
+   [
+    "phoneme"
+   ],
+   [],
+   false,
+   "reject"
+  ],
+  [
+   "lexical",
+   [
+    "lexical decision"
+   ],
+   [
+    "decision"
+   ],
+   false,
+   "reject"
+  ]
+ ]
+}

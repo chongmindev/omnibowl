@@ -147,6 +147,8 @@ button{all:unset;cursor:pointer}
 </div>
 
 <script>
+__JUDGE_JS__
+const JR=judgeRules(__JUDGE__);
 const CH=__CHAPTERS__;
 const T=__TOSSUPS__;
 const $=id=>document.getElementById(id);
@@ -155,7 +157,6 @@ let S={state:'loading',t:null,words:[],i:0,num:0,pts:0,c:0,neg:0,heard:0,log:[],
 if(!S.name){S.name='guest'+Math.floor(1000+Math.random()*9000);store.set('name',S.name)}
 let tick=null,timer=null,timerEnd=0,timerDur=0,raf=null;
 const BUZZ_WINDOW=5000,ANSWER_WINDOW=8000;
-const norm=s=>s.toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
 
 function renderSide(){
  $('name').textContent=S.name;$('sc').textContent=S.c;$('sn').textContent=S.neg;$('sh').textContent=S.heard;$('sp').textContent=S.pts;
@@ -200,11 +201,12 @@ function buzz(){
 function submit(timeout){
  if(S.state!=='buzzed')return;stopAll();S.state='checking';setAct('checking','Checking',true);$('ans').disabled=true;
  setTimeout(()=>{$('ans').disabled=false;const g=norm($('ans').value);
-  if(!timeout&&!S.prompted&&S.t.prompt.some(p=>norm(p)===g)){S.prompted=true;S.state='buzzed';$('ansLab').textContent='Be more specific';$('ans').value='';$('ans').focus();setAct('buzz','Enter · submit');startBar(ANSWER_WINDOW,()=>submit(true));return}
-  judge(g)},600);
+  const v=timeout?'reject':judgeAnswer($('ans').value,S.t.acc,S.t.prompt,JR,S.prompted);
+  if(v==='prompt'){S.prompted=true;S.state='buzzed';$('ansLab').textContent='Be more specific';$('ans').value='';$('ans').focus();setAct('buzz','Enter · submit');startBar(ANSWER_WINDOW,()=>submit(true));return}
+  judge(g,v==='accept')},600);
 }
-function judge(g){
- stopAll();const ok=g!==null&&g!==''&&S.t.acc.some(a=>norm(a)===g);
+function judge(g,accepted){
+ stopAll();const ok=g!==null&&g!==''&&!!accepted;
  const p=g===null?0:ok?10:(S.finished?0:-5);
  S.heard++;S.pts+=p;if(p>0)S.c++;if(p<0)S.neg++;
  S.state='judged';S.i=S.words.length;qText(S.words.join(' '));$('ansWrap').classList.remove('open');

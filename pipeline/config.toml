@@ -312,3 +312,21 @@ category = "Social Science"
 subcategory = "Psychology"
 set_year = 0
 pipeline_version = "0.1-rough"
+
+# Answer judging in the player and the multiplayer server (decision "answer judging", P1 +
+# S1, 2026-10-11). tools/play.py writes these into tossups.json; server/judge.py and
+# tools/judge.js apply them.
+[judge]
+# Words dropped before comparing; word order is ignored too.
+ignore_words = ["the", "a", "an"]
+# Typos allowed (Damerau edit distance on the whole answer): none for answers shorter
+# than `typo_free_below` letters, 1 up to `one_typo_up_to`, `long_typos` beyond.
+typo_free_below = 5
+one_typo_up_to = 8
+long_typos = 2
+# P1: prompt on the last words of a multi-word answer ("aphasia" for "Broca's aphasia").
+# Forms with these words are skipped (the head comes before "of": "theory of mind").
+prompt_skip_words = ["of", "and", "or"]
+# Classes whose terms guard against near misses: a typo match is refused when the guess
+# is as close to one of these other terms ("morpheme" is not a typo of "phoneme").
+guard_classes = ["answer", "broad_answer", "clue_only", "too_broad", "variant"]

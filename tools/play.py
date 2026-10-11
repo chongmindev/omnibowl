@@ -5,8 +5,8 @@ uv run python tools/play.py [--book language_in_mind] && open data/play/index.ht
 Also writes data/play/tossups.json (book, chapters, tossups) for the multiplayer server.
 
 The output holds textbook text, so it is written to data/ (gitignored) and stays local.
-Answer judging in the prototype is a local match against the answerline and its
-accepted alternates (normalized); prompts are not generated yet.
+Answer judging (tools/judge.js here, server/judge.py in the server) accepts the answerline,
+its alternates and small typos, and prompts on the last words of a multi-word answer.
 """
 
 import argparse
@@ -15,6 +15,7 @@ import re
 import sqlite3
 from pathlib import Path
 
+from omnibowl import config
 from omnibowl.assemble import answerline
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +24,17 @@ ROOT = Path(__file__).resolve().parents[1]
 def norm(s: str) -> str:
     s = re.sub(r"<[^>]+>", "", s).lower().replace("’", "").replace("'", "")
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", s)).strip()
+
+
+def prompts(accept: list[str], skip: set[str]) -> list[str]:
+    """P1 (decision "answer judging"): the last words of a multi-word accepted form ask for
+    more ("aphasia" for "brocas aphasia"), unless they are themselves accepted."""
+    out = set()
+    for a in accept:
+        w = a.split()
+        if len(w) > 1 and not skip & set(w):
+            out |= {" ".join(w[k:]) for k in range(1, len(w))}
+    return sorted(out - set(accept))
 
 
 def answer_group(conn, term_id: int):
@@ -46,6 +58,7 @@ def main() -> None:
     ap.add_argument("--all", action="store_true",
                     help="include unrewritten drafts (default: only verified rewrites, when any exist)")
     args = ap.parse_args()
+    jc = config.load()["judge"]
     conn = sqlite3.connect(args.db)
     conn.row_factory = sqlite3.Row
     book = conn.execute("SELECT * FROM books WHERE slug = ?", (args.book,)).fetchone()
@@ -101,9 +114,18 @@ def main() -> None:
         tossups.append({"id": rid, "ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
                         "secs": ", ".join(s for s in secs if s) or "the book",
                         "q": rewrites.get(rid, t["question"]), "a": answerline(display, forms[1:])[0],
-                        "acc": [a for a in accept if a], "prompt": [], "rw": rid in rewrites})
+                        "acc": [a for a in accept if a], "prompt": prompts(accept, set(jc["prompt_skip_words"])) if kind != "person" else [],
+                        "rw": rid in rewrites})
+    # Judging rules and the book's other terms (a typo match is refused when the guess is
+    # as close to one of them), shared by the page (tools/judge.js) and the server.
+    guard = sorted({norm(r[0]) for r in conn.execute(
+        f"SELECT display FROM terms WHERE book_id = ? AND class IN ({','.join('?' * len(jc['guard_classes']))})",
+        (book["id"], *jc["guard_classes"]))} - {""})
+    judge = {k: jc[k] for k in ("ignore_words", "typo_free_below", "one_typo_up_to", "long_typos")} | {"terms": guard}
     page = (ROOT / "tools" / "play_template.html").read_text()
-    page = (page.replace("__CHAPTERS__", json.dumps(chapters, ensure_ascii=False))
+    page = (page.replace("__JUDGE_JS__", (ROOT / "tools" / "judge.js").read_text())
+                .replace("__JUDGE__", json.dumps(judge, ensure_ascii=False))
+                .replace("__CHAPTERS__", json.dumps(chapters, ensure_ascii=False))
                 .replace("__TOSSUPS__", json.dumps(tossups, ensure_ascii=False))
                 .replace("__COUNT__", str(len(tossups))))
     out = ROOT / "data" / "play" / "index.html"
@@ -112,7 +134,7 @@ def main() -> None:
     # The same tossups as data for the multiplayer server (server/ reads this file, never
     # the database, so pipeline reruns cannot break a game in progress).
     (out.parent / "tossups.json").write_text(json.dumps(
-        {"book": book["title"], "slug": args.book, "chapters": chapters, "tossups": tossups},
+        {"book": book["title"], "slug": args.book, "chapters": chapters, "judge": judge, "tossups": tossups},
         ensure_ascii=False, indent=1))
     print(f"wrote {out} and tossups.json ({len(tossups)} tossups, {sum(x['rw'] for x in tossups)} rewritten)")
 
