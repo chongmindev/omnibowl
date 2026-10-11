@@ -3,7 +3,7 @@
 import pytest
 import spacy
 
-from omnibowl.candidates import capitalized_share, concept_key, concept_spans, person_spans, topic_names
+from omnibowl.candidates import capitalized_share, concept_key, concept_spans, person_spans, topic_names, variant_heads
 
 
 @pytest.fixture(scope="module")
@@ -107,3 +107,13 @@ def test_surname_merge_needs_capitals():
         return [(0, 0, 0, s) for s in surfaces]
     assert capitalized_share(m(["Broca", "Broca"])) == 1.0
     assert capitalized_share(m(["memory"] * 9 + ["Memory"])) < 0.5
+
+
+def test_variant_heads():
+    classed = [["answer", 1, "n400"], ["answer", 2, "n400 effect"], ["answer", 3, "broca’s area"],
+               ["answer", 4, "lexical decision"], ["answer", 5, "lexical decision task"],
+               ["answer", 6, "alveolar ridge"], ["answer", 7, "alveolar"], ["clue_only", 8, "priming effect"],
+               ["answer", 9, "priming"], ["answer", 10, "brain-imaging study"], ["answer", 11, "brain imaging"]]
+    kinds = {i: "concept" for _, i, _ in classed}
+    out = variant_heads(classed, kinds, {"effect", "task", "study"})
+    assert out == {2: 1, 5: 4, 10: 11}

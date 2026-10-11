@@ -431,3 +431,15 @@ speech .41 the one written exception). Myers: behavior .34, brain .41 lowest; ey
 vision .84. Not yet used by assemble or the packs: thresholds are an open choice.
 What breaks on another book: nothing book-specific; very small books give answers
 few sentences, so ranks get noisy.
+
+## candidates: answer variants (2026-10-11, option A)
+
+"N400", "N400 activity" and "N400 effect" were three answers, so the player had three
+tossups on one thing. Chosen: an answer that is another answer of the same kind plus only
+light trailing nouns (`variant_light_nouns`: effect, task, theory, system, ...) becomes
+class `variant` of the shorter one (`term_variants`); its forms are accepted for the head,
+and its tossups play as the head. Rejected: B (keep separate, dedupe at play time), C
+(nothing). A first rule that took any everyday trailing word merged "Broca's area" into
+Broca and "alveolar ridge" into alveolar, hence the word list and the same-kind check.
+Sedivy: 15 variants, Myers: 12 (e.g. "placebo effect" -> placebo, "James-Lange theory" ->
+James-Lange). The player's surname-only accept now applies to people only.

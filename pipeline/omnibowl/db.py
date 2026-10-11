@@ -160,6 +160,14 @@ CREATE TABLE IF NOT EXISTS terms (
     UNIQUE (book_id, kind, norm)
 );
 
+-- Answer variants (candidates.classify_terms): term_id has class `variant` and is
+-- played as head_id ("N400 effect" -> "N400").
+CREATE TABLE IF NOT EXISTS term_variants (
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    term_id     INTEGER PRIMARY KEY REFERENCES terms(id),
+    head_id     INTEGER NOT NULL REFERENCES terms(id)
+);
+
 -- Every place a term appears: sentence and character offsets within its text.
 CREATE TABLE IF NOT EXISTS mentions (
     id          INTEGER PRIMARY KEY,
@@ -259,7 +267,7 @@ PARSE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clu
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
 LABEL_TABLES = ["labels"]
-CANDIDATE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "mentions", "terms"]
+CANDIDATE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "mentions", "term_variants", "terms"]
 COREF_TABLES = ["coref"]
 CLUE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues"]
 RANK_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta"]

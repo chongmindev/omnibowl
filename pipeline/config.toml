@@ -178,6 +178,14 @@ broad_min_name_chars = 3
 broad_by_keyness = false
 # Answers made only of everyday/broad words of the book become clue_only (F3, 2026-10-10).
 generic_answer_filter = true
+# Variant merge (decision "answer variants", A, 2026-10-11): an answer that is another
+# answer of the same kind plus only these trailing light nouns ("N400 effect", "priming
+# effect", "lexical decision task") becomes class `variant` of the shorter one; its forms
+# are accepted for it. English words, not book facts.
+variant_merge = true
+variant_light_nouns = ["effect", "activity", "response", "task", "system", "theory", "view", "model",
+                       "network", "study", "process", "datum", "data", "level", "scan", "principle",
+                       "phenomenon", "paradigm", "experiment", "work"]
 answer_min_sentences = 5
 # Lowered from 4.0 / 100 on 2026-10-10 (more answers for the v1 rewrite; F3 filters junk).
 answer_log_ratio = 3.5

@@ -25,6 +25,20 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", s)).strip()
 
 
+def answer_group(conn, term_id: int):
+    """(display, forms) of the answer a term is played as: a variant ("N400 effect",
+    decision "answer variants") plays as its head, and every form in the group is accepted."""
+    head = conn.execute("SELECT head_id FROM term_variants WHERE term_id = ?", (term_id,)).fetchone()
+    head_id = head[0] if head else term_id
+    display, kind = conn.execute("SELECT display, kind FROM terms WHERE id = ?", (head_id,)).fetchone()
+    forms = []
+    for r in conn.execute("SELECT forms FROM terms WHERE id = ? OR id IN "
+                          "(SELECT term_id FROM term_variants WHERE head_id = ?) ORDER BY id = ? DESC, id",
+                          (head_id, head_id, head_id)):
+        forms += [f for f, _ in json.loads(r[0])]
+    return display, kind, forms
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--book", default="language_in_mind")
@@ -70,22 +84,23 @@ def main() -> None:
                WHERE t.id = ?""", (int(base.rsplit("-", 1)[1]),)).fetchone()
         if t is None:
             continue
-        ans_html, _ = answerline(t["display"], [f for f, _ in json.loads(t["forms"])])
+        ans_html, _ = answerline(*answer_group(conn, t["term_id"])[::2])
         num = int(t["number"]) if (t["number"] or "").isdigit() else None
         rows.append((rid, {"term_id": t["term_id"], "answer": ans_html, "question": "", "section_ids": "[]",
                            "packet_json": json.dumps({"number": num})}))
     for rid, t in rows:
         if rewrites and not args.all and rid not in rewrites:
             continue
-        term = conn.execute("SELECT display, forms FROM terms WHERE id = ?", (t["term_id"],)).fetchone()
-        forms = [term["display"]] + [f for f, _ in json.loads(term["forms"])]
+        display, kind, forms = answer_group(conn, t["term_id"])
+        forms = [display] + forms
+        # A person's surname alone is accepted ("Broca" for "Paul Broca").
         accept = sorted({norm(f) for f in forms} | {norm(f).rstrip("s") for f in forms}
-                        | {norm(f).split()[-1] for f in forms if len(norm(f).split()) == 2 and term["display"][0].isupper()})
+                        | {norm(f).split()[-1] for f in forms if len(norm(f).split()) == 2 and kind == "person"})
         packet = json.loads(t["packet_json"] or "{}")
         secs = [secnum.get(s, "") for s in json.loads(t["section_ids"])]
         tossups.append({"id": rid, "ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
                         "secs": ", ".join(s for s in secs if s) or "the book",
-                        "q": rewrites.get(rid, t["question"]), "a": t["answer"],
+                        "q": rewrites.get(rid, t["question"]), "a": answerline(display, forms[1:])[0],
                         "acc": [a for a in accept if a], "prompt": [], "rw": rid in rewrites})
     page = (ROOT / "tools" / "play_template.html").read_text()
     page = (page.replace("__CHAPTERS__", json.dumps(chapters, ensure_ascii=False))

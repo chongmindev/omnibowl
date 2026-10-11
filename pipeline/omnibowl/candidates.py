@@ -461,7 +461,9 @@ def classify_terms(book_id: int, conn, cfg: dict) -> None:
     broad_answer (decision "broad answers", options B + A, 2026-10-10): a too_broad term
                 the book itself treats as a topic (`book_topics`), or, if
                 `broad_by_keyness`, one that also clears the answer keyness line. Broad
-                answers ("eye", "sleep") draw their clues from many chapters."""
+                answers ("eye", "sleep") draw their clues from many chapters.
+    variant     an answer that is another answer plus light nouns ("N400 effect"), played
+                as that answer (`term_variants`, decision "answer variants")."""
     c = cfg["candidates"]["classes"]
     topics = book_topics(conn, book_id, c)
     rows = conn.execute("SELECT id, keyness, keyness_kind, coverage, n_chapters, norm, forms FROM terms WHERE book_id = ?",
@@ -495,5 +497,33 @@ def classify_terms(book_id: int, conn, cfg: dict) -> None:
             words = re.findall(r"[a-z0-9]+", o[2])
             if o[0] == "answer" and len(words) > 1 and all(w in broad or w.rstrip("s") in broad for w in words):
                 o[0] = "clue_only"
+    conn.execute("DELETE FROM term_variants WHERE book_id = ?", (book_id,))
+    if c["variant_merge"]:
+        kinds = {r["id"]: r["kind"] for r in conn.execute("SELECT id, kind FROM terms WHERE book_id = ?", (book_id,))}
+        pairs = variant_heads(out, kinds, set(c["variant_light_nouns"]))
+        for o in out:
+            if o[1] in pairs:
+                o[0] = "variant"
+        conn.executemany("INSERT INTO term_variants (book_id, term_id, head_id) VALUES (?, ?, ?)",
+                         [(book_id, v, h) for v, h in pairs.items()])
     conn.executemany("UPDATE terms SET class = ? WHERE id = ?", [(cls, tid) for cls, tid, _ in out])
     conn.commit()
+
+
+def variant_heads(classed: list, kinds: dict[int, str], light: set[str]) -> dict[int, int]:
+    """{variant term id: head term id} for answers that are a shorter answer of the same
+    kind plus only light trailing nouns ("n400 effect" -> "n400"; "lexical decision task"
+    -> "lexical decision"). `classed` rows are [class, id, norm]. Hyphens count as spaces."""
+    words = lambda n: re.findall(r"[a-z0-9’']+", n.replace("-", " "))
+    heads = {(" ".join(words(n)), kinds[i]): i for cls, i, n in classed if cls in ("answer", "broad_answer")}
+    out = {}
+    for cls, i, n in classed:
+        w = words(n)
+        if cls != "answer":
+            continue
+        for k in range(len(w) - 1, 0, -1):
+            h = heads.get((" ".join(w[:k]), kinds[i]))
+            if h is not None and all(x in light or x.rstrip("s") in light for x in w[k:]):
+                out[i] = h
+                break
+    return out

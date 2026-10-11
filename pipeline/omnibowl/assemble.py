@@ -325,15 +325,20 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
     key_spans = {}
     for r in conn.execute(
             """SELECT m.term_id, m.sentence_id, m.start_char, m.end_char FROM mentions m
-               JOIN terms t ON t.id = m.term_id WHERE m.book_id = ? AND t.class IN ('answer', 'broad_answer', 'clue_only')""",
+               JOIN terms t ON t.id = m.term_id WHERE m.book_id = ? AND t.class IN ('answer', 'broad_answer', 'clue_only', 'variant')""",
             (book_id,)):
         key_spans.setdefault(r["sentence_id"], []).append((r["term_id"], r["start_char"], r["end_char"]))
+
+    variant_forms = {}  # head term id -> its variants' surface forms ("N400 effect")
+    for r in conn.execute("SELECT v.head_id, t.forms FROM term_variants v JOIN terms t ON t.id = v.term_id "
+                          "WHERE v.book_id = ?", (book_id,)):
+        variant_forms.setdefault(r["head_id"], []).extend(f for f, _ in json.loads(r["forms"]))
 
     number = 0
     for t in conn.execute(
             """SELECT t.*, m.referent, m.plural, m.giveaway, m.main_chapter, m.referent_source FROM terms t
                JOIN answer_meta m ON m.term_id = t.id WHERE t.book_id = ? ORDER BY t.id""", (book_id,)):
-        forms = [f for f, _ in json.loads(t["forms"])]
+        forms = [f for f, _ in json.loads(t["forms"])] + variant_forms.get(t["id"], [])
         ref, many = t["referent"], bool(t["plural"])
         if a["skip_generic_referents"] and t["referent_source"] == "generic":
             DROPS["answer: generic referent"] += 1
