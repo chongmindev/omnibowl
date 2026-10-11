@@ -29,7 +29,7 @@ class Settings:
     max_wpm: int = 600
     max_name: int = 20
     max_answer: int = 200
-    log_length: int = 50
+    log_length: int = 100         # history entries kept: finished tossups, joins, renames
 
 
 class Conn(Protocol):
@@ -68,6 +68,7 @@ class Room:
         self.conns: dict[Conn, str] = {}
         self.players: dict[str, Player] = {}
         self.selected: set[int] = {n for n, _ in lib.chapters}
+        self.skip_allowed = False      # skipping a tossup mid-read is a room option, off by default
         self.wpm = self.settings.default_wpm
         self.state = "idle"
         self.empty_reason = ""
@@ -96,6 +97,7 @@ class Room:
                 p = Player(pid=pid, name=self._clean_name(name) or "guest",
                            color=COLORS[len(self.players) % len(COLORS)])
                 self.players[pid] = p
+                self._history({"kind": "join", "pid": pid, "name": p.name})
             p.conns += 1
             self.conns[conn] = pid
             if self.state == "idle":
@@ -136,6 +138,9 @@ class Room:
                 changed = self._skip()
             elif kind == "chapters":
                 changed = self._set_chapters(msg.get("chapters"))
+            elif kind == "skip_allowed":
+                self.skip_allowed = bool(msg.get("allowed"))
+                changed = True
             elif kind == "wpm":
                 changed = self._set_wpm(msg.get("wpm"))
             elif kind == "name":
@@ -237,18 +242,21 @@ class Room:
                 p.heard += 1
         last = self.buzzes[-1] if self.buzzes else None
         # Finished tossups only, so the full question and answer can be reread from the log.
-        self.log.insert(0, {"num": self.num, "answer": self.tossup.answer_html,
+        self._history({"kind": "tossup", "num": self.num, "answer": self.tossup.answer_html,
                             "pid": last.pid if last else None, "points": last.points if last else 0,
                             "question": " ".join(self.tossup.words), "chapter": self.tossup.chapter,
                             "sections": self.tossup.sections, "rewritten": self.tossup.rewritten,
                             "buzzes": [b.__dict__ for b in self.buzzes]})
-        del self.log[self.settings.log_length:]
         self.buzzer = None
         self.i = len(self.tossup.words)
         self._transition("judged")
 
+    def _history(self, entry: dict) -> None:
+        self.log.insert(0, entry)
+        del self.log[self.settings.log_length:]
+
     def _skip(self) -> bool:
-        if self.state in ("reading", "window"):
+        if self.state in ("reading", "window") and self.skip_allowed:
             self._end()
         elif self.state in ("judged", "empty"):
             self._next()
@@ -282,7 +290,11 @@ class Room:
         name = self._clean_name(name)
         if not name:
             return False
+        old = self.players[pid].name
+        if name == old:
+            return False
         self.players[pid].name = name
+        self._history({"kind": "rename", "pid": pid, "old": old, "name": name})
         return True
 
     # ---- timer tasks ------------------------------------------------------------------
@@ -330,7 +342,10 @@ class Room:
             "selected": sorted(self.selected), "wpm": self.wpm,
             "state": self.state, "empty_reason": self.empty_reason, "num": self.num,
             "buzzer": self.buzzer, "prompted": self.prompted, "typed": self.typed,
-            "locked": sorted(self.locked),
+            "locked": sorted(self.locked), "skip_allowed": self.skip_allowed,
+            # Buzzes on the tossup in progress (word_index = words revealed at the buzz), so
+            # every screen can mark where each player buzzed. They hold no answerline.
+            "buzzes": [b.__dict__ for b in self.buzzes] if self.tossup else [],
             "timer": None, "tossup": None, "result": None,
             "players": [{"pid": p.pid, "name": p.name, "color": p.color, "correct": p.correct,
                          "neg": p.neg, "heard": p.heard, "points": p.points, "away": p.conns == 0}

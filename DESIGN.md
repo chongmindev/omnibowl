@@ -25,6 +25,7 @@ From the patterns that make interfaces look accidental instead of designed:
 - No icons for decoration, and no icon larger than the text beside it.
 - No animation without the shared easing curve, and nothing that pops in.
 - No control without a visible response: every action shows progress, success or failure.
+- No center dots (·) as separators in UI text. Use spacing, commas or " / ".
 - No dead controls. A control that isn't built yet is shown disabled and says so on hover.
 
 ## Color
@@ -89,53 +90,72 @@ everything else.
 │ verdict row (when judged)                ├─────────────────┤
 ├──────────────────────────────────────────┤ CHAPTERS        │
 │ log: 03 Broca's area              +10    │ ■ 03 ...        │
-│      02 garden path sentences      −5    │ □ 07 ...        │
+│      Mina joined the game                │ □ 07 ...        │
 ├──────────────────────────────┬───────────┤                 │
-│ Space · buzz   → · next      │   BUZZ    │                 │
+│ Space to buzz                │   BUZZ    │                 │
 └──────────────────────────────┴───────────┴─────────────────┘
 ```
 
 - Main column left, sidebar right (fixed width `clamp(240px, 20vw, 340px)`).
-- Below 900px wide, the sidebar moves under the reader as a single column.
+- The page never scrolls: it fills the window, the log and the sidebar scroll inside
+  their own areas, and the footer (Buzz / Next) is always on screen.
+- Below 900px wide, the sidebar moves under the reader as a single column; there the
+  page scrolls and the footer sticks to the bottom.
 
 ## Components
 
 - **Header.** Black wordmark cell, a metadata cell, and a blue tossup-number cell. For a
-  generated tossup the metadata is its chapter and section; for a QBReader stand-in it
+  generated tossup the metadata reads "Generated tossup" and never names the chapter or
+  section, which would be a clue (they appear in the verdict and history after the
+  tossup); for a QBReader stand-in it
   is "QBREADER / <set name> <year> / filed under CH. N", so it never reads as if the
   textbook wrote it.
 - **Question.** Red Hat Mono, full column width. A 2px red cursor follows the last
   revealed word. The question block does not start at the top of the column: it sits
   `clamp(28px, 12vh, 140px)` down, with a 3px rule above it, so the eye lands on it
   lower on the screen.
+- **Buzz markers.** In rooms, each buzz is marked in the question text at the word where
+  it happened: the player's 9px square, their name in uppercase label type, and the
+  result (`+10` blue, `−5` red, `0` mute; "buzzing" in red while they answer). No box
+  around it. Markers stay when the question is reread from the history.
 - **Answer row.** Opens under the question on buzz: an ink label cell "Answer" and a
-  text field. A QBReader prompt shows "Be more specific" in the label cell.
-- **Verdict row.** A colored result cell (blue "+10 · correct", red "−5 · incorrect",
-  red "0 · incorrect"), the answerline with the required part underlined, and the
+  text field. A QBReader prompt shows "Be more specific" in the label cell. In rooms,
+  other players see the row open read-only with "<name> answering" in the label cell
+  and the buzzer's typing as it happens.
+- **Verdict row.** A colored result cell (blue "+10 correct", red "−5 incorrect",
+  red "0 incorrect", red "0 no buzz"; another player's name follows when the deciding
+  buzz was theirs), everyone's answers in mute, the answerline with the required part underlined, and the
   source: chapters and sections for generated tossups, or set name and year for
   QBReader tossups, marked "QBReader".
-- **Tossup log.** Newest first: number, answer, result colored by sign. Hairline rows.
+- **History.** Newest first, hairline rows. A finished tossup shows number, answer, and
+  result colored by sign (with the player's name if not you); clicking it (or Enter)
+  expands it in place to the full question with buzz markers, the answerline, who said
+  what, and its chapter and sections. Room events ("Mina joined the game", "guest4821
+  renamed to Mina") sit between them as single mono `--mute` lines.
 - **Time bar.** 10px yellow bar attached directly under the question (a hairline
   between them), draining left to right, so the clock sits next to what you are
   reading. Used for the buzz window after the question ends and for the answer window
   after a buzz. Nothing tracks progress while the question is being read.
-- **Footer.** Key hints in mono on the left; the action cell on the right: red "Buzz",
-  red "Enter · submit" while answering, yellow "→ · next" after a verdict.
+- **Footer.** Key hints in mono on the left ("Space to buzz", "Enter to submit"); the
+  action cell on the right: red "Buzz", red "Submit" while answering, disabled "Locked
+  out" after your wrong buzz, yellow "Next →" after a verdict.
 - **Sidebar sections.** Each has an uppercase label row over its content.
   - Textbook: title, author, edition, year, with a blue stripe; a disabled "Change"
     control whose hover note reads "Not built yet: one textbook for now".
   - Scoreboard: a ranked player table (rank, player, +10, −5, heard, points). Solo play
-    is a one-row table. Your row is white with a 4px blue left edge. In rooms (later), a
+    is a one-row table. Your row is white with a 4px blue left edge. In rooms, a
     4px red edge and "buzzing" mark whoever holds the buzz, and away players use
     `--faint`. Each player has a 9px square marker in blue, yellow, red or ink.
   - Speed: a slider; the track is hairline-outlined, the fill yellow, the handle a 3px
     ink bar. Shows words per minute.
+  - Room: square checkboxes for room-wide options, currently "Allow skipping
+    mid-question" (off by default).
   - Chapters: a list of square checkboxes (11px, 2px ink border, filled ink when on),
     chapter number in mono, title.
 - **Your name.** You start as `guest` plus four random digits (e.g. `guest4821`). On the
   first visit only, a black note under your scoreboard row reads "You're guest4821.
-  Click to rename." Clicking your row opens an editor under it: a mono text field and a
-  hint line ("5 of 20 characters"), with Enter to save and Esc to cancel. Names are 1 to
+  Click to rename." Clicking your row turns your name into a text field in place (same
+  type, a 2px ink underline); Enter or clicking elsewhere saves, Esc cancels. Names are 1 to
   20 characters, trimmed; empty reverts to the previous name. Saved on the device.
 - **Disabled control.** `--faint` text, `not-allowed` cursor, a black hover note in mono.
 
@@ -158,7 +178,7 @@ everything else.
 | Buzzed | Reading stops at once; the answer row opens with focus in the field; the yellow bar drains the answer window. |
 | Checking | The submit cell reads "Checking" with a short sweep and is disabled until the result returns. |
 | Prompt | The answer row stays open with "Be more specific"; the answer window restarts. |
-| Judged | Verdict row appears; full question shown; the tossup is added to the log; the action cell turns yellow "→ · next". |
+| Judged | Verdict row appears; full question shown; the tossup is added to the log; the action cell turns yellow "Next →". |
 | Answer check offline | Falls back to a local match and marks the verdict "checked offline". |
 | Time runs out | Buzz window: the tossup is judged as unanswered (0). Answer window: whatever is typed is submitted. |
 | No tossups | The question area explains why: no chapters selected, or none available for them. |
@@ -170,7 +190,7 @@ everything else.
 |---|---|
 | Space | Buzz (while reading or in the buzz window) |
 | Enter | Submit the answer |
-| → | Next tossup; skip while reading |
+| → | Next tossup; skip while reading only when the room allows skipping |
 
 Speed is changed only with the slider. Every action also works by pointer and touch, and
 every control has a visible focus state: a 2px ink outline offset 2px.

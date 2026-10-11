@@ -70,12 +70,17 @@ broadcasts.
   answerline reaches the page only after the tossup ends.
 - **Scores:** +10 correct, −5 wrong before the last word, 0 wrong after it. If the answer
   window runs out, whatever was typed is submitted.
-- **Next / skip:** → (or the yellow button) skips the tossup being read or starts the next
-  one, for the whole room. The chapter filter is shared too.
-- **Log:** click a finished tossup (or focus it and press Enter) to reread the full
-  question, the answerline, who said what, and the sections its clues came from.
+- **Next / skip:** after a tossup, → (or the yellow Next button) starts the next one for
+  the whole room. Skipping a tossup while it is being read is off until someone ticks
+  "Allow skipping mid-question" (sidebar, Room). The chapter filter is shared too.
+- **Buzz markers:** each buzz is marked in the question text where it happened, with the
+  player's color and result, for everyone, during the tossup and afterwards.
+- **History:** finished tossups, "joined the game" and renames, newest first. Click a
+  tossup (or focus it and press Enter) to reread the full question with its buzz
+  markers, the answerline, who said what, and the sections its clues came from.
 - **Players:** each browser tab is one player (a reload keeps your seat and score). Names
-  start as `guest####`; click your scoreboard row to rename. Players who close the page
-  stay on the board as "away".
+  start as `guest####`; click your name on the scoreboard to edit it in place (Enter or
+  clicking away saves, Esc cancels). Players who close the page stay on the board as
+  "away". The header doesn't name the chapter, since that would be a clue.
 
 Timings and limits are in `server/room.py` (`Settings`).

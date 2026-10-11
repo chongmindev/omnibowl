@@ -123,9 +123,11 @@ def test_prompt_once_then_reject():
         r, a = room(), Fake()
         await r.join(a, "p1", "alice")
         await r.handle(a, {"type": "chapters", "chapters": [1]})
-        await r.handle(a, {"type": "next"})
         await until(a, "judged")
         await r.handle(a, {"type": "next"})  # chapter 1 only: tossup "a", which has a prompt form
+        if r.tossup.id != "a":  # the first tossup was "b": hear "a" next
+            await until(a, "judged")
+            await r.handle(a, {"type": "next"})
         await until(a, "window")
         await r.handle(a, {"type": "buzz"})
         await r.handle(a, {"type": "answer", "text": "answer"})
@@ -140,6 +142,7 @@ def test_chapters_filter_and_empty_state():
         r, a = room(), Fake()
         await r.join(a, "p1", "alice")
         await r.handle(a, {"type": "chapters", "chapters": []})
+        await r.handle(a, {"type": "skip_allowed", "allowed": True})
         await r.handle(a, {"type": "next"})  # skip the running tossup
         await r.handle(a, {"type": "next"})
         s = a.state
@@ -170,4 +173,51 @@ def test_names_wpm_and_rejoin_keep_score():
         await r.join(a2, "p1", "ignored")
         p1 = [p for p in a2.state["players"] if p["pid"] == "p1"][0]
         assert p1["points"] == 30 and not p1["away"] and p1["name"] == "x" * 20
+    run(go())
+
+
+def test_skip_is_off_until_a_player_allows_it():
+    async def go():
+        slow = Settings(buzz_window=1, answer_window=1, loading_delay=0, default_wpm=600)
+        r, a = room(settings=slow), Fake()
+        await r.join(a, "p1", "alice")
+        await until(a, "reading")
+        assert a.state["skip_allowed"] is False
+        await r.handle(a, {"type": "next"})
+        assert a.state["state"] == "reading"  # not skipped
+        await r.handle(a, {"type": "skip_allowed", "allowed": True})
+        await r.handle(a, {"type": "next"})
+        assert a.state["state"] == "judged" and a.state["skip_allowed"] is True
+    run(go())
+
+
+def test_history_has_joins_renames_and_tossups_newest_first():
+    async def go():
+        r, a, b = room(), Fake(), Fake()
+        await r.join(a, "p1", "alice")
+        await r.join(b, "p2", "bob")
+        await r.join(Fake(), "p1", "alice")  # a second tab of alice: no new join entry
+        await r.handle(b, {"type": "name", "name": "Robert"})
+        await r.handle(b, {"type": "name", "name": "Robert"})  # unchanged: no entry
+        await until(a, "judged")
+        kinds = [(e["kind"], e.get("name")) for e in a.state["log"]]
+        assert kinds == [("tossup", None), ("rename", "Robert"), ("join", "bob"), ("join", "alice")]
+        assert a.state["log"][1]["old"] == "bob"
+    run(go())
+
+
+def test_buzz_positions_are_shared_during_the_tossup():
+    async def go():
+        slow = Settings(buzz_window=1, answer_window=1, loading_delay=0, default_wpm=600)
+        r, a, b = room(settings=slow), Fake(), Fake()
+        await r.join(a, "p1", "alice")
+        await r.join(b, "p2", "bob")
+        await until(a, "reading")
+        await asyncio.sleep(0.25)
+        await r.handle(a, {"type": "buzz"})
+        at = r.i
+        await r.handle(a, {"type": "answer", "text": "wrong"})
+        s = b.state
+        assert s["buzzes"] == [{"pid": "p1", "given": "wrong", "points": -5, "word_index": at}]
+        assert "Answer" not in str(s)  # still no answerline
     run(go())
