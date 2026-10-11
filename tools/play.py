@@ -2,6 +2,8 @@
 
 uv run python tools/play.py [--book language_in_mind] && open data/play/index.html
 
+Also writes data/play/tossups.json (book, chapters, tossups) for the multiplayer server.
+
 The output holds textbook text, so it is written to data/ (gitignored) and stays local.
 Answer judging in the prototype is a local match against the answerline and its
 accepted alternates (normalized); prompts are not generated yet.
@@ -81,7 +83,7 @@ def main() -> None:
                         | {norm(f).split()[-1] for f in forms if len(norm(f).split()) == 2 and term["display"][0].isupper()})
         packet = json.loads(t["packet_json"] or "{}")
         secs = [secnum.get(s, "") for s in json.loads(t["section_ids"])]
-        tossups.append({"ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
+        tossups.append({"id": rid, "ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
                         "secs": ", ".join(s for s in secs if s) or "the book",
                         "q": rewrites.get(rid, t["question"]), "a": t["answer"],
                         "acc": [a for a in accept if a], "prompt": [], "rw": rid in rewrites})
@@ -92,7 +94,12 @@ def main() -> None:
     out = ROOT / "data" / "play" / "index.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)
-    print(f"wrote {out} ({len(tossups)} tossups, {sum(x['rw'] for x in tossups)} rewritten)")
+    # The same tossups as data for the multiplayer server (server/ reads this file, never
+    # the database, so pipeline reruns cannot break a game in progress).
+    (out.parent / "tossups.json").write_text(json.dumps(
+        {"book": book["title"], "slug": args.book, "chapters": chapters, "tossups": tossups},
+        ensure_ascii=False, indent=1))
+    print(f"wrote {out} and tossups.json ({len(tossups)} tossups, {sum(x['rw'] for x in tossups)} rewritten)")
 
 
 if __name__ == "__main__":
