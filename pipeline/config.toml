@@ -173,11 +173,15 @@ broad_min_index_subentries = 3
 broad_max_heading_repeats = 1
 # Topic names shorter than this (index letter dividers "A", "B") are ignored.
 broad_min_name_chars = 3
-# ... or, when true, if it also clears the answer keyness line above.
-broad_by_keyness = true
+# ... or, when true, if it also clears the answer keyness line below. Off since
+# 2026-10-10: in batches 16-19 the keyness-only route gave no usable tossups.
+broad_by_keyness = false
+# Answers made only of everyday/broad words of the book become clue_only (F3, 2026-10-10).
+generic_answer_filter = true
 answer_min_sentences = 5
-answer_log_ratio = 4.0
-answer_local_mi = 100.0
+# Lowered from 4.0 / 100 on 2026-10-10 (more answers for the v1 rewrite; F3 filters junk).
+answer_log_ratio = 3.5
+answer_local_mi = 75.0
 floor_log_ratio = 2.0
 floor_local_mi = 50.0
 

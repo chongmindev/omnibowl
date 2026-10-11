@@ -485,6 +485,15 @@ def classify_terms(book_id: int, conn, cfg: dict) -> None:
             cls = "clue_only"
         else:
             cls = "not_term"
-        out.append((cls, t["id"]))
-    conn.executemany("UPDATE terms SET class = ? WHERE id = ?", out)
+        out.append([cls, t["id"], t["norm"]])
+    # Generic-answer filter (decision "generic answers", F3, 2026-10-10): an answer made
+    # only of words that are themselves everyday or broad words in this book ("individual
+    # words", "language comprehension") is a phrase, not a topic; it stays a clue.
+    if c["generic_answer_filter"]:
+        broad = {norm for cls, _, norm in out if " " not in norm and cls in ("too_broad", "broad_answer", "not_term")}
+        for o in out:
+            words = re.findall(r"[a-z0-9]+", o[2])
+            if o[0] == "answer" and len(words) > 1 and all(w in broad or w.rstrip("s") in broad for w in words):
+                o[0] = "clue_only"
+    conn.executemany("UPDATE terms SET class = ? WHERE id = ?", [(cls, tid) for cls, tid, _ in out])
     conn.commit()

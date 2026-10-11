@@ -57,8 +57,8 @@ def main() -> None:
     for t in conn.execute("SELECT * FROM tossups WHERE book_id = ? ORDER BY number", (book["id"],)):
         rows.append((t["id"], t))
         rows += [(vid, t) for vid in sorted(variants.get(t["id"], []))]
-    # A rewrite outlives its draft: if a later pipeline run no longer drafts that answer,
-    # rebuild the row's answerline and chapter from the term (ids are "<book>-<term id>").
+    # A rewrite outlives its draft: if a later pipeline run no longer drafts (or even
+    # ranks) that answer, rebuild the row's answerline and chapter from the term (ids are "<book>-<term id>").
     have = {rid for rid, _ in rows}
     for rid in sorted(rewrites):
         base = rid.rsplit("-v", 1)[0]
@@ -66,7 +66,7 @@ def main() -> None:
             continue
         t = conn.execute(
             """SELECT t.id AS term_id, t.display, t.forms, s.number, s.title FROM terms t
-               JOIN answer_meta m ON m.term_id = t.id LEFT JOIN sections s ON s.id = m.main_chapter
+               LEFT JOIN answer_meta m ON m.term_id = t.id LEFT JOIN sections s ON s.id = m.main_chapter
                WHERE t.id = ?""", (int(base.rsplit("-", 1)[1]),)).fetchone()
         if t is None:
             continue
