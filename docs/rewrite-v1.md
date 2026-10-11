@@ -89,3 +89,12 @@ assemble rules. Items have `"draft": null` and a `first_tossup` field: the rewri
 use different facts (the giveaway may repeat the definition). Verification and the
 player treat them like any other rewrite; the player reuses the first tossup's answer
 line and chapter.
+
+## Broad answers ("eye", "sleep")
+
+Answers in many chapters (class `broad_answer`, see decisions.md "broad answers") are
+drafted with one clue per chapter and exported like any other draft, with `"broad": true`.
+`tools/rewrite_batches.py` now only appends: it writes tossups not yet in any batch after
+the last batch number and never touches existing batches or rewrites. Rewrite them with the
+same prompt; the clues are a tour of the book, so the referent is the plain thing ("this
+organ", "this state") and rule 9 skips vague ones ("effect", "researchers").

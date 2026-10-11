@@ -3,7 +3,7 @@
 import pytest
 import spacy
 
-from omnibowl.candidates import concept_key, concept_spans, person_spans
+from omnibowl.candidates import capitalized_share, concept_key, concept_spans, person_spans, topic_names
 
 
 @pytest.fixture(scope="module")
@@ -89,3 +89,21 @@ def test_abbreviations_merge():
     merged = merge_abbreviations(found, texts)
     assert ("concept", "voice onset time") not in merged and len(merged["concept", "vot"]) == 4
     assert ("concept", "erps") not in merged and len(merged["concept", "erp"]) == 3
+
+
+def test_topic_names_from_headings_and_labels():
+    assert topic_names("The Eye") == ["eye"]
+    assert topic_names("Sleep and Dreams") == ["sleep and dreams", "sleep", "dreams"]
+    assert "eye" in topic_names("Information Processing in the Eye and Brain")
+    assert topic_names("Eye, structure of") == ["eye"]
+    assert topic_names("The Role of Sleep") == ["role of sleep", "sleep"]
+    assert topic_names("event-related potentials (ERPs)") == ["event-related potentials", "erps"]
+    assert topic_names("Module 21 Vision") == ["vision"]
+    assert topic_names("3.2 Speech Perception") == ["speech perception"]
+
+
+def test_surname_merge_needs_capitals():
+    def m(surfaces):
+        return [(0, 0, 0, s) for s in surfaces]
+    assert capitalized_share(m(["Broca", "Broca"])) == 1.0
+    assert capitalized_share(m(["memory"] * 9 + ["Memory"])) < 0.5

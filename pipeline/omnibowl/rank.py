@@ -144,7 +144,9 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
     max_idf = math.log(n)
     stop = set(r["specificity_stopwords"])
 
-    terms = conn.execute("SELECT * FROM terms WHERE book_id = ? AND class = 'answer'", (book_id,)).fetchall()
+    classes = cfg["clues"]["term_classes"]
+    terms = conn.execute(f"SELECT * FROM terms WHERE book_id = ? AND class IN ({','.join('?' * len(classes))})",
+                         (book_id, *classes)).fetchall()
     for t in terms:
         clues = conn.execute(
             """SELECT c.*, s.text AS stext FROM clues c JOIN sentences s ON s.id = json_extract(c.sentence_ids, '$[0]')

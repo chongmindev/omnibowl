@@ -27,14 +27,14 @@ def main() -> None:
     lab = lambda t: (t["norm"] in people) if t["kind"] == "person" else (t["norm"] in concepts)
     print(f"== {args.book}")
     print(f"  {'class':<11}{'terms':>7}{'labeled':>9}{'share':>8}")
-    for cls in ("answer", "clue_only", "too_broad", "not_term"):
+    for cls in ("answer", "broad_answer", "clue_only", "too_broad", "not_term"):
         ts = [t for t in terms if t["class"] == cls]
         n = sum(map(lab, ts))
         print(f"  {cls:<11}{len(ts):>7}{n:>9}{n / max(1, len(ts)):>8.0%}")
     found = Counter(t["class"] for t in terms if t["kind"] == "concept" and t["norm"] in concepts)
     total = len(concepts)
     print(f"  labeled concept terms by class (of {total}): " +
-          ", ".join(f"{c} {found[c]}" for c in ("answer", "clue_only", "too_broad", "not_term")) +
+          ", ".join(f"{c} {found[c]}" for c in ("answer", "broad_answer", "clue_only", "too_broad", "not_term")) +
           f", not found {total - sum(found.values())}")
 
 

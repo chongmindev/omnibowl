@@ -34,6 +34,7 @@ import spacy
 
 from . import db
 from .clues import clean, linked_chains
+from .rank import chapter_of
 
 EVENT_ANAPHOR = re.compile(r"^(This|That|These|Those)\s+(?:is|was|are|were|would|will|can|could|may|might|has|have|had|led|leads|means|meant|suggests|shows|showed|makes|made)\b")
 
@@ -106,6 +107,10 @@ def bad_mention(doc, a: int, b: int) -> str | None:
     if not toks:
         return None
     head = toks[-1]
+    if doc.text[b:b + 1] in "-‐" and b < len(doc.text) or doc.text[a - 1:a] in ("-", "‐") and a > 0:
+        return "hyphenated"  # "eye-tracking" would become "this organ-tracking"
+    if any(c.dep_ in ("compound", "amod") and c.i < toks[0].i for c in head.children):
+        return "modified"  # "job stress", "motor cortex neurons"
     if head.dep_ == "poss" and (any(c.dep_ == "conj" for c in head.children) or head.dep_ == "conj"):
         return "coordinated"  # "Broca's and Wernicke's attempts"
     if head.dep_ in ("compound", "amod", "nmod", "poss") and head.head.i > head.i:
@@ -289,6 +294,7 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
     pver = a["pipeline_version"] + ("-pool" if mode == "pool" else "")
     nlp = spacy.load(cfg["sentences"]["spacy_model"], exclude=["ner", "lemmatizer"])
     source_re = re.compile("|".join(a["source_patterns"]))
+    top = chapter_of(conn, book_id)
 
     def is_np(text: str) -> bool:
         d = nlp(text)
@@ -319,7 +325,7 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
     key_spans = {}
     for r in conn.execute(
             """SELECT m.term_id, m.sentence_id, m.start_char, m.end_char FROM mentions m
-               JOIN terms t ON t.id = m.term_id WHERE m.book_id = ? AND t.class IN ('answer', 'clue_only')""",
+               JOIN terms t ON t.id = m.term_id WHERE m.book_id = ? AND t.class IN ('answer', 'broad_answer', 'clue_only')""",
             (book_id,)):
         key_spans.setdefault(r["sentence_id"], []).append((r["term_id"], r["start_char"], r["end_char"]))
 
@@ -344,7 +350,7 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
                JOIN clue_scores cs ON cs.clue_id = c.id
                JOIN sentences s ON s.id = json_extract(c.sentence_ids, '$[0]')
                WHERE c.term_id = ? ORDER BY cs.difficulty DESC""", (t["id"],)).fetchall()
-        picked, used_sent, per_section, length = [], set(), Counter(), 0
+        picked, used_sent, per_section, per_chapter, length = [], set(), Counter(), Counter(), 0
         giveaway = t["giveaway"]
         tail_budget = len(giveaway or "") + 40
         for c in clues:
@@ -352,6 +358,9 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
             if sid in used_sent or c["kind"] == "definition" or meta_re.search(c["text"]):
                 continue
             if per_section[c["section_id"]] >= a["max_per_section"]:
+                continue
+            # Broad answers ("eye") range over the book: one clue per chapter.
+            if t["class"] == "broad_answer" and per_chapter[top(c["section_id"])] >= a["broad_max_per_chapter"]:
                 continue
             c0, c1 = c["start_char"], c["end_char"]
             raw = c["stext"][c0:c1]
@@ -383,6 +392,7 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
             picked.append((c, text))
             used_sent.add(sid)
             per_section[c["section_id"]] += 1
+            per_chapter[top(c["section_id"])] += 1
             length += len(text) + 1
             if len(picked) >= a["max_sentences"] - 1:
                 break
@@ -418,7 +428,8 @@ def run(book_id: int, conn, cfg: dict, mode: str = "strict") -> None:
                section_ids, clue_ids, pipeline_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (f"{book['slug']}-{t['id']}", question, question, ans_html, ans_plain,
              a["category"], a["subcategory"], round(10 * sum(diffs) / len(diffs)) if diffs else 0, number,
-             json.dumps({"name": f"Chapter {ch['number']}: {ch['title']}" if ch else "", "number": int(ch["number"]) if ch and ch["number"].isdigit() else None}),
+             json.dumps({"name": (f"Chapter {ch['number']}: {ch['title']}" if ch["number"] else ch["title"]) if ch else "",
+                        "number": int(ch["number"]) if ch and (ch["number"] or "").isdigit() else None}),
              json.dumps({"name": book["title"], "year": a["set_year"]}),
              "generated", book_id, t["id"],
              json.dumps(sorted({c["section_id"] for c, _ in picked})),

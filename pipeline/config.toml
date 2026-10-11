@@ -116,6 +116,9 @@ subentry_min_indent = 8.0
 margin_min_share = 0.05
 
 [candidates]
+# A one-word concept merges into the person with that surname only if it is written
+# capitalized at least this often ("Broca" yes; "memory", misread once as a name, no).
+surname_min_capitalized = 0.5
 # Sentence kinds that count as text about a term. Exercises, objectives and examples
 # are left out (prompts and stimulus sentences, not facts).
 sentence_kinds = ["body", "box", "summary", "definition", "caption"]
@@ -162,6 +165,16 @@ synonym_heads = [["term", "word", "name", "label", "vocabulary"],
 [candidates.classes]
 # Hand-set lines (decision X, 2026-10-08); tune against labels (Y) only if these fail.
 too_broad_min_chapters = 10
+# Broad answers (decision "broad answers", B + A, 2026-10-10): a too_broad term becomes
+# `broad_answer` if the book treats it as a topic (glossary entry, chapter or section
+# heading, or subject-index head with at least this many subentries) ...
+broad_min_index_subentries = 3
+# A heading title used more than this many times is furniture, not a topic.
+broad_max_heading_repeats = 1
+# Topic names shorter than this (index letter dividers "A", "B") are ignored.
+broad_min_name_chars = 3
+# ... or, when true, if it also clears the answer keyness line above.
+broad_by_keyness = true
 answer_min_sentences = 5
 answer_log_ratio = 4.0
 answer_local_mi = 100.0
@@ -181,7 +194,7 @@ max_tokens_in_batch = 4000
 sentence_kinds = ["body", "box", "summary", "definition", "caption"]
 # Terms that get clues: answers now; clue_only terms can be added later as sources of
 # clues about other answers.
-term_classes = ["answer"]
+term_classes = ["answer", "broad_answer"]
 # A clause shorter than this many words is not a clue on its own.
 min_words = 5
 
@@ -236,6 +249,8 @@ min_chars = 350
 max_chars = 750
 max_clue_chars = 300
 max_per_section = 3
+# Broad answers (class broad_answer) take at most this many clues from one chapter.
+broad_max_per_chapter = 1
 # Clauses matching any of these address the reader or point at the book; not facts.
 meta_patterns = ["\\byou\\b", "\\byour\\b", "\\bsee (?:figure|table|box|chapter|section|method)",
                  "\\bthis (?:chapter|section|subsection|book)\\b", "\\bas we(?:'ll| will)? see\\b",

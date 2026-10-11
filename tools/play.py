@@ -13,6 +13,8 @@ import re
 import sqlite3
 from pathlib import Path
 
+from omnibowl.assemble import answerline
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -53,6 +55,23 @@ def main() -> None:
     for t in conn.execute("SELECT * FROM tossups WHERE book_id = ? ORDER BY number", (book["id"],)):
         rows.append((t["id"], t))
         rows += [(vid, t) for vid in sorted(variants.get(t["id"], []))]
+    # A rewrite outlives its draft: if a later pipeline run no longer drafts that answer,
+    # rebuild the row's answerline and chapter from the term (ids are "<book>-<term id>").
+    have = {rid for rid, _ in rows}
+    for rid in sorted(rewrites):
+        base = rid.rsplit("-v", 1)[0]
+        if rid in have or not base.startswith(args.book + "-"):
+            continue
+        t = conn.execute(
+            """SELECT t.id AS term_id, t.display, t.forms, s.number, s.title FROM terms t
+               JOIN answer_meta m ON m.term_id = t.id LEFT JOIN sections s ON s.id = m.main_chapter
+               WHERE t.id = ?""", (int(base.rsplit("-", 1)[1]),)).fetchone()
+        if t is None:
+            continue
+        ans_html, _ = answerline(t["display"], [f for f, _ in json.loads(t["forms"])])
+        num = int(t["number"]) if (t["number"] or "").isdigit() else None
+        rows.append((rid, {"term_id": t["term_id"], "answer": ans_html, "question": "", "section_ids": "[]",
+                           "packet_json": json.dumps({"number": num})}))
     for rid, t in rows:
         if rewrites and not args.all and rid not in rewrites:
             continue

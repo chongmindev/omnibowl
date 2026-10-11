@@ -3,7 +3,8 @@
 uv run python -m omnibowl.run --stage assemble --pool --book data/books/<book>.pdf
 uv run python tools/rewrite_batches.py [--book language_in_mind] [--size 20]
 
-Writes data/rewrites/batch_NN.json (gitignored: it holds book text). Each tossup has its
+Appends data/rewrites/batch_NN.json after the existing batches, for tossups not yet in
+any batch (gitignored: it holds book text). Each tossup has its
 draft, answer, accepted forms, referent, definition, and each clue's source sentence with
 the sentence before it, which is everything the rewrite needs and nothing more.
 See docs/rewrite-v1.md.
@@ -32,7 +33,7 @@ def main() -> None:
     items = []
     for t in conn.execute("SELECT * FROM tossups WHERE book_id = ? ORDER BY number", (book["id"],)):
         term = conn.execute(
-            """SELECT t.display, t.kind, t.forms, m.referent, m.referent_source, m.giveaway
+            """SELECT t.display, t.kind, t.class, t.forms, m.referent, m.referent_source, m.giveaway
                FROM terms t JOIN answer_meta m ON m.term_id = t.id WHERE t.id = ?""", (t["term_id"],)).fetchone()
         clues = []
         for cid in json.loads(t["clue_ids"]):
@@ -50,16 +51,21 @@ def main() -> None:
             "referent": term["referent"],
             "referent_is_generic": term["referent_source"] == "generic",
             "definition": term["giveaway"],
+            # Broad answers ("eye") take one clue per chapter; the rewrite treats them as
+            # a tour of the book rather than one topic.
+            "broad": term["class"] == "broad_answer",
             "draft": t["question"],
             "clues": clues,
         })
-    for f in out_dir.glob("batch_*.json"):
-        f.unlink()
+    # Append only: existing batches (and their out_NN.json rewrites) are never renumbered.
+    done = {i["id"] for f in out_dir.glob("batch_*.json") for i in json.loads(f.read_text())}
+    items = [i for i in items if i["id"] not in done]
+    start = max([int(p.stem.split("_")[1]) for p in out_dir.glob("batch_*.json")] or [0]) + 1
     n = 0
     for i in range(0, len(items), args.size):
+        (out_dir / f"batch_{start + n:02d}.json").write_text(json.dumps(items[i:i + args.size], ensure_ascii=False, indent=1))
         n += 1
-        (out_dir / f"batch_{n:02d}.json").write_text(json.dumps(items[i:i + args.size], ensure_ascii=False, indent=1))
-    print(f"wrote {n} batches ({len(items)} tossups) to {out_dir}")
+    print(f"{len(items)} new tossups -> " + (f"batches {start:02d}-{start + n - 1:02d}" if n else "no new batches"))
 
 
 if __name__ == "__main__":

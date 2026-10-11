@@ -251,6 +251,11 @@ def person_spans(doc):
         yield ent, toks[-1].text.lower()
 
 
+def capitalized_share(mentions) -> float:
+    """Share of mentions written with a capital first letter (surface is the 4th field)."""
+    return sum(m[3][:1].isupper() for m in mentions) / len(mentions) if mentions else 0.0
+
+
 def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
     ccfg = cfg["candidates"]
     nlp = nlp or spacy.load(cfg["sentences"]["spacy_model"])
@@ -304,9 +309,12 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
     for (kind, key) in [k for k in found if k[0] == "person"]:
         found[kind, key] = [m for m in found[kind, key]
                             if not any(a <= m[1] and m[2] <= b for a, b in possessive[m[0]])]
-    # A one-word proper noun that is also a person's surname is that person ("Broca").
+    # A one-word proper noun that is also a person's surname is that person ("Broca"),
+    # but not a common noun the NER once misread as a name ("Memory", "Brain"): the
+    # concept must be written capitalized most of the time.
     people = {k for (kind, k) in found if kind == "person"}
-    for (kind, key) in [k for k in found if k[0] == "concept" and k[1] in people]:
+    for (kind, key) in [k for k in found if k[0] == "concept" and k[1] in people
+                        and capitalized_share(found[k]) >= ccfg["surname_min_capitalized"]]:
         found["person", key] = found["person", key] + found.pop((kind, key))
     for (kind, key), ms in sorted(found.items()):
         if len(ms) < ccfg["min_mentions"]:
@@ -403,23 +411,74 @@ def coverage(book_id: int, conn) -> None:
 
 # ----------------------------------------------------------------------------- class
 
+def topic_names(text: str) -> list[str]:
+    """Lowercased names a heading or label puts forward as topics: "The Eye" -> ["eye"],
+    "Sleep and Dreams" -> ["sleep and dreams", "sleep", "dreams"], "Eye, structure of"
+    -> ["eye"], "event-related potentials (ERPs)" -> ["event-related potentials", "erps"]."""
+    text = re.sub(r"^\s*(?:(?i:module|chapter|unit|section)\s+)?[A-Z]?\d[\d.]*\s*[:.]?\s*", "", text)
+    inner = re.findall(r"\(([^)]+)\)", text)
+    text = re.sub(r"\([^)]*\)", "", text).split(",")[0]
+    out = []
+    # "The Role of Sleep": the part before "of" is a generic head; keep what follows.
+    parts = re.split(r",|\b(?:and|or|in)\b|&", text) + re.split(r"\bof\b", text)[1:]
+    for name in [text, *inner, *[q for p in parts for q in re.split(r"\bof\b", p)[-1:]]]:
+        name = re.sub(r"^(?:the|a|an)\s+", "", name.strip().lower()).strip(" :.?")
+        if name and name not in out:
+            out.append(name)
+    return out
+
+
+def book_topics(conn, book_id: int, c: dict) -> set[str]:
+    """Names the book itself treats as topics (decision "broad answers", option B): a
+    glossary entry, a subject-index head with at least `broad_min_index_subentries`
+    subentries, or a chapter or section heading. Works without any of them: a book with
+    no glossary or index still has headings."""
+    topics = set()
+    for (term,) in conn.execute("SELECT term FROM labels WHERE book_id = ? AND role = 'glossary'", (book_id,)):
+        topics.update(topic_names(term))
+    for (term,) in conn.execute(
+            """SELECT p.term FROM labels p WHERE p.book_id = ? AND p.role = 'subject_index' AND p.parent_id IS NULL
+               AND (SELECT COUNT(*) FROM labels k WHERE k.parent_id = p.id) >= ?""",
+            (book_id, c["broad_min_index_subentries"])):
+        topics.update(topic_names(term))
+    # A heading that recurs ("Module Review", "Check Your Understanding") is furniture.
+    titles = Counter(" ".join(topic_names(t)[:1]) for (t,) in conn.execute(
+        "SELECT title FROM sections WHERE book_id = ? AND kind IN ('chapter', 'section')", (book_id,)))
+    for title, n in titles.items():
+        if n <= c["broad_max_heading_repeats"]:
+            topics.update(topic_names(title))
+    # Index letter dividers ("A", "B") and fragments are not topics.
+    return {t for t in topics if len(t) >= c["broad_min_name_chars"] and re.search(r"[a-z]", t)}
+
+
 def classify_terms(book_id: int, conn, cfg: dict) -> None:
     """Class from hand-set lines in config (decision "candidates: class lines", option X):
     too_broad   in at least `too_broad_min_chapters` chapters;
     answer      not too broad, at least `answer_min_sentences` sentences (a tossup needs
                 four to seven clues), keyness at or above the answer line for its kind;
     clue_only   keyness at or above the floor for its kind, but not an answer;
-    not_term    below the floor (everyday words and incidental phrases)."""
+    not_term    below the floor (everyday words and incidental phrases).
+    broad_answer (decision "broad answers", options B + A, 2026-10-10): a too_broad term
+                the book itself treats as a topic (`book_topics`), or, if
+                `broad_by_keyness`, one that also clears the answer keyness line. Broad
+                answers ("eye", "sleep") draw their clues from many chapters."""
     c = cfg["candidates"]["classes"]
-    rows = conn.execute("SELECT id, keyness, keyness_kind, coverage, n_chapters FROM terms WHERE book_id = ?",
+    topics = book_topics(conn, book_id, c)
+    rows = conn.execute("SELECT id, keyness, keyness_kind, coverage, n_chapters, norm, forms FROM terms WHERE book_id = ?",
                         (book_id,)).fetchall()
     out = []
-    for t in rows:
+    for row in rows:
+        t = dict(row)
+        t["forms"] = [t["norm"]] + [f for f, _ in json.loads(t["forms"])]
         lr = t["keyness_kind"] == "log_ratio"
         answer_line = c["answer_log_ratio"] if lr else c["answer_local_mi"]
         floor = c["floor_log_ratio"] if lr else c["floor_local_mi"]
         if t["n_chapters"] >= c["too_broad_min_chapters"]:
             cls = "too_broad"
+            if t["coverage"] >= c["answer_min_sentences"] and (
+                    (c["broad_by_keyness"] and t["keyness"] >= answer_line)
+                    or topics & {f.lower() for f in t["forms"]}):
+                cls = "broad_answer"
         elif t["coverage"] >= c["answer_min_sentences"] and t["keyness"] >= answer_line:
             cls = "answer"
         elif t["keyness"] >= floor:

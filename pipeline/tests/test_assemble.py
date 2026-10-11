@@ -40,3 +40,14 @@ def test_leaks_and_answerline():
     assert not leaks("This researcher examined a patient.", stems)
     html, plain = answerline("VOT", ["VOT", "voice onset time", "VOTs"])
     assert plain == "VOT [accept voice onset time]"
+
+
+def test_bad_mention_hyphen_and_noun_modifiers(nlp):
+    for text, word in [("Researchers used eye-tracking equipment.", "eye"),
+                       ("Workers with low job stress lived longer.", "stress"),
+                       ("It activates more motor cortex neurons.", "neurons")]:
+        doc = nlp(text)
+        a = text.index(word)
+        assert bad_mention(doc, a, a + len(word)), text
+    doc = nlp("Stress can set off hormonal changes.")
+    assert bad_mention(doc, 0, 6) is None

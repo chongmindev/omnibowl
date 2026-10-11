@@ -375,3 +375,31 @@ nothing concrete 405. A sample of rule-2 drops were all bystander mentions.
 Open: answers that are noise ("Birdie", "waveforms") and generic referents ("this
 term"); proposed: no tossup for a generic referent; a person answer must be cited or
 titled somewhere in the book.
+
+## candidates: broad answers (2026-10-10)
+
+Chong's question: why no general answers like "eye"? Every term in 10+ chapters was
+`too_broad` and got no clues, which threw out "eye", "sleep" and "neurons" with "day"
+and "researchers". Options: (A) a broad term that also clears the answer keyness line;
+(B) a broad term the book treats as a topic; (C) WordNet semantic classes (new
+dependency, less tied to the book). **Chosen: B, plus A** (`broad_by_keyness`).
+- B (`book_topics`): a glossary entry, a subject-index head with at least 3 subentries,
+  or a chapter/section heading. Heading names split at commas, "and", "or", "in"; only
+  the part after "of" counts ("The Role of Sleep" -> sleep). Headings used more than
+  once ("Module Review") and names under 3 characters (index letter dividers) are
+  ignored. Works on a book with no glossary or index, through headings.
+- New class `broad_answer`; clues and rank run on it; `assemble` takes at most one clue
+  per chapter for it (`broad_max_per_chapter`), so its tossups range over the book.
+- Fix found on the way: a common noun the NER once read as a name ("Memory") was merged
+  into a "person"; now a concept merges into a surname only if written capitalized at
+  least half the time (`surname_min_capitalized`).
+- Fix: masking inside compounds ("eye-tracking", "job stress", "motor cortex neurons")
+  now rejects the mention.
+
+Result: Sedivy 60 broad terms (B 29, A-only 29 + overlap), 51 broad drafts; Myers 137
+broad terms (B 102), 112 drafts. B brings eye, sleep, stress, neurons, hormones, vision,
+frontal lobes, syllable, ambiguity. A-only is mostly noise ("researchers", "Module",
+"p.", "U.S.", "n't", "college students") with a few good ones (cortex, therapy,
+vocabulary). B also lets in vague index heads ("effect", "case", "range", "means").
+What breaks on another book: a book with no index and generic headings ("Introduction",
+"Overview") gives B little; the furniture filter only catches repeated headings.
