@@ -1,17 +1,23 @@
-"""Clue packs for broad answers ("eye", "sleep") that have no verified rewrite yet.
+"""Clue packs for answers that have no verified rewrite and are in no batch yet.
 
-uv run python tools/broad_packs.py [--book language_in_mind] [--size 20]
+uv run python tools/clue_packs.py [--book language_in_mind] [--size 20] [--limit N]
+
+Two kinds of answers get packs: broad answers ("eye", "sleep"), and regular answers that
+never got a usable draft (strict wording rules left too few clues).
 
 Drafts for broad answers came out thin: assemble picks clues hardest first, and for a
 broad answer the hardest sentences are mostly passing mentions. A pack instead takes the
 sentences where the answer is most central (topicality from `assemble`, the answer as
 subject beats a passing mention; mentions inside compounds or under modifiers are left
-out), at most `--per-chapter` per chapter, up to `--max-clues`, ordered hardest first. The
-rewrite session picks the 4 to 6 best (decision "broad answers: clue packs", option A).
+out; other masking problems do not matter, since the rewrite restates the sentence), at most `--per-chapter` per chapter for a broad answer or `--per-section` per
+section for a regular one, up to `--max-clues`, ordered hardest first. The rewrite
+session picks the 4 to 6 best (decision "broad answers: clue packs", option A). Answers
+with the most usable sentences are packed first, so early batches are the strongest.
 
 Only answers that reach `broad_answer` through the book's own topics (glossary, index,
 headings) are packed: the keyness-only route produced no usable tossups in batches 16-19.
-Pack ids equal the draft ids, so a passing rewrite replaces an earlier skip.
+Regular answers already in a batch (as a draft) are left alone. Pack ids equal the draft
+ids, so a passing rewrite replaces an earlier skip.
 Appends data/rewrites/batch_NN.json after the existing batches (gitignored: book text).
 """
 
@@ -29,6 +35,7 @@ from omnibowl.assemble import bad_mention, topicality
 from omnibowl.rank import chapter_of
 
 ROOT = Path(__file__).resolve().parents[1]
+NOT_ABOUT = {"modifier", "hyphenated"}
 
 
 def main() -> None:
@@ -37,7 +44,9 @@ def main() -> None:
     ap.add_argument("--size", type=int, default=20)
     ap.add_argument("--max-clues", type=int, default=12, help="sentences per pack")
     ap.add_argument("--min-clues", type=int, default=5, help="sentences a pack needs")
-    ap.add_argument("--per-chapter", type=int, default=2, help="sentences per chapter")
+    ap.add_argument("--per-chapter", type=int, default=2, help="broad answers: sentences per chapter")
+    ap.add_argument("--per-section", type=int, default=3, help="regular answers: sentences per section")
+    ap.add_argument("--limit", type=int, default=0, help="pack at most this many answers (0: all)")
     ap.add_argument("--min-topicality", type=float, default=0.5)
     ap.add_argument("--db", type=Path, default=ROOT / "data" / "omnibowl.db")
     args = ap.parse_args()
@@ -54,16 +63,23 @@ def main() -> None:
 
     rdir = ROOT / "data" / "rewrites"
     verified = json.loads((rdir / "verified.json").read_text())
-    packed = {i["id"] for f in rdir.glob("batch_*.json") for i in json.loads(f.read_text()) if i.get("pack")}
+    items = [i for f in rdir.glob("batch_*.json") for i in json.loads(f.read_text())]
+    batched = {i["id"] for i in items}
+    packed = {i["id"] for i in items if i.get("pack")}
 
     packs = []
     for t in conn.execute(
             """SELECT t.*, m.referent, m.referent_source, m.giveaway FROM terms t
-               JOIN answer_meta m ON m.term_id = t.id WHERE t.book_id = ? AND t.class = 'broad_answer'
-               ORDER BY t.id""", (book["id"],)):
+               JOIN answer_meta m ON m.term_id = t.id
+               WHERE t.book_id = ? AND t.class IN ('broad_answer', 'answer') ORDER BY t.id""", (book["id"],)):
         tid = f"{args.book}-{t['id']}"
         forms = [t["norm"]] + [f for f, _ in json.loads(t["forms"])]
-        if verified.get(tid, {}).get("ok") or tid in packed or not topics & {f.lower() for f in forms}:
+        broad = t["class"] == "broad_answer"
+        if verified.get(tid, {}).get("ok") or tid in packed:
+            continue
+        if broad and not topics & {f.lower() for f in forms}:
+            continue
+        if not broad and tid in batched:
             continue
         spans = defaultdict(list)
         for r in conn.execute("SELECT sentence_id, start_char, end_char FROM mentions WHERE term_id = ?", (t["id"],)):
@@ -78,19 +94,22 @@ def main() -> None:
         rows = [r for r in rows if not meta_re.search(r["text"]) and not source_re.search(r["text"])]
         scored = []
         for r, doc in zip(rows, nlp.pipe(r["text"] for r in rows)):
-            ok = [(x, y) for x, y in spans[r["sid"]] if not bad_mention(doc, x, y)]
+            # The rewrite restates each sentence instead of masking it, so only mentions
+            # where the answer modifies something else ("speech sounds", "eye-tracking")
+            # are not about the answer; "a large N400 effect" is fine here.
+            ok = [(x, y) for x, y in spans[r["sid"]] if bad_mention(doc, x, y) not in NOT_ABOUT]
             if not ok:
                 continue
             score = max(topicality(doc, x, y, a) for x, y in ok)
             if score >= args.min_topicality:
                 scored.append((score, r["d"], r))
         scored.sort(key=lambda s: (-s[0], -s[1]))
-        picked, per_ch = [], Counter()
+        picked, per_unit = [], Counter()
         for score, d, r in scored:
-            ch = top(r["section_id"])
-            if per_ch[ch] >= args.per_chapter:
+            unit, cap = (top(r["section_id"]), args.per_chapter) if broad else (r["section_id"], args.per_section)
+            if per_unit[unit] >= cap:
                 continue
-            per_ch[ch] += 1
+            per_unit[unit] += 1
             picked.append((d, r))
             if len(picked) >= args.max_clues:
                 break
@@ -109,19 +128,25 @@ def main() -> None:
             "referent": t["referent"],
             "referent_is_generic": t["referent_source"] == "generic",
             "definition": t["giveaway"],
-            "broad": True,
+            "broad": broad,
             "pack": True,
             "draft": None,
             "clues": clues,
+            "_n": len(scored),
         })
+    packs.sort(key=lambda p: -p["_n"])
+    if args.limit:
+        packs = packs[:args.limit]
+    for p in packs:
+        del p["_n"]
     start = max([int(p.stem.split("_")[1]) for p in rdir.glob("batch_*.json")] or [0]) + 1
     n = 0
     for i in range(0, len(packs), args.size):
         (rdir / f"batch_{start + n:02d}.json").write_text(json.dumps(packs[i:i + args.size], ensure_ascii=False, indent=1))
         n += 1
-    print(f"{len(packs)} broad packs -> " + (f"batches {start:02d}-{start + n - 1:02d}" if n else "no new batches"))
-    for p in packs:
-        print(f"  {p['answer']}: {len(p['clues'])} sentences")
+    print(f"{len(packs)} packs ({sum(p['broad'] for p in packs)} broad) -> " + (f"batches {start:02d}-{start + n - 1:02d}" if n else "no new batches"))
+    print("  first:", ", ".join(p["answer"] for p in packs[:30]))
+    print("  last:", ", ".join(p["answer"] for p in packs[-15:]))
 
 
 if __name__ == "__main__":

@@ -98,3 +98,11 @@ drafted with one clue per chapter and exported like any other draft, with `"broa
 the last batch number and never touches existing batches or rewrites. Rewrite them with the
 same prompt; the clues are a tour of the book, so the referent is the plain thing ("this
 organ", "this state") and rule 9 skips vague ones ("effect", "researchers").
+
+## Clue packs for answers without a draft
+
+`uv run python tools/clue_packs.py` packs every answer (regular or broad) that has no
+verified rewrite and is in no batch yet: its most central sentences (answer as subject
+first), at most 3 per section (2 per chapter for broad answers), 5 to 12 sentences,
+hardest first, strongest answers first. Items have `"pack": true` and `"draft": null`;
+rewrite them with the broad-pack prompt (rule 10: pick the 4 to 6 best sentences).
