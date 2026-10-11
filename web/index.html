@@ -136,8 +136,8 @@ button{all:unset;cursor:pointer}
       </div>
       <div class="grow" id="ansWrap"><div><div class="ans"><div class="lab" id="ansLab">Answer</div><input id="ans" autocomplete="off" spellcheck="false" aria-label="Your answer" maxlength="200"></div></div></div>
       <div class="grow" id="verWrap"><div><div class="verdict"><div class="res" id="res"></div><div class="line" id="aline"></div><div class="src" id="src"></div></div></div></div>
-      <div class="log" id="log"></div>
       <div class="foot"><div class="hint" id="hint"></div><button class="act buzz" id="act" disabled>Buzz</button></div>
+      <div class="log" id="log"></div>
     </main>
     <aside class="side">
       <div class="sec">
@@ -204,7 +204,7 @@ const pname=pid=>{const p=player(pid);return p?p.name:'someone'};
 const ptsColor=p=>p>0?'var(--blue)':p<0?'var(--red)':'var(--mute)';
 // A marker in the question text where a player buzzed: their square and name, colored by result.
 function marker(pid,points,live){const p=player(pid);
- return `<span class="bz" style="color:${live?'var(--red)':ptsColor(points)}"><i style="background:${p?COLOR[p.color]:'var(--faint)'}"></i>${esc(pname(pid))}${live?' buzzing':' '+pts(points)}</span>`}
+ return `<span class="bz" style="color:${live?'var(--red)':ptsColor(points)}"><i style="background:${p?COLOR[p.color]:'var(--faint)'}"></i>${esc(pname(pid))}${live?' buzzing':''}</span>`}
 function marked(words,buzzes,live){
  const at={};for(const b of buzzes)(at[b.word_index]=at[b.word_index]||[]).push(marker(b.pid,b.points,false));
  if(live)(at[words.length]=at[words.length]||[]).push(marker(live,0,true));
