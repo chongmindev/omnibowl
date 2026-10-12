@@ -17,7 +17,8 @@ From the patterns that make interfaces look accidental instead of designed:
 - No gradients, glow, drop shadows, glassmorphism, sparkles, or emoji in UI text.
 - No color used only to look modern. Every color below has a job; a color without a
   job does not appear.
-- No rounded corners. Everything is square, so nothing can mismatch.
+- No rounded corners. Everything is square, so nothing can mismatch. A circle appears
+  only as pure geometry (the buzzer in the favicon), never as a softened square.
 - No boxed chips, pills or rounded cards. Structure comes from rules (lines) and the grid.
 - No cards that lift, grow or bounce on hover. Hover changes color only.
 - No oversized heavy headings over thin body text. Weights stay in a narrow range.
@@ -70,8 +71,10 @@ everything else.
 
 - Outer frame and section dividers: `3px solid var(--ink)`.
 - Rows inside a section: `1px solid var(--hair)`.
-- Spacing scale (px): 4, 8, 12, 16, 24, 32. Cell padding is 8×14 for compact rows and
-  20×24 for the question.
+- Spacing scale (px): 4, 8, 12, 16, 24, 32. Cell padding is 8×16 for compact rows,
+  12×16 for header, answer and verdict cells, 12×24 for the action cell, and 24 for the
+  question. One derived value: an expanded history row indents 60px (the 48px number
+  column plus 12px) so its text lines up with the answer column.
 - The layout fills the device edge to edge; there is no maximum width.
 
 ## Layout
@@ -88,19 +91,21 @@ everything else.
 ├──────────────────────────────────────────┤─────────────────┤
 │ answer row (when buzzed)                 │ SPEED  ━━━━┃──  │
 │ verdict row (when judged)                ├─────────────────┤
-├──────────────────────────────────────────┤ CHAPTERS        │
-│ log: 03 Broca's area              +10    │ ■ 03 ...        │
-│      Mina joined the game                │ □ 07 ...        │
-├──────────────────────────────┬───────────┤                 │
-│ Space to buzz                │   BUZZ    │                 │
-└──────────────────────────────┴───────────┴─────────────────┘
+├──────────────────────────────┬───────────┤ CHAPTERS IN PLAY│
+│ Space to buzz                │   BUZZ    │ 6 of 13 All None│
+├──────────────────────────────┴───────────┤ ☑ 03 ...        │
+│ log: 03 Broca's area              +10    │ ☐ 07 ...        │
+│      Mina joined the game                │                 │
+└──────────────────────────────────────────┴─────────────────┘
 ```
 
 - Main column left, sidebar right (fixed width `clamp(240px, 20vw, 340px)`).
-- The page never scrolls: it fills the window, the log and the sidebar scroll inside
-  their own areas, and the footer (Buzz / Next) is always on screen.
+- The page never scrolls: it fills the window and the history scrolls inside its own
+  area. In rooms the sidebar scrolls as a whole; in single player only the chapter list
+  scrolls. The action bar (Buzz / Next) sits right under the question, answer and
+  verdict rows, so the hand and the eye stay in one place.
 - Below 900px wide, the sidebar moves under the reader as a single column; there the
-  page scrolls and the footer sticks to the bottom.
+  page scrolls and the action bar sticks to the bottom of the screen.
 
 ## Components
 
@@ -114,10 +119,11 @@ everything else.
   revealed word. The question block does not start at the top of the column: it sits
   `clamp(28px, 12vh, 140px)` down, with a 3px rule above it, so the eye lands on it
   lower on the screen.
-- **Buzz markers.** In rooms, each buzz is marked in the question text at the word where
-  it happened: the player's 9px square, their name in uppercase label type, and the
-  result (`+10` blue, `−5` red, `0` mute; "buzzing" in red while they answer). No box
-  around it. Markers stay when the question is reread from the history.
+- **Buzz markers.** Each buzz is marked in the question text at the word where it
+  happened: the player's 9px square and their name in uppercase label type, colored by
+  the result (blue correct, red wrong, mute 0); "buzzing" in red while they answer. The
+  color carries the result, so no points are written. No box around it. Markers stay
+  when the question is reread from the history. Rooms and single player alike.
 - **Answer row.** Opens under the question on buzz: an ink label cell "Answer" and a
   text field. A QBReader prompt shows "Be more specific" in the label cell. In rooms,
   other players see the row open read-only with "<name> answering" in the label cell
@@ -127,7 +133,8 @@ everything else.
   buzz was theirs), everyone's answers in mute, the answerline with the required part underlined, and the
   source: chapters and sections for generated tossups, or set name and year for
   QBReader tossups, marked "QBReader".
-- **History.** Newest first, hairline rows. A finished tossup shows number, answer, and
+- **History.** Newest first, hairline rows, the last 100 tossups (rooms and single
+  player). A finished tossup shows number, answer, and
   result colored by sign (with the player's name if not you); clicking it (or Enter)
   expands it in place to the full question with buzz markers, the answerline, who said
   what, and its chapter and sections. Room events ("Mina joined the game", "guest4821
@@ -136,7 +143,8 @@ everything else.
   between them), draining left to right, so the clock sits next to what you are
   reading. Used for the buzz window after the question ends and for the answer window
   after a buzz. Nothing tracks progress while the question is being read.
-- **Footer.** Key hints in mono on the left ("Space to buzz", "Enter to submit"); the
+- **Action bar.** Directly under the question, answer and verdict rows, above the
+  history. Key hints in mono on the left ("Space to buzz", "Enter to submit"); the
   action cell on the right: red "Buzz", red "Submit" while answering, disabled "Locked
   out" after your wrong buzz, yellow "Next →" after a verdict.
 - **Sidebar sections.** Each has an uppercase label row over its content.
@@ -150,13 +158,21 @@ everything else.
     ink bar. Shows words per minute.
   - Room: square checkboxes for room-wide options, currently "Allow skipping
     mid-question" (off by default).
-  - Chapters: a list of square checkboxes (11px, 2px ink border, filled ink when on),
-    chapter number in mono, title.
+  - Chapters in play: the label row carries the count ("6 of 13"). Under it, a help
+    row: one mono `--mute` line, "Only checked chapters are asked, from the next tossup
+    on. Numbers are tossups per chapter." (rooms add "Shared by the whole room."), with
+    two plain controls at its right, All and None, each `--faint` and inert when it
+    would change nothing. Then
+    a list of square checkboxes (11px, 2px ink border; filled ink with a white check
+    when on; hover shades an empty box), chapter number in mono, title, and the number
+    of tossups. Unchecked chapters use `--faint`.
 - **Your name.** You start as `guest` plus four random digits (e.g. `guest4821`). On the
   first visit only, a black note under your scoreboard row reads "You're guest4821.
   Click to rename." Clicking your row turns your name into a text field in place (same
   type, a 2px ink underline); Enter or clicking elsewhere saves, Esc cancels. Names are 1 to
   20 characters, trimmed; empty reverts to the previous name. Saved on the device.
+- **Favicon.** A buzzer seen from the side: a red half-disc on an ink base, on paper.
+  Inline SVG, no file.
 - **Disabled control.** `--faint` text, `not-allowed` cursor, a black hover note in mono.
 
 ## Motion

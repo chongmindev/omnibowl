@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Omnibowl room</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%23F4F2EC%27/%3E%3Cpath d=%27M3 10 A5 5 0 0 1 13 10 Z%27 fill=%27%23D7261E%27/%3E%3Crect x=%271%27 y=%2710%27 width=%2714%27 height=%274%27 fill=%27%23141414%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700&family=Red+Hat+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -16,48 +18,48 @@ body{background:var(--paper);color:var(--ink);font-family:'League Spartan',sans-
 .mono{font-family:'Red Hat Mono',monospace}
 button{all:unset;cursor:pointer}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.proto{background:var(--ink);color:var(--paper);font-family:'Red Hat Mono',monospace;font-size:11px;padding:5px 14px;display:flex;justify-content:space-between}
+.proto{background:var(--ink);color:var(--paper);font-family:'Red Hat Mono',monospace;font-size:11px;padding:4px 16px;display:flex;justify-content:space-between}
 .proto button{text-decoration:underline}
 .app{display:grid;grid-template-rows:auto 1fr;flex:1 1 auto;min-height:0;border:var(--line)}
 .head{display:grid;grid-template-columns:auto 1fr auto;border-bottom:var(--line)}
-.mark{background:var(--ink);color:#fff;padding:10px 16px;font-weight:700;font-size:var(--fmark);letter-spacing:.06em;text-transform:uppercase}
+.mark{background:var(--ink);color:#fff;padding:12px 16px;font-weight:700;font-size:var(--fmark);letter-spacing:.06em;text-transform:uppercase}
 .meta{padding:12px 16px;font-size:var(--flab);color:var(--mute);text-transform:uppercase;align-self:center}
-.num{background:var(--blue);color:#fff;padding:10px 16px;font-weight:700;font-size:var(--fmark);min-width:56px;text-align:center}
+.num{background:var(--blue);color:#fff;padding:12px 16px;font-weight:700;font-size:var(--fmark);min-width:56px;text-align:center}
 .body{display:grid;grid-template-columns:1fr clamp(240px,20vw,340px);min-height:0}
 .reader{display:flex;flex-direction:column;border-right:var(--line);min-width:0;min-height:0}
 .stage{margin-top:clamp(28px,12vh,140px);border-top:var(--line)}
 .q{padding:24px;font-size:var(--fq);line-height:1.65;min-height:9em}
 .q .msg{color:var(--mute)}
 .q .msg b{color:var(--ink);font-weight:500}
-.q .msg button{color:var(--ink);border-bottom:2px solid var(--ink);margin-left:6px}
-.caret{display:inline-block;width:2px;height:.95em;vertical-align:-.12em;margin-left:3px;background:var(--red)}
+.q .msg button{color:var(--ink);border-bottom:2px solid var(--ink);margin-left:8px}
+.caret{display:inline-block;width:2px;height:.95em;vertical-align:-.12em;margin-left:4px;background:var(--red)}
 .caret.blink{animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .grow{display:grid;grid-template-rows:0fr;transition:grid-template-rows 150ms var(--ease)}
 .grow.open{grid-template-rows:1fr}
 .grow>div{overflow:hidden}
 .ans{display:grid;grid-template-columns:auto 1fr;border-top:var(--line)}
-.ans .lab{background:var(--ink);color:#fff;padding:10px 14px;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;font-weight:700;display:flex;align-items:center}
-.ans input{all:unset;padding:10px 14px;font-family:'Red Hat Mono',monospace;font-size:var(--fq)}
+.ans .lab{background:var(--ink);color:#fff;padding:12px 16px;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;font-weight:700;display:flex;align-items:center}
+.ans input{all:unset;padding:12px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--fq)}
 .verdict{display:grid;grid-template-columns:auto 1fr auto;border-top:var(--line)}
-.verdict .res{color:#fff;padding:10px 14px;font-weight:700;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center}
-.verdict .line{padding:11px 14px;font-family:'Red Hat Mono',monospace;font-size:var(--fui)}
+.verdict .res{color:#fff;padding:12px 16px;font-weight:700;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center}
+.verdict .line{padding:12px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--fui)}
 .verdict .line u{text-decoration:none;border-bottom:2px solid var(--ink);font-weight:500}
-.verdict .src{padding:11px 14px;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);border-left:var(--line)}
+.verdict .src{padding:12px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);border-left:var(--line)}
 .log{border-top:var(--line);flex:1 1 auto;min-height:0;overflow-y:auto}
 .log .row{display:grid;grid-template-columns:48px 1fr auto;border-bottom:1px solid var(--hair);font-size:var(--fui)}
 .log .row>span{padding:8px 12px}
 .log .n{font-weight:700;border-right:1px solid var(--hair)}
 .log .a{font-family:'Red Hat Mono',monospace}
 .log .r{font-weight:700}
-.log .empty{padding:10px 14px;color:var(--faint);font-family:'Red Hat Mono',monospace;font-size:var(--flab)}
+.log .empty{padding:12px 16px;color:var(--faint);font-family:'Red Hat Mono',monospace;font-size:var(--flab)}
 .timebar{height:10px;border-top:var(--line);background:#E4E0D6;visibility:hidden}
 .stage .timebar{border-top:1px solid var(--hair)}
 .timebar.on{visibility:visible}
 .timebar i{display:block;height:100%;background:var(--yellow);width:100%}
 .foot{display:grid;grid-template-columns:1fr auto;border-top:var(--line)}
-.hint{padding:10px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);align-self:center}
-.act{padding:10px 26px;font-weight:700;font-size:var(--fui);letter-spacing:.06em;text-transform:uppercase;border-left:var(--line);transition:background-color 120ms var(--ease),color 120ms var(--ease);position:relative;overflow:hidden;min-width:170px;text-align:center}
+.hint{padding:12px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);align-self:center}
+.act{padding:12px 24px;font-weight:700;font-size:var(--fui);letter-spacing:.06em;text-transform:uppercase;border-left:var(--line);transition:background-color 120ms var(--ease),color 120ms var(--ease);position:relative;overflow:hidden;min-width:170px;text-align:center}
 .act.buzz{background:var(--red);color:#fff}.act.buzz:hover{background:#B81F18}
 .act.next{background:var(--yellow);color:var(--ink)}.act.next:hover{background:#DDA604}
 .act.checking{background:var(--red);color:#fff;cursor:progress}
@@ -65,39 +67,47 @@ button{all:unset;cursor:pointer}
 @keyframes sweep{to{left:100%}}
 .act[disabled]{background:#E4E0D6;color:var(--faint);cursor:not-allowed}
 .side{display:flex;flex-direction:column;min-height:0;overflow-y:auto}
-.sec{border-bottom:var(--line)}
+.sec{border-bottom:var(--line)}.sec.last{border-bottom:0}
 .lab{display:flex;justify-content:space-between;align-items:stretch;font-size:var(--flab);letter-spacing:.08em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--hair)}
-.lab>span:first-child{padding:8px 14px}
-.lab .aside{font-family:'Red Hat Mono',monospace;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mute);padding:8px 14px}
+.lab>span:first-child{padding:8px 16px}
+.lab .aside{font-family:'Red Hat Mono',monospace;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mute);padding:8px 16px}
 .change{position:relative;display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--hair);color:var(--faint);cursor:not-allowed}
-.change::after{content:"Not built yet: one textbook for now";position:absolute;right:0;top:calc(100% + 6px);white-space:nowrap;background:var(--ink);color:#fff;font-family:'Red Hat Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;padding:6px 9px;opacity:0;transform:translateY(-3px);transition:opacity 160ms var(--ease),transform 160ms var(--ease);pointer-events:none;z-index:5}
+.change::after{content:"Not built yet: one textbook for now";position:absolute;right:0;top:calc(100% + 6px);white-space:nowrap;background:var(--ink);color:#fff;font-family:'Red Hat Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;padding:8px 8px;opacity:0;transform:translateY(-3px);transition:opacity 160ms var(--ease),transform 160ms var(--ease);pointer-events:none;z-index:5}
 .change:hover::after,.change:focus::after{opacity:1;transform:none}
 .book{display:grid;grid-template-columns:8px 1fr}
 .book .stripe{background:var(--blue)}
-.book .t{padding:12px 14px}
+.book .t{padding:12px 16px}
 .book .title{font-size:var(--fpts);font-weight:700;line-height:1.1}
-.book .by{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);margin-top:5px;line-height:1.4}
+.book .by{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);margin-top:4px;line-height:1.4}
 .sb{display:grid;grid-template-columns:24px 1fr 32px 30px 30px 42px;align-items:center}
-.sb>span{padding:7px 6px}
+.sb>span{padding:8px 4px}
 .sb>span:nth-child(n+3){text-align:right}
 .sb.cols{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);border-bottom:1px solid var(--hair)}
 .sb.me{background:#fff;box-shadow:inset 4px 0 0 var(--blue);cursor:pointer;position:relative;transition:background-color 120ms var(--ease)}
 .sb.me:hover{background:#FBFAF6}
 .sb .rk{font-family:'Red Hat Mono',monospace;font-size:11px;color:var(--mute);padding-left:12px}
-.sb .nm{font-weight:500;display:flex;align-items:center;gap:7px;overflow:hidden;white-space:nowrap}
+.sb .nm{font-weight:500;display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap}
 .sb .nm i{width:9px;height:9px;background:var(--blue);flex:none}
 .sb .c{color:var(--blue);font-weight:700}.sb .neg{color:var(--red);font-weight:700}.sb .pts{font-weight:700;font-size:var(--fpts);padding-right:12px}
-.tip{position:absolute;left:10px;top:calc(100% + 8px);background:var(--ink);color:#fff;font-family:'Red Hat Mono',monospace;font-size:11px;padding:7px 10px;white-space:nowrap;z-index:6;transition:opacity 200ms var(--ease)}
+.tip{position:absolute;left:10px;top:calc(100% + 8px);background:var(--ink);color:#fff;font-family:'Red Hat Mono',monospace;font-size:11px;padding:8px 12px;white-space:nowrap;z-index:6;transition:opacity 200ms var(--ease)}
 .tip::before{content:"";position:absolute;left:16px;top:-6px;border:6px solid transparent;border-top:0;border-bottom-color:var(--ink)}
-.sb .nm input{all:unset;flex:1 1 auto;min-width:0;font:inherit;background:var(--paper);box-shadow:inset 0 -2px 0 var(--ink);padding:0 2px;cursor:text}
-.speed{padding:12px 14px}
+.sb .nm input{all:unset;flex:1 1 auto;min-width:0;font:inherit;background:var(--paper);box-shadow:inset 0 -2px 0 var(--ink);padding:0 4px;cursor:text}
+.speed{padding:12px 16px}
 .speed input{-webkit-appearance:none;appearance:none;width:100%;height:12px;background:linear-gradient(var(--yellow),var(--yellow)) 0/var(--p,30%) 100% no-repeat,#E4E0D6;outline:1px solid var(--ink);outline-offset:-1px;cursor:pointer}
 .speed input::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:20px;background:var(--ink)}
 .speed input::-moz-range-thumb{width:6px;height:20px;background:var(--ink);border:0;border-radius:0}
 .speed .row{display:flex;justify-content:space-between;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);margin-top:8px}
 .speed .row b{color:var(--ink);font-weight:500}
-.chap{display:grid;grid-template-columns:24px 28px 1fr auto;align-items:center;padding:6px 14px;cursor:pointer;transition:color 120ms var(--ease)}
+.chap{display:grid;grid-template-columns:24px 28px 1fr auto;align-items:center;padding:8px 16px;cursor:pointer;transition:color 120ms var(--ease)}
 .chap .box{width:11px;height:11px;border:2px solid var(--ink)}
+.chbtn{display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--hair);font-family:'Red Hat Mono',monospace;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink)}
+.chbtn:hover{background:#fff}.chbtn[disabled]{color:var(--faint);cursor:default;background:none}
+.chlab span{white-space:nowrap}
+.chhelp>span{padding:8px 16px}
+.chhelp{display:grid;grid-template-columns:1fr auto auto;padding:0;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);border-bottom:1px solid var(--hair)}
+.chap .box{position:relative}
+.chap.on .box::after{content:"";position:absolute;left:2px;top:-1px;width:3px;height:6px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chap:hover .box{background:#E4E0D6}.chap.on:hover .box{background:var(--ink)}
 .chap.on .box{background:var(--ink)}
 .chap .no{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute)}
 .chap .ct{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--faint)}
@@ -114,15 +124,17 @@ button{all:unset;cursor:pointer}
 .log .row{cursor:pointer;transition:background-color 120ms var(--ease)}
 .log .row:hover{background:#FBFAF6}
 .log .row[aria-expanded="true"]{background:#fff;border-bottom-color:transparent}
-.log .more>div>div{background:#fff;border-bottom:1px solid var(--hair);padding:4px 16px 14px 60px}
+.log .more>div>div{background:#fff;border-bottom:1px solid var(--hair);padding:4px 16px 16px 60px} /* 60 = 48px number column + 12px, aligns with the answer */
 .log .more .qt{font-family:'Red Hat Mono',monospace;font-size:var(--fui);line-height:1.65}
 .log .more .al{font-family:'Red Hat Mono',monospace;font-size:var(--fui);margin-top:8px}
 .log .more .al u{text-decoration:none;border-bottom:2px solid var(--ink);font-weight:500}
-.bz{white-space:nowrap;font-size:var(--flab);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin:0 6px 0 2px}
+.r-pos{color:var(--blue)}.r-neg,.r-live{color:var(--red)}.r-zero{color:var(--mute)}
+.said{color:var(--mute);margin-left:12px}
+.bz{white-space:nowrap;font-size:var(--flab);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin:0 8px 0 4px}
 .bz i{display:inline-block;width:9px;height:9px;margin-right:4px;vertical-align:0}
 .log .ev{display:grid;grid-template-columns:48px 1fr;border-bottom:1px solid var(--hair);font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute)}
-.log .ev>span{padding:6px 12px}
-.log .more .md{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);margin-top:6px}
+.log .ev>span{padding:8px 12px}
+.log .more .md{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);margin-top:8px}
 </style>
 </head>
 <body>
@@ -157,8 +169,9 @@ button{all:unset;cursor:pointer}
         <div class="lab"><span>Room</span><span class="aside">whole room</span></div>
         <div class="chap" id="skipOpt" tabindex="0" role="checkbox" aria-checked="false"><span class="box"></span><span></span><span>Allow skipping mid-question</span><span></span></div>
       </div>
-      <div class="sec" style="border-bottom:0">
-        <div class="lab"><span>Chapters</span><span class="aside" id="chcount"></span></div>
+      <div class="sec last">
+        <div class="lab chlab"><span>Chapters in play</span><span class="aside" id="chcount"></span></div>
+        <div class="chhelp"><span>Only checked chapters are asked, from the next tossup on. Shared by the whole room. Numbers are tossups per chapter.</span><button class="chbtn" id="chAll">All</button><button class="chbtn" id="chNone">None</button></div>
         <div id="chaps"></div>
       </div>
     </aside>
@@ -201,10 +214,10 @@ function offline(msg,canRetry){
 
 const me=()=>S.players.find(p=>p.pid===S.you);
 const pname=pid=>{const p=player(pid);return p?p.name:'someone'};
-const ptsColor=p=>p>0?'var(--blue)':p<0?'var(--red)':'var(--mute)';
+const ptsClass=p=>p>0?'r-pos':p<0?'r-neg':'r-zero';
 // A marker in the question text where a player buzzed: their square and name, colored by result.
 function marker(pid,points,live){const p=player(pid);
- return `<span class="bz" style="color:${live?'var(--red)':ptsColor(points)}"><i style="background:${p?COLOR[p.color]:'var(--faint)'}"></i>${esc(pname(pid))}${live?' buzzing':''}</span>`}
+ return `<span class="bz ${live?'r-live':ptsClass(points)}"><i style="background:${p?COLOR[p.color]:'var(--faint)'}"></i>${esc(pname(pid))}${live?' buzzing':''}</span>`}
 function marked(words,buzzes,live){
  const at={};for(const b of buzzes)(at[b.word_index]=at[b.word_index]||[]).push(marker(b.pid,b.points,false));
  if(live)(at[words.length]=at[words.length]||[]).push(marker(live,0,true));
@@ -268,7 +281,7 @@ function renderVerdict(){
   const who=b.pid===S.you?'':' '+pname(b.pid);
   r.textContent=b.points>0?'+10 correct'+who:(b.points<0?'−5 incorrect':'0 incorrect')+who}
  const b2=said(R.buzzes);
- $('aline').innerHTML='Answer: '+R.answer+(b2?`<span style="color:var(--mute);margin-left:12px">${b2}</span>`:'');
+ $('aline').innerHTML='Answer: '+R.answer+(b2?`<span class="said">${b2}</span>`:'');
  $('src').textContent=(R.rewritten?'rewritten, ':'draft, ')+'clues from '+(R.sections||'the book');
  $('verWrap').classList.add('open');
 }
@@ -301,7 +314,7 @@ function renderSide(){
  }
  if(document.activeElement!==$('wpm')){$('wpm').value=S.wpm;showWpm(S.wpm)}
  $('chaps').innerHTML=S.chapters.map(([n,t,ct])=>{const on=S.selected.includes(n);return `<div class="chap ${on?'on':''}" data-n="${n}" tabindex="0" role="checkbox" aria-checked="${on}"><span class="box"></span><span class="no">${String(n).padStart(2,'0')}</span><span>${esc(t)}</span><span class="ct">${ct||''}</span></div>`}).join('');
- $('chcount').textContent=S.selected.length+' of '+S.chapters.length;
+ $('chcount').textContent=S.selected.length+' of '+S.chapters.length;$('chAll').disabled=S.selected.length===S.chapters.length;$('chNone').disabled=!S.selected.length;
  $('skipOpt').classList.toggle('on',S.skip_allowed);$('skipOpt').setAttribute('aria-checked',S.skip_allowed);
 }
 function showWpm(v){$('wpmv').textContent=v+' wpm';$('wpm').style.setProperty('--p',((v-120)/480*100)+'%')}
@@ -314,7 +327,7 @@ function renderLog(){
  if(!S.log.length){$('log').innerHTML='<div class="empty">Finished tossups appear here. Click one to read it again.</div>';return}
  $('log').innerHTML=S.log.map(l=>{if(l.kind!=='tossup')return event(l);
   const who=l.pid&&l.pid!==S.you?' '+esc(pname(l.pid)):'',open=openLog.has(l.num),b=said(l.buzzes||[]);
-  return `<div class="row" data-n="${l.num}" tabindex="0" role="button" aria-expanded="${open}"><span class="n">${String(l.num).padStart(2,'0')}</span><span class="a">${esc(l.answer.replace(/<[^>]+>/g,''))}</span><span class="r" style="color:${ptsColor(l.points)}">${pts(l.points)}${who}</span></div>`
+  return `<div class="row" data-n="${l.num}" tabindex="0" role="button" aria-expanded="${open}"><span class="n">${String(l.num).padStart(2,'0')}</span><span class="a">${esc(l.answer.replace(/<[^>]+>/g,''))}</span><span class="r ${ptsClass(l.points)}">${pts(l.points)}${who}</span></div>`
   +`<div class="grow more${open?' open':''}"><div><div><div class="qt">${marked((l.question||'').split(' '),l.buzzes||[],null)}</div><div class="al">Answer: ${l.answer}</div>`
   +`<div class="md">${b||'no buzzes'} / ch. ${l.chapter} / ${l.rewritten?'rewritten':'draft'}, clues from ${esc(l.sections||'the book')}</div></div></div></div>`}).join('');
 }
@@ -345,6 +358,7 @@ $('chaps').onclick=e=>{const el=e.target.closest('.chap');if(!el||!S)return;cons
  send({type:'chapters',chapters:S.selected.includes(n)?S.selected.filter(x=>x!==n):[...S.selected,n]})};
 $('skipOpt').onclick=()=>{if(S)send({type:'skip_allowed',allowed:!S.skip_allowed})};
 $('skipOpt').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();e.stopPropagation();$('skipOpt').click()}};
+$('chAll').onclick=()=>{if(S)send({type:'chapters',chapters:S.chapters.map(c=>c[0])})};$('chNone').onclick=()=>{if(S)send({type:'chapters',chapters:[]})};
 $('chaps').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();e.stopPropagation();e.target.click()}};
 
 // name
@@ -355,7 +369,8 @@ function openEd(){
  const span=$('me').querySelector('.nm>span'),inp=document.createElement('input');
  inp.maxLength=20;inp.value=myName;inp.setAttribute('aria-label','Your name');inp.spellcheck=false;span.replaceWith(inp);
  inp.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')closeEd(inp,true);if(e.key==='Escape')closeEd(inp,false)};
- inp.onblur=()=>{if(document.hasFocus())closeEd(inp,true)}; // clicking elsewhere saves; switching windows doesn'tinp.onclick=e=>e.stopPropagation();
+ inp.onclick=e=>e.stopPropagation();
+ inp.onblur=()=>{if(document.hasFocus())closeEd(inp,true)}; // clicking elsewhere saves; switching windows doesn't
  inp.focus();inp.select();
 }
 function closeEd(inp,save){
