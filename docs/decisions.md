@@ -454,3 +454,29 @@ words of a multi-word answer ("cortex" for "cerebral cortex"; not for people, no
 (sound-alike matching), S3 (per-word typos). One rule set in two places, server/judge.py
 and tools/judge.js, held together by server/tests/judge_cases.json (the test runs both).
 Limits in `[judge]`; tools/play.py writes them and the guard terms into tossups.json.
+
+## rank: clue difficulty, A + B2 (2026-10-12)
+
+Played tossups did not feel pyramidal. Measured first: `eval/pyramid.py` links each
+rewritten sentence to its source sentence (89% link) and scores the order; Chong
+hand-ordered 5 tossups (`eval/difficulty_gold.json`, ids and sentence indices only). Chosen
+signals: A1 repetition (a fact restated in other sentences about the answer is easier), A2
+placement (the old emphasis), A3 detail (numbers, citations, people, quoted stimuli), B2
+QBReader phrase familiarity (stage `qbreader`: each book term inside a clue is searched in
+QBReader tossup text; often used and late in questions = easy). Rejected: B1, real tossups
+on the same answer (a probe of 40 answers: 16 had any, 7 had five or more, many hits were
+other senses of the word), and C, learning from buzzes (not enough play yet).
+Agreement with the hand order (1 = same, 0.5 = none), 5 tossups, about 30 pairs:
+| score | gold | played order |
+|---|---|---|
+| old: 0.6 placement + 0.4 word rarity | 0.75 | 0.65 |
+| placement 0.6 + familiarity 0.4 | 0.71 | 0.55 |
+| old 0.75 + familiarity 0.25 | 0.67 | 0.62 |
+| all new, 0.35/0.2/0.2/0.25 | 0.60 | 0.62 |
+| alone: placement .75, repetition .56, word rarity .54, familiarity .58, detail .46 | | |
+The played order is a biased reference (the rewrite sessions saw clues sorted by the old
+score). QBReader covers 1,220 of 2,206 phrases and 90% of this book's clues. Decision for
+now: keep the old weights live (config), store every feature, and tune once the gold set
+has 15 to 20 tossups; five is too few to fit weights. What would break on another book:
+nothing book-specific; a book quizbowl rarely touches gets few familiarity values and the
+weighted mean leans on the book's own signals.

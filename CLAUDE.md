@@ -119,7 +119,7 @@ For generated tossups, `set.name` is the book title and `packet` is the chapter.
 ## Layout
 
 ```
-pipeline/omnibowl/   parse.py profile.py tag.py sentences.py backmatter.py candidates.py coref.py clues.py rank.py uniqueness.py assemble.py run.py
+pipeline/omnibowl/   parse.py profile.py tag.py sentences.py backmatter.py candidates.py coref.py clues.py qbreader.py rank.py difficulty.py uniqueness.py pyramid.py assemble.py run.py
 pipeline/config.toml
 pipeline/tests/
 server/              room server (main.py, room.py), judge.py, tossups.py, tests/
@@ -143,7 +143,7 @@ uv run python -m server                   # multiplayer rooms on 0.0.0.0:8000, p
 uv run uvicorn server.main:create_app --factory --reload   # server development, localhost
 ```
 
-Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`) -> sentences (`sentences.py`, spaCy) -> back matter (`backmatter.py`: glossary and index entries into `labels`). `--stage profile`, `--stage tag`, `--stage sentences` and `--stage backmatter` rerun from that step on. Then `--stage candidates`, `--stage coref` (local F-coref model, about 2 minutes per book), `--stage clues`, `--stage rank` (also writes `clue_uniqueness`) and `--stage assemble` (writes `tossups`). Evals: `eval/tag_accuracy.py`, `eval/sentence_accuracy.py`, `eval/candidate_recall.py`, `eval/candidate_ranking.py`, `eval/candidate_classes.py`, `eval/clue_accuracy.py`, `eval/clue_uniqueness.py`. Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
+Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, writes `data/profiles/<book>.auto.toml`; hand corrections go in `profiles/<book>.toml`, committed) -> tag (`tag.py`) -> sentences (`sentences.py`, spaCy) -> back matter (`backmatter.py`: glossary and index entries into `labels`). `--stage profile`, `--stage tag`, `--stage sentences` and `--stage backmatter` rerun from that step on. Then `--stage candidates`, `--stage coref` (local F-coref model, about 2 minutes per book), `--stage clues`, `--stage qbreader` (QBReader phrase lookups for clue difficulty, cached in `data/qbreader_cache/`, about 15 minutes the first time), `--stage rank` (also writes `clue_uniqueness`) and `--stage assemble` (writes `tossups`). Evals: `eval/tag_accuracy.py`, `eval/sentence_accuracy.py`, `eval/candidate_recall.py`, `eval/candidate_ranking.py`, `eval/candidate_classes.py`, `eval/clue_accuracy.py`, `eval/clue_uniqueness.py`, `eval/pyramid.py` (clue order of the played tossups under each difficulty score; `eval/review_difficulty.py` builds the page for hand-ordering the gold set). Test books: `language_in_mind.pdf` (v0) and `myers_ap_psych.pdf` (generalization check). Tagging accuracy: `uv run python eval/tag_accuracy.py`. The real-book test in `pipeline/tests/test_parse.py` is skipped when the PDF is absent.
 
 ## Evaluation
 
@@ -160,8 +160,7 @@ Implemented stages: `parse` = measure (`parse.py`) -> profile (`profile.py`, wri
 ## Open decisions
 
 - Answer vs. clue-only vs. too-broad thresholds: TBD, to be tuned against the index and glossary.
-- How much weight QBReader signals get relative to textbook signals in `rank`: TBD.
-- How clue difficulty is scored (textbook emphasis, mention counts, QBReader signals): TBD.
+- How clue difficulty is scored: decided (2026-10-12): placement, repetition and detail from the book (A1-A3) plus QBReader phrase familiarity (B2), as a weighted mean (`difficulty.py`). The weights, including how much QBReader counts against the book: TBD, to be tuned on the hand-ordered gold set (`eval/difficulty_gold.json`).
 - How clue uniqueness is measured: decided (retrieval test, `uniqueness.py`, 2026-10-10). The threshold a lead-in must pass, and how it drops vague clues: TBD.
 - How the referent ("this hypothesis") is chosen: TBD.
 - How hostage clues (a guess between two named options) are detected without an LLM: TBD.

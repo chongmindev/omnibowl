@@ -211,9 +211,32 @@ term_classes = ["answer", "broad_answer"]
 min_words = 5
 
 [rank]
-# Difficulty = w_emphasis * emphasis + w_specificity * specificity (decision C, rough).
+# Difficulty (decision "clue difficulty: A + B2", 2026-10-12) = weighted mean of the
+# features a clue has (familiarity is missing when no phrase in the clue was looked up):
+#   emphasis (A2, placement), repetition (A1), detail (A3), familiarity (B2), specificity
+#   (word rarity, the old second term). All are computed and stored in clue_scores; the
+#   weights below keep the old score (0.6 placement + 0.4 rarity) until the gold set is big
+#   enough to tune them. On 5 gold tossups (eval/pyramid.py, agreement with Chong's order):
+#   old 0.75, placement + familiarity 0.6/0.4 0.71, old + familiarity 0.67, starting weights
+#   0.35/0.2/0.2/0.25 0.60. See docs/decisions.md.
 w_emphasis = 0.6
+w_repetition = 0.0
+w_detail = 0.0
+w_familiarity = 0.0
 w_specificity = 0.4
+# A1 repetition: another clue sentence of the same answer restates this clue when they share
+# at least this many content words (first `repetition_word_prefix` letters, answer words removed).
+# repetition = 1 / (1 + restatements).
+repetition_min_shared = 3
+repetition_word_prefix = 5
+# A3 detail: count of numbers (years included), citations, people named (book person terms)
+# and quoted stimuli; detail = min(1, count / detail_saturation).
+detail_saturation = 3
+# B2 familiarity, per phrase: f = min(1, log(1 + tossups) / log(1 + familiar_tossups));
+# hardness = 1 - f * mean_pos (well known and used late = easy; unknown or used early = hard).
+# A clue takes its most familiar phrase.
+familiar_tossups = 50
+unknown_pos = 0.5            # when QBReader counts a phrase but returned none to measure
 # Emphasis by where the clue sits: 0 = the book makes it easy, 1 = buried.
 coref_penalty = 0.1
 off_chapter_penalty = 0.15
@@ -244,6 +267,23 @@ predicate = 0.8
 object = 0.6
 prepositional = 0.3
 other = 0.5
+
+[qbreader]
+# Stage qbreader (decision "clue difficulty: A + B2"). API: https://www.qbreader.org/tools/api-docs/
+base_url = "https://www.qbreader.org/api"
+min_interval_s = 0.12       # under the 20 requests/second limit, with room to spare
+workers = 4                 # requests in flight at once (each search takes 1-2 s)
+timeout_s = 30
+retries = 3
+max_return = 25             # tossups returned per phrase, for positions
+phrase_classes = ["answer", "broad_answer", "clue_only", "variant"]  # not too_broad: everyday words
+
+[pyramid]
+# eval/pyramid.py: linking rewritten sentences to their source sentences, and drop-backs.
+link_word_prefix = 5        # compare words by their first 5 letters (inflection)
+link_min_share = 0.3        # a sentence links when a source has 30%+ of its content words
+dropback_eps = 0.1          # a later sentence harder by more than this is a drop-back
+gold_file = "eval/difficulty_gold.json"
 
 [rank.emphasis]
 definition = 0.0

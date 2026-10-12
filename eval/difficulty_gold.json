@@ -1,0 +1,10 @@
+{
+ "about": "Hand order of each tossup's sentences before the giveaway, hardest first, by Chong (2026-10-12). Indices into omnibowl.pyramid.clue_sentences(question) of the v1 rewrite with that id. Made with eval/review_difficulty.py.",
+ "tossups": {
+  "language_in_mind-150554-v2": [2, 0, 3, 1],
+  "language_in_mind-151075-v2": [2, 3, 1, 0],
+  "language_in_mind-149179": [0, 2, 3, 1],
+  "language_in_mind-143660": [1, 0, 3, 2],
+  "language_in_mind-150987": [3, 0, 1, 2]
+ }
+}

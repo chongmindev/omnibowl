@@ -1,7 +1,9 @@
 """Stage 4: rank. For each answer, the referent ("this ERP") and the giveaway; for each
 clue, a difficulty from 0 (easy) to 1 (hard).
 
-Difficulty (decision "rank: difficulty", option C = A + B, rough first version):
+Difficulty (decision "clue difficulty: A + B2", 2026-10-12; difficulty.py) is the weighted
+mean of placement (below), repetition, detail and QBReader familiarity. It replaced
+(decision "rank: difficulty", option C = A + B, rough first version):
   - emphasis (A): how the textbook presents the fact. Definitions and summaries are
     easy; body text where the term is introduced in bold is easy; ordinary body text
     is middling; boxes and captions are harder; clues found only through coreference
@@ -19,13 +21,14 @@ Referent (decision "rank: referent", A then B then C):
 Giveaway: "For 10 points, name this <definition>" when the answer has a definition.
 """
 
+import json
 import math
 import re
 from collections import Counter, defaultdict
 
 import spacy
 
-from . import db, uniqueness
+from . import db, difficulty, uniqueness
 
 WORD = re.compile(r"[A-Za-z][A-Za-z'’-]+|\d+")
 
@@ -181,9 +184,24 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
             (book_id, t["id"], ref, int(many), source, rest, main_ch))
 
         # Clue difficulty.
+        texts = [c["stext"][c["start_char"]:c["end_char"]] for c in clues]
+        first_sid = [json.loads(c["sentence_ids"])[0] for c in clues]
+        cw = [difficulty.words(x, stop, answer_words, r["repetition_word_prefix"]) for x in texts]
+        reps = difficulty.repetition(cw, first_sid, r["repetition_min_shared"])
+        people, phrases = defaultdict(set), defaultdict(list)
+        for cid, mid, kind, n_tossups, mean_pos in conn.execute(
+                """SELECT c.id, m.term_id, mt.kind, q.n_tossups, q.mean_pos FROM clues c
+                   JOIN mentions m ON m.sentence_id = json_extract(c.sentence_ids, '$[0]')
+                        AND m.start_char >= c.start_char AND m.end_char <= c.end_char AND m.term_id != c.term_id
+                   JOIN terms mt ON mt.id = m.term_id
+                   LEFT JOIN qb_phrases q ON q.term_id = m.term_id
+                   WHERE c.term_id = ?""", (t["id"],)):
+            if kind == "person":
+                people[cid].add(mid)
+            if n_tossups is not None:
+                phrases[cid].append((n_tossups, mean_pos))
         rows = []
-        for c in clues:
-            text = c["stext"][c["start_char"]:c["end_char"]]
+        for c, text, rep in zip(clues, texts, reps):
             emph = r["emphasis"].get(c["kind"], r["emphasis"]["body"])
             if c["kind"] == "body" and _bold_intro(conn, c, t):
                 emph = r["emphasis"]["bold_intro"]
@@ -196,11 +214,15 @@ def run(book_id: int, conn, cfg: dict, nlp=None) -> None:
                            if w.lower() not in stop and w.lower() not in answer_words and df[w.lower()]),
                           reverse=True)[:r["specificity_top_words"]]
             spec = (sum(idfs) / len(idfs) / max_idf) if idfs else 0.0
-            diff = r["w_emphasis"] * emph + r["w_specificity"] * spec
-            rows.append((book_id, c["id"], round(diff, 4), round(emph, 4), round(spec, 4)))
+            det = difficulty.detail(text, len(people[c["id"]]), r)
+            fam = difficulty.familiarity(phrases[c["id"]], r)
+            diff = difficulty.combine({"emphasis": emph, "specificity": spec, "repetition": rep,
+                                       "detail": det, "familiarity": fam}, r)
+            rows.append((book_id, c["id"], round(diff, 4), round(emph, 4), round(spec, 4), round(rep, 4),
+                         round(det, 4), None if fam is None else round(fam, 4)))
         conn.executemany(
-            "INSERT INTO clue_scores (book_id, clue_id, difficulty, emphasis, specificity) VALUES (?, ?, ?, ?, ?)",
-            rows)
+            """INSERT INTO clue_scores (book_id, clue_id, difficulty, emphasis, specificity, repetition, detail,
+               familiarity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", rows)
     conn.commit()
     uniqueness.run(book_id, conn, cfg)
 

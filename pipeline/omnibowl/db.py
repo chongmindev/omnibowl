@@ -228,7 +228,20 @@ CREATE TABLE IF NOT EXISTS clue_scores (
     clue_id     INTEGER PRIMARY KEY REFERENCES clues(id),
     difficulty  REAL NOT NULL,         -- 0 easy .. 1 hard
     emphasis    REAL NOT NULL,
-    specificity REAL NOT NULL
+    specificity REAL NOT NULL,
+    repetition  REAL,                 -- 1 stated once in the answer's clues .. 0 repeated often
+    detail      REAL,                 -- 0 no years/numbers/names/quoted stimuli .. 1 many
+    familiarity REAL                  -- QBReader: 0 well known and late in questions .. 1 unknown; NULL no phrase
+);
+
+-- Stage qbreader: how QBReader tossups use each book term found inside clues.
+CREATE TABLE IF NOT EXISTS qb_phrases (
+    book_id     INTEGER NOT NULL REFERENCES books(id),
+    term_id     INTEGER PRIMARY KEY REFERENCES terms(id),
+    query       TEXT NOT NULL,        -- the phrase as searched
+    n_tossups   INTEGER NOT NULL,     -- QBReader tossups whose text contains it
+    mean_pos    REAL,                 -- mean relative position (0 first word .. 1 last), of the returned ones
+    n_found     INTEGER NOT NULL      -- returned tossups the position was measured on
 );
 
 -- Stage rank (uniqueness.py): rank of the true answer when the clue is a query.
@@ -263,15 +276,19 @@ CREATE TABLE IF NOT EXISTS tossups (
 );
 """
 
-PARSE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
+PARSE_TABLES = ["qb_phrases", "tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "coref", "mentions", "terms", "labels", "sentences", "blocks", "links", "lines", "panels", "sections"]
 TAG_TABLES = ["blocks"]
 SENTENCE_TABLES = ["sentences"]
 LABEL_TABLES = ["labels"]
-CANDIDATE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "mentions", "term_variants", "terms"]
+CANDIDATE_TABLES = ["qb_phrases", "tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues", "mentions", "term_variants", "terms"]
 COREF_TABLES = ["coref"]
 CLUE_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta", "clues"]
 RANK_TABLES = ["tossups", "clue_uniqueness", "clue_scores", "answer_meta"]
 ASSEMBLE_TABLES = ["tossups"]
+QBREADER_TABLES = ["qb_phrases"]
+
+# Columns added after a table first shipped: added to existing databases on connect.
+ADDED_COLUMNS = {"clue_scores": {"repetition": "REAL", "detail": "REAL", "familiarity": "REAL"}}
 
 
 def connect(path: Path) -> sqlite3.Connection:
@@ -280,6 +297,11 @@ def connect(path: Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
+    for table, cols in ADDED_COLUMNS.items():
+        have = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+        for name, kind in cols.items():
+            if name not in have:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {kind}")
     return conn
 
 

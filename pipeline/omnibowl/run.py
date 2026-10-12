@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import assemble, backmatter, candidates, clues, config, coref, db, parse, profile, rank, sentences, tag
+from . import assemble, backmatter, candidates, clues, config, coref, db, parse, profile, qbreader, rank, sentences, tag
 
 
 def book_id_for(conn, book: Path) -> int:
@@ -61,6 +61,10 @@ def run_clues(book, conn, cfg):
     clues.run(book_id_for(conn, book), conn, cfg)
 
 
+def run_qbreader(book, conn, cfg):
+    qbreader.run(book_id_for(conn, book), conn, cfg)
+
+
 def run_rank(book, conn, cfg):
     rank.run(book_id_for(conn, book), conn, cfg)
 
@@ -74,8 +78,8 @@ def run_assemble(book, conn, cfg, pool=False):
 # earlier steps stored; "tag" uses the saved profile plus any hand corrections.
 STAGES = {"parse": run_parse, "profile": run_profile, "tag": run_tag, "sentences": run_sentences,
           "backmatter": run_backmatter, "candidates": run_candidates, "coref": run_coref,
-          "clues": run_clues, "rank": run_rank, "assemble": run_assemble}
-ORDER = ["parse", "candidates", "coref", "clues", "rank", "assemble"]
+          "clues": run_clues, "qbreader": run_qbreader, "rank": run_rank, "assemble": run_assemble}
+ORDER = ["parse", "candidates", "coref", "clues", "qbreader", "rank", "assemble"]
 
 
 def main(argv: list[str] | None = None) -> int:
