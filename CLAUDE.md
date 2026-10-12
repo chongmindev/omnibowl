@@ -12,7 +12,7 @@ The developer (Chong) is building this partly to design the algorithms himself. 
 
 **v1 exception (2026-10-09):** for the v0 book only, the algorithmic draft pool (`assemble --pool`) is rewritten into quizbowl wording in Claude Code sessions, one batch at a time, and every rewrite is checked by `tools/verify_rewrites.py` against its source sentences. The pipeline still chooses all answers and facts. Rewrites stay in `data/rewrites/` (gitignored). Process and rules: `docs/rewrite-v1.md`.
 
-**Built on request (2026-10-10):** multiplayer v0, protobowl-style rooms (any path after the domain is a room), private link only, never deployed publicly. See `docs/multiplayer.md`.
+**Built on request (2026-10-10):** multiplayer v0, protobowl-style rooms (any path after the domain is a room), private link only. Reached from anywhere through Tailscale Funnel on the developer's Mac (2026-10-12, chosen over Cloudflare Access to avoid buying a domain): the address is public, the `?k=` key is the only lock, and the link is never posted or listed. See `docs/multiplayer.md`.
 
 **Later (do not build unless asked):** the LLM rewrite stage, mixing in real QBReader tossups, bonuses, power marks, non-textbook sources, using buzz data to re-rank clues.
 

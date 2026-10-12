@@ -188,7 +188,7 @@ uv run python -m server                                      # multiplayer: prin
 
 The server binds port 8000 on all interfaces and prints a link for this machine and one
 for the same Wi-Fi, each with a private key. Any path is a room (`/lobby`, `/psych101`).
-Playing across networks (Tailscale, cloudflared) and the room rules are in
+Playing across networks (Tailscale Funnel, private Tailscale, cloudflared) and the room rules are in
 `docs/multiplayer.md`.
 
 `--stage profile`, `tag`, `sentences` and `backmatter` rerun parse from that step on.

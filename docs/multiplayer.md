@@ -1,21 +1,23 @@
 # Multiplayer rooms (v0)
 
 A protobowl-style room for playing generated tossups with one or two other people. The
-questions come from a copyrighted textbook: share the link privately and never deploy
-this publicly.
+questions come from a copyrighted textbook: the address may be reachable from the
+internet (Funnel, below), but only people holding the key get in. Share the link
+privately, never post it, and never list the site anywhere.
 
 ## Run
 
 ```
 uv run python tools/play.py        # writes data/play/tossups.json (the server reads only this)
 uv run python -m server            # binds 0.0.0.0:8000 and prints the links
+uv run python -m server --new-key  # same, with a new key: every older link stops working
 ```
 
 It prints a link for this machine and one for the same Wi-Fi, each carrying the private
 key (`?k=...`). The first visit with the key sets a cookie and drops the key from the
 address bar; later visits and the WebSocket need only the cookie. Without it every
 page and socket is refused (403). The key lives in `data/server_key` (gitignored); set
-`OMNIBOWL_KEY` to use a different one, or delete the file to rotate it.
+`OMNIBOWL_KEY` to use a different one (which `--new-key` does not change).
 
 Any path is a room: `/lobby`, `/psych101`, `/anything` (letters, digits, `-`, `_`).
 Rooms live in memory and reset when the server restarts.
@@ -34,12 +36,28 @@ Send the "Same Wi-Fi" link. If it doesn't load on the other laptop:
 
 ## Different networks
 
-**Tailscale (recommended: private to the people you invite).** Install Tailscale on both
+**Tailscale Funnel (the setup in use: a fixed https address anyone can open; the key is
+the only lock).** On this Mac, once:
+
+1. Install Tailscale and sign in (menu bar icon > Log in). `brew install --cask tailscale`
+   needs your password, so run it in your own Terminal, or use the Mac App Store.
+2. `tailscale funnel --bg 8000`. The first time, it prints a link to turn on HTTPS
+   certificates and Funnel for your tailnet; open it, approve, and run the command again.
+   `--bg` keeps Funnel on across restarts until `tailscale funnel --bg 8000 off`.
+
+The CLI is `tailscale` if it is on your PATH, otherwise
+`/Applications/Tailscale.app/Contents/MacOS/Tailscale`. From then on, `uv run python -m
+server` prints an "Anywhere" link, `https://<mac>.<tailnet>.ts.net/lobby?k=<key>`. Send
+that; the friend needs only a browser. The address stays the same, so a leaked link keeps
+working: start the server with `--new-key` to cut off every old link. While the server is
+stopped, the address answers with an error and nothing else. The host name includes your
+tailnet's name, which is visible to anyone with the link.
+
+**Tailscale, private (only people you share this Mac with; they install Tailscale).** Install Tailscale on both
 machines (`brew install --cask tailscale`, or tailscale.com/download) and sign in. Invite
 the other student to your tailnet, or share just this machine with them (admin console >
 Machines > Share). They then open `http://<your-tailscale-ip>:8000/lobby?k=<key>`, where
-`tailscale ip -4` prints the address. Nothing is reachable from the public internet. Do
-not use `tailscale funnel`, which publishes the port to everyone.
+`tailscale ip -4` prints the address. Nothing is reachable from the public internet.
 
 **cloudflared quick tunnel (no account; the URL is public, the key is the only lock).**
 
