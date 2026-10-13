@@ -78,6 +78,7 @@ class Room:
         self.buzzer: str | None = None
         self.finished = False          # the current buzz came after the last word
         self.prompted = False
+        self.prompt_given = ""         # the answer that drew the prompt, shown and re-judged with the next
         self.typed = ""
         self.locked: set[str] = set()  # players who already buzzed on this tossup
         self.buzzes: list[Buzz] = []
@@ -145,6 +146,8 @@ class Room:
                 changed = self._set_wpm(msg.get("wpm"))
             elif kind == "name":
                 changed = self._rename(pid, str(msg.get("name", "")))
+            elif kind == "reset_score":
+                changed = self._reset_score(pid)
             else:
                 changed = False
             if changed:
@@ -202,7 +205,7 @@ class Room:
     def _buzz(self, pid: str) -> bool:
         if self.state not in ("reading", "window") or pid in self.locked:
             return False
-        self.buzzer, self.typed, self.prompted = pid, "", False
+        self.buzzer, self.typed, self.prompted, self.prompt_given = pid, "", False, ""
         self.finished = self.i >= len(self.tossup.words)
         self.locked.add(pid)
         self._start_answer()
@@ -216,13 +219,14 @@ class Room:
     def _submit(self, pid: str | None, text: str) -> bool:
         if self.state != "buzzed" or pid is None or pid != self.buzzer:
             return False
-        verdict = self.tossup.judge(text, self.prompted)
+        verdict = self.tossup.judge(text, self.prompted, self.prompt_given)
         if verdict == "prompt":
-            self.prompted, self.typed = True, ""
+            self.prompted, self.typed, self.prompt_given = True, "", text.strip()
             self._start_answer()
             return True
         points = 10 if verdict == "accept" else (0 if self.finished else -5)
-        self.buzzes.append(Buzz(pid=pid, given=text.strip(), points=points, word_index=self.i))
+        given = f"{self.prompt_given} → {text.strip()}" if self.prompted else text.strip()
+        self.buzzes.append(Buzz(pid=pid, given=given, points=points, word_index=self.i))
         p = self.players[pid]
         p.points += points
         p.correct += points > 0
@@ -297,6 +301,15 @@ class Room:
         self._history({"kind": "rename", "pid": pid, "old": old, "name": name})
         return True
 
+    def _reset_score(self, pid: str) -> bool:
+        """A player zeroes their own line of the scoreboard; nobody else's changes."""
+        p = self.players[pid]
+        if not (p.points or p.correct or p.neg or p.heard):
+            return False
+        p.points = p.correct = p.neg = p.heard = 0
+        self._history({"kind": "reset", "pid": pid, "name": p.name})
+        return True
+
     # ---- timer tasks ------------------------------------------------------------------
 
     async def _reveal(self, gen: int, delay: float) -> None:
@@ -341,7 +354,8 @@ class Room:
             "chapters": [[n, title, counts.get(n, 0)] for n, title in lib.chapters],
             "selected": sorted(self.selected), "wpm": self.wpm,
             "state": self.state, "empty_reason": self.empty_reason, "num": self.num,
-            "buzzer": self.buzzer, "prompted": self.prompted, "typed": self.typed,
+            "buzzer": self.buzzer, "prompted": self.prompted, "prompt_given": self.prompt_given,
+            "typed": self.typed,
             "locked": sorted(self.locked), "skip_allowed": self.skip_allowed,
             # Buzzes on the tossup in progress (word_index = words revealed at the buzz), so
             # every screen can mark where each player buzzed. They hold no answerline.

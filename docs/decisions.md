@@ -455,6 +455,23 @@ words of a multi-word answer ("cortex" for "cerebral cortex"; not for people, no
 and tools/judge.js, held together by server/tests/judge_cases.json (the test runs both).
 Limits in `[judge]`; tools/play.py writes them and the guard terms into tossups.json.
 
+## play: answer judging, leniency (2026-10-12)
+
+Chong's fixes after playing: (1) a person's surname alone is always accepted; a name the
+book also has as a person term counts even when its answer term has another kind (two
+Tomasello tossups only prompted on "Tomasello"); only the surname is underlined ("Paul
+<u>Broca</u>"). (2) A prompt now shows what was said ("More specific than 'aphasia'?"),
+and the next answer is also tried joined to it ("aphasia", then "Broca's"); single player
+judges what is typed when time runs out, as rooms do. (3) An abbreviated answer shows
+its expansion in parentheses and accepts it: from its forms by initials, else the book's
+most common "<words> (ABBR)". (4) Inflections: words of `stem_from` letters or more also
+match by a light stem (-s, -es, -ies, -ed, -ing, doubled consonant, final e), refused when
+the guess is itself another book term ("priming" is not "prime"). (5) Trailing words in
+`optional_tails` (effect, phase, test, task, paradigm, area) are optional: only the rest
+is underlined and the rest alone is accepted ("<u>test</u> phase"). Known loose case:
+"<u>span</u> test" accepts "span". Rejected: a full stemmer (Porter; a dependency, and
+over-merges such as "general"/"generate"), per-answer optional words chosen by hand.
+
 ## rank: clue difficulty, A + B2 (2026-10-12)
 
 Played tossups did not feel pyramidal. Measured first: `eval/pyramid.py` links each

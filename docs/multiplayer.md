@@ -85,9 +85,11 @@ broadcasts.
   after the last word runs out.
 - **Judging:** on the server (`server/judge.py`), with the same rules as the single-player
   page (`tools/judge.js`): the answerline or an accepted alternate, ignoring case,
-  punctuation, articles and word order; small typos unless another book term is as
-  close; a prompt on the last words of a multi-word answer, once per buzz (decision
-  "answer judging"). The answerline reaches the page only after the tossup ends.
+  punctuation, articles and word order; small typos and inflections ("testing" for
+  "test") unless the guess is another book term; a person's surname; a prompt on the last
+  words of a multi-word answer, once per buzz, after which the new answer is also tried
+  joined to the prompted one (decisions "answer judging" and "answer judging: leniency").
+  The answerline reaches the page only after the tossup ends.
 - **Scores:** +10 correct, −5 wrong before the last word, 0 wrong after it. If the answer
   window runs out, whatever was typed is submitted.
 - **Next / skip:** after a tossup, → (or the yellow Next button) starts the next one for
@@ -95,12 +97,15 @@ broadcasts.
   "Allow skipping mid-question" (sidebar, Room). The chapter filter is shared too.
 - **Buzz markers:** each buzz is marked in the question text where it happened, with the
   player's color and result, for everyone, during the tossup and afterwards.
-- **History:** finished tossups, "joined the game" and renames, newest first. Click a
+- **History:** finished tossups, "joined the game", renames and score resets, newest first. Click a
   tossup (or focus it and press Enter) to reread the full question with its buzz
   markers, the answerline, who said what, and the sections its clues came from.
 - **Players:** each browser tab is one player (a reload keeps your seat and score). Names
   start as `guest####`; click your name on the scoreboard to edit it in place (Enter or
   clicking away saves, Esc cancels). Players who close the page stay on the board as
   "away". The header doesn't name the chapter, since that would be a clue.
+- **Score Reset:** the button on the scoreboard zeroes your own row (+10, −5, heard,
+  points) and nobody else's, after a second confirming click. History gets a "reset
+  their score" line so the room can see it happened.
 
 Timings and limits are in `server/room.py` (`Settings`).

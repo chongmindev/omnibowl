@@ -6,13 +6,18 @@ Also writes data/play/tossups.json (book, chapters, tossups) for the multiplayer
 
 The output holds textbook text, so it is written to data/ (gitignored) and stays local.
 Answer judging (tools/judge.js here, server/judge.py in the server) accepts the answerline,
-its alternates and small typos, and prompts on the last words of a multi-word answer.
+its alternates, small typos and inflections, and prompts on the last words of a multi-word
+answer. Answerlines (decision "answer judging: leniency"): a person's surname is accepted;
+only the surname and the required part are underlined ("Paul <u>Broca</u>",
+"<u>test</u> phase", an optional trailing word left out); an
+abbreviated answer shows its expansion, from its forms or the book's own "words (ABBR)".
 """
 
 import argparse
 import json
 import re
 import sqlite3
+from collections import Counter
 from pathlib import Path
 
 from omnibowl import config
@@ -35,6 +40,56 @@ def prompts(accept: list[str], skip: set[str]) -> list[str]:
         if len(w) > 1 and not skip & set(w):
             out |= {" ".join(w[k:]) for k in range(1, len(w))}
     return sorted(out - set(accept))
+
+
+ACRONYM = re.compile(r"[A-Z][A-Z0-9]{1,6}")
+SMALL = {"of", "and", "the", "in", "for", "to", "a", "an", "on"}
+
+
+def initials(phrase: str, split_hyphens: bool) -> str:
+    words = re.split(r"[\s\-‐]+" if split_hyphens else r"\s+", phrase)
+    return "".join(w[0] for w in words if w and w.lower() not in SMALL).lower()
+
+
+def is_expansion(acronym: str, phrase: str) -> bool:
+    return acronym.lower() in (initials(phrase, True), initials(phrase, False))
+
+
+def expansion(conn, book_id: int, acronym: str, forms: list[str]) -> str | None:
+    """The spelled-out form of an abbreviated answer: one of its forms whose initials
+    spell it, else the most common "<words> (ACRONYM)" in the book."""
+    for f in forms:
+        if len(f.split()) > 1 and is_expansion(acronym, f):
+            return f
+    found = Counter()
+    before = re.compile(r"((?:[\w’'‐-]+\s+){1,8})\(" + re.escape(acronym) + r"\)")
+    for (text,) in conn.execute("SELECT text FROM sentences WHERE book_id = ? AND text LIKE ?",
+                                (book_id, f"%({acronym})%")):
+        for m in before.finditer(text):
+            words = m.group(1).split()
+            for k in range(2, len(words) + 1):
+                if is_expansion(acronym, " ".join(words[-k:])):
+                    found[" ".join(words[-k:])] += 1
+                    break
+    return found.most_common(1)[0][0] if found else None
+
+
+def optional_core(display: str, jc: dict) -> str | None:
+    """The required part of an answer ending in an optional word ("test" of "test phase")."""
+    words = display.split()
+    if len(words) > 1 and words[-1].lower() in jc["optional_tails"]:
+        core = display[: display.rstrip().rfind(" ")].rstrip()
+        if len(re.sub(r"[^A-Za-z]", "", core)) >= jc["optional_tail_min_letters"]:
+            return core
+    return None
+
+
+def is_person(conn, book_id: int, display: str, kind: str) -> bool:
+    """A person, or a name the book also has as a person term (a duplicate term can carry
+    another kind)."""
+    return kind == "person" or conn.execute(
+        "SELECT 1 FROM terms WHERE book_id = ? AND kind = 'person' AND lower(display) = lower(?)",
+        (book_id, display)).fetchone() is not None
 
 
 def answer_group(conn, term_id: int):
@@ -106,22 +161,26 @@ def main() -> None:
             continue
         display, kind, forms = answer_group(conn, t["term_id"])
         forms = [display] + forms
+        person = is_person(conn, book["id"], display, kind)
+        core = display.split()[-1] if person and len(display.split()) > 1 else optional_core(display, jc)
+        expand = expansion(conn, book["id"], display, forms) if ACRONYM.fullmatch(display) else None
         # A person's surname alone is accepted ("Broca" for "Paul Broca").
         accept = sorted({norm(f) for f in forms} | {norm(f).rstrip("s") for f in forms}
-                        | {norm(f).split()[-1] for f in forms if len(norm(f).split()) == 2 and kind == "person"})
+                        | {norm(f).split()[-1] for f in forms if len(norm(f).split()) >= 2 and person}
+                        | {norm(x) for x in (core, expand) if x})
         packet = json.loads(t["packet_json"] or "{}")
         secs = [secnum.get(s, "") for s in json.loads(t["section_ids"])]
         tossups.append({"id": rid, "ch": packet.get("number") or 0, "sec": secs[0] if secs else "",
                         "secs": ", ".join(s for s in secs if s) or "the book",
-                        "q": rewrites.get(rid, t["question"]), "a": answerline(display, forms[1:])[0],
-                        "acc": [a for a in accept if a], "prompt": prompts(accept, set(jc["prompt_skip_words"])) if kind != "person" else [],
+                        "q": rewrites.get(rid, t["question"]), "a": answerline(display, forms[1:], core, expand)[0],
+                        "acc": [a for a in accept if a], "prompt": prompts(accept, set(jc["prompt_skip_words"])) if not person else [],
                         "rw": rid in rewrites})
     # Judging rules and the book's other terms (a typo match is refused when the guess is
     # as close to one of them), shared by the page (tools/judge.js) and the server.
     guard = sorted({norm(r[0]) for r in conn.execute(
         f"SELECT display FROM terms WHERE book_id = ? AND class IN ({','.join('?' * len(jc['guard_classes']))})",
         (book["id"], *jc["guard_classes"]))} - {""})
-    judge = {k: jc[k] for k in ("ignore_words", "typo_free_below", "one_typo_up_to", "long_typos")} | {"terms": guard}
+    judge = {k: jc[k] for k in ("ignore_words", "typo_free_below", "one_typo_up_to", "long_typos", "stem_from")} | {"terms": guard}
     page = (ROOT / "tools" / "play_template.html").read_text()
     page = (page.replace("__JUDGE_JS__", (ROOT / "tools" / "judge.js").read_text())
                 .replace("__JUDGE__", json.dumps(judge, ensure_ascii=False))

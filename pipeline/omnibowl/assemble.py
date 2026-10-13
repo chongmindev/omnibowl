@@ -88,14 +88,25 @@ def answer_stems(forms: list[str], ref: str, cfg: dict) -> set[str]:
     return stems
 
 
-def answerline(display: str, forms: list[str]) -> tuple[str, str]:
+def answerline(display: str, forms: list[str], core: str | None = None,
+               expansion: str | None = None) -> tuple[str, str]:
+    """(html, plain). `core` is the part of `display`, at its start or end, that is required
+    (only it is underlined: "<u>test</u> phase", "Paul <u>Broca</u>"); `expansion` spells out an abbreviated answer and is
+    shown in parentheses ("SLI (specific language impairment)")."""
+    shown = {x.lower().rstrip("s") for x in (display, core, expansion) if x}
     alts = []
     for f in forms:
-        if f.lower() != display.lower() and f.lower().rstrip("s") != display.lower().rstrip("s") \
-                and f.lower() not in [a.lower() for a in alts]:
+        if f.lower().rstrip("s") not in shown and f.lower() not in [a.lower() for a in alts]:
             alts.append(f)
     acc = f" [accept {' or '.join(alts[:3])}]" if alts else ""
-    return f"<b><u>{display}</u></b>{acc}", f"{display}{acc}"
+    if core and core != display and display.startswith(core):
+        head = f"<b><u>{core}</u></b>{display[len(core):]}"
+    elif core and core != display and display.endswith(core):
+        head = f"{display[:-len(core)]}<b><u>{core}</u></b>"
+    else:
+        head = f"<b><u>{display}</u></b>"
+    exp_html, exp_plain = (f" (<b><u>{expansion}</u></b>)", f" ({expansion})") if expansion else ("", "")
+    return f"{head}{exp_html}{acc}", f"{display}{exp_plain}{acc}"
 
 
 def bad_mention(doc, a: int, b: int) -> str | None:

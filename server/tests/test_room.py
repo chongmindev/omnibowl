@@ -131,9 +131,29 @@ def test_prompt_once_then_reject():
         await until(a, "window")
         await r.handle(a, {"type": "buzz"})
         await r.handle(a, {"type": "answer", "text": "answer"})
-        assert a.state["state"] == "buzzed" and a.state["prompted"]
+        assert a.state["state"] == "buzzed" and a.state["prompted"] and a.state["prompt_given"] == "answer"
         await r.handle(a, {"type": "answer", "text": "answer"})
         assert a.state["state"] == "judged" and a.state["result"]["buzzes"][0]["points"] == 0
+    run(go())
+
+
+def test_after_a_prompt_the_new_answer_completes_the_old_one():
+    async def go():
+        r, a = room(), Fake()
+        await r.join(a, "p1", "alice")
+        await r.handle(a, {"type": "chapters", "chapters": [1]})
+        await until(a, "judged")
+        await r.handle(a, {"type": "next"})
+        if r.tossup.id != "a":
+            await until(a, "judged")
+            await r.handle(a, {"type": "next"})
+        await until(a, "window")
+        await r.handle(a, {"type": "buzz"})
+        await r.handle(a, {"type": "answer", "text": "answer"})  # prompt: "answer" of "answer a"
+        await r.handle(a, {"type": "answer", "text": "a"})       # "a" + "answer" = the answer
+        s = a.state
+        assert s["state"] == "judged" and s["result"]["buzzes"][0]["points"] == 10
+        assert s["result"]["buzzes"][0]["given"] == "answer → a"
     run(go())
 
 
@@ -220,4 +240,21 @@ def test_buzz_positions_are_shared_during_the_tossup():
         s = b.state
         assert s["buzzes"] == [{"pid": "p1", "given": "wrong", "points": -5, "word_index": at}]
         assert "Answer" not in str(s)  # still no answerline
+    run(go())
+
+
+def test_reset_score_clears_only_your_own_line():
+    async def go():
+        r, a, b = room(), Fake(), Fake()
+        await r.join(a, "p1", "alice")
+        await r.join(b, "p2", "bob")
+        await r.handle(a, {"type": "reset_score"})  # nothing to reset: no log entry
+        assert all(e["kind"] != "reset" for e in a.state["log"])
+        for pid in ("p1", "p2"):
+            p = r.players[pid]
+            p.points, p.correct, p.neg, p.heard = 15, 2, 1, 4
+        await r.handle(a, {"type": "reset_score"})
+        lines = {p["pid"]: (p["points"], p["correct"], p["neg"], p["heard"]) for p in b.state["players"]}
+        assert lines == {"p1": (0, 0, 0, 0), "p2": (15, 2, 1, 4)}
+        assert b.state["log"][0] == {"kind": "reset", "pid": "p1", "name": "alice"}
     run(go())

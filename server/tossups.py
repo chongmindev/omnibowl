@@ -30,9 +30,10 @@ class Tossup:
     rewritten: bool
     rules: Rules = Rules()
 
-    def judge(self, given: str, prompted: bool) -> str:
-        """'accept', 'prompt' or 'reject'. A second prompt in a row is a reject."""
-        return judge(given, self.accept, self.prompt, self.rules, prompted)
+    def judge(self, given: str, prompted: bool, previous: str = "") -> str:
+        """'accept', 'prompt' or 'reject'. A second prompt in a row is a reject; after a
+        prompt, the new answer is also tried joined to the prompted one (`previous`)."""
+        return judge(given, self.accept, self.prompt, self.rules, prompted, previous)
 
 
 @dataclass(frozen=True)

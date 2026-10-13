@@ -102,6 +102,7 @@ button{all:unset;cursor:pointer}
 .chap .box{width:11px;height:11px;border:2px solid var(--ink)}
 .chbtn{display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--hair);font-family:'Red Hat Mono',monospace;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink)}
 .chbtn:hover{background:#fff}.chbtn[disabled]{color:var(--faint);cursor:default;background:none}
+.labr{display:flex}.labr .aside{padding:8px}.lab>span,.lab .aside,.labr .chbtn{white-space:nowrap}.chbtn.armed{color:var(--red)}
 .chlab span{white-space:nowrap}
 .chhelp>span{padding:8px 16px}
 .chhelp{display:grid;grid-template-columns:1fr auto auto;padding:0;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);border-bottom:1px solid var(--hair)}
@@ -157,7 +158,7 @@ button{all:unset;cursor:pointer}
         <div class="book"><span class="stripe"></span><div class="t"><div class="title">Language in Mind</div><div class="by">Julie Sedivy, 2nd ed., 2019<br>An Introduction to Psycholinguistics</div></div></div>
       </div>
       <div class="sec" id="sbSec">
-        <div class="lab"><span>Scoreboard</span><span class="aside" id="sbaside"></span></div>
+        <div class="lab"><span>Scoreboard</span><span class="labr"><span class="aside" id="sbaside"></span><button class="chbtn" id="scoreReset">Score Reset</button></span></div>
         <div class="sb cols"><span>#</span><span>Player</span><span>+10</span><span>−5</span><span>Hd</span><span>Pts</span></div>
         <div id="sbRows"></div>
       </div>
@@ -263,11 +264,11 @@ function renderAnswer(prev){
  if(!open){inp.disabled=false;return}
  const fresh=!prev||prev.state!=='buzzed'||prev.buzzer!==S.buzzer||prev.prompted!==S.prompted||prev.num!==S.num;
  if(mine){
-  $('ansLab').textContent=S.prompted?'Be more specific':'Answer';
+  $('ansLab').textContent=S.prompted?`More specific than “${S.prompt_given}”?`:'Answer';
   inp.disabled=checking;
   if(fresh){inp.value='';setTimeout(()=>inp.focus(),20)}
  }else{
-  $('ansLab').textContent=pname(S.buzzer)+(S.prompted?' prompted':' answering');
+  $('ansLab').textContent=pname(S.buzzer)+(S.prompted?` prompted on “${S.prompt_given}”`:' answering');
   inp.disabled=true;if(fresh)inp.value=S.typed||'';
  }
 }
@@ -312,6 +313,7 @@ function renderSide(){
    return `<div class="sb${isMe?' me':''}${buzzing?' buzzing':''}${p.away?' away':''}"${isMe?' id="me" tabindex="0" role="button" aria-label="Rename"':''}><span class="rk">${i+1}</span><span class="nm"><i style="background:${p.away?'var(--faint)':COLOR[p.color]}"></i><span>${esc(p.name)}</span>${buzzing?'<span class="tag">buzzing</span>':p.away?'<span class="tag">away</span>':''}</span><span class="c">${p.correct}</span><span class="neg">${p.neg}</span><span>${p.heard}</span><span class="pts">${p.points}</span></div>`}).join('');
   const row=$('me');if(row){row.onclick=openEd;row.onkeydown=e=>{if(!editing&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();openEd()}};if(tip)row.appendChild(tip)}
  }
+ const m=me();$('scoreReset').disabled=!m||!(m.points||m.correct||m.neg||m.heard);if($('scoreReset').disabled)disarm();
  if(document.activeElement!==$('wpm')){$('wpm').value=S.wpm;showWpm(S.wpm)}
  $('chaps').innerHTML=S.chapters.map(([n,t,ct])=>{const on=S.selected.includes(n);return `<div class="chap ${on?'on':''}" data-n="${n}" tabindex="0" role="checkbox" aria-checked="${on}"><span class="box"></span><span class="no">${String(n).padStart(2,'0')}</span><span>${esc(t)}</span><span class="ct">${ct||''}</span></div>`}).join('');
  $('chcount').textContent=S.selected.length+' of '+S.chapters.length;$('chAll').disabled=S.selected.length===S.chapters.length;$('chNone').disabled=!S.selected.length;
@@ -321,7 +323,7 @@ function showWpm(v){$('wpmv').textContent=v+' wpm';$('wpm').style.setProperty('-
 const openLog=new Set(); // log rows expanded on this page (by tossup number)
 function said(buzzes){return buzzes.map(x=>`${x.pid===S.you?'you':esc(pname(x.pid))} said “${esc(x.given)}” ${pts(x.points)}`).join(', ')}
 function event(l){const who=n=>l.pid===S.you?'You':esc(n);
- const text=l.kind==='join'?`${who(l.name)} joined the game`:`${l.pid===S.you?'You':esc(l.old)} renamed to ${esc(l.name)}`;
+ const text=l.kind==='join'?`${who(l.name)} joined the game`:l.kind==='reset'?`${who(l.name)} reset ${l.pid===S.you?'your':'their'} score`:`${l.pid===S.you?'You':esc(l.old)} renamed to ${esc(l.name)}`;
  return `<div class="ev"><span></span><span>${text}</span></div>`}
 function renderLog(){
  if(!S.log.length){$('log').innerHTML='<div class="empty">Finished tossups appear here. Click one to read it again.</div>';return}
@@ -356,6 +358,12 @@ $('wpm').oninput=e=>showWpm(+e.target.value);
 $('wpm').onchange=e=>send({type:'wpm',wpm:+e.target.value});
 $('chaps').onclick=e=>{const el=e.target.closest('.chap');if(!el||!S)return;const n=+el.dataset.n;
  send({type:'chapters',chapters:S.selected.includes(n)?S.selected.filter(x=>x!==n):[...S.selected,n]})};
+// Resetting takes two clicks (the second within RESET_CONFIRM_MS), so a stray click costs nothing.
+const RESET_CONFIRM_MS=3000;let armed=null;
+function disarm(){clearTimeout(armed);armed=null;const b=$('scoreReset');b.classList.remove('armed');b.textContent='Score Reset'}
+$('scoreReset').onclick=()=>{const b=$('scoreReset');if(!S||b.disabled)return;
+ if(armed){disarm();send({type:'reset_score'});return}
+ b.classList.add('armed');b.textContent='Confirm reset';armed=setTimeout(disarm,RESET_CONFIRM_MS)};
 $('skipOpt').onclick=()=>{if(S)send({type:'skip_allowed',allowed:!S.skip_allowed})};
 $('skipOpt').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();e.stopPropagation();$('skipOpt').click()}};
 $('chAll').onclick=()=>{if(S)send({type:'chapters',chapters:S.chapters.map(c=>c[0])})};$('chNone').onclick=()=>{if(S)send({type:'chapters',chapters:[]})};

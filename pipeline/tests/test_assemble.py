@@ -40,6 +40,11 @@ def test_leaks_and_answerline():
     assert not leaks("This researcher examined a patient.", stems)
     html, plain = answerline("VOT", ["VOT", "voice onset time", "VOTs"])
     assert plain == "VOT [accept voice onset time]"
+    html, plain = answerline("VOT", ["voice onset time", "VOTs"], expansion="voice onset time")
+    assert html == "<b><u>VOT</u></b> (<b><u>voice onset time</u></b>)" and plain == "VOT (voice onset time)"
+    assert answerline("test phase", ["test phases"], core="test")[0] == "<b><u>test</u></b> phase"
+    html, _ = answerline("Paul Broca", ["Broca", "Pierre Paul Broca"], core="Broca")
+    assert html == "Paul <b><u>Broca</u></b> [accept Pierre Paul Broca]"
 
 
 def test_bad_mention_hyphen_and_noun_modifiers(nlp):

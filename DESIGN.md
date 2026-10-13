@@ -125,8 +125,9 @@ everything else.
   color carries the result, so no points are written. No box around it. Markers stay
   when the question is reread from the history. Rooms and single player alike.
 - **Answer row.** Opens under the question on buzz: an ink label cell "Answer" and a
-  text field. A QBReader prompt shows "Be more specific" in the label cell. In rooms,
-  other players see the row open read-only with "<name> answering" in the label cell
+  text field. A prompt shows "More specific than “<what you said>”?" in the label cell. In
+  rooms, other players see the row open read-only with "<name> answering" (or "<name>
+  prompted on “…”") in the label cell
   and the buzzer's typing as it happens.
 - **Verdict row.** A colored result cell (blue "+10 correct", red "−5 incorrect",
   red "0 incorrect", red "0 no buzz"; another player's name follows when the deciding
@@ -154,6 +155,10 @@ everything else.
     is a one-row table. Your row is white with a 4px blue left edge. In rooms, a
     4px red edge and "buzzing" mark whoever holds the buzz, and away players use
     `--faint`. Each player has a 9px square marker in blue, yellow, red or ink.
+    The label row ends in a "Score Reset" text button (mono, like All/None) that
+    zeroes your own row only. It takes two clicks: the first turns it red and reads
+    "Confirm reset" for 3 seconds. It is disabled while your row is all zeros.
+    Label rows never wrap: the count and the button sit on one line.
   - Speed: a slider; the track is hairline-outlined, the fill yellow, the handle a 3px
     ink bar. Shows words per minute.
   - Room: square checkboxes for room-wide options, currently "Allow skipping

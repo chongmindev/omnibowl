@@ -115,6 +115,7 @@ button{all:unset;cursor:pointer}
 .chap .box{width:11px;height:11px;border:2px solid var(--ink)}
 .chbtn{display:flex;align-items:center;padding:0 12px;border-left:1px solid var(--hair);font-family:'Red Hat Mono',monospace;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink)}
 .chbtn:hover{background:#fff}.chbtn[disabled]{color:var(--faint);cursor:default;background:none}
+.labr{display:flex}.labr .aside{padding:8px}.lab>span,.lab .aside,.labr .chbtn{white-space:nowrap}.chbtn.armed{color:var(--red)}
 .chlab span{white-space:nowrap}
 .chhelp>span{padding:8px 16px}
 .chhelp{display:grid;grid-template-columns:1fr auto auto;padding:0;font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute);border-bottom:1px solid var(--hair)}
@@ -150,7 +151,7 @@ button{all:unset;cursor:pointer}
         <div class="book"><span class="stripe"></span><div class="t"><div class="title">Language in Mind</div><div class="by">Julie Sedivy, 2nd ed., 2019<br>An Introduction to Psycholinguistics</div></div></div>
       </div>
       <div class="sec">
-        <div class="lab"><span>Scoreboard</span><span class="aside">solo</span></div>
+        <div class="lab"><span>Scoreboard</span><span class="labr"><span class="aside">solo</span><button class="chbtn" id="scoreReset">Score Reset</button></span></div>
         <div class="sb cols"><span>#</span><span>Player</span><span>+10</span><span>−5</span><span>Hd</span><span>Pts</span></div>
         <div class="sb me" id="me" tabindex="0" role="button" aria-label="Rename"><span class="rk">1</span><span class="nm"><i></i><span id="name"></span></span><span class="c" id="sc">0</span><span class="neg" id="sn">0</span><span id="sh">0</span><span class="pts" id="sp">0</span></div>
       </div>
@@ -181,6 +182,7 @@ const BUZZ_WINDOW=5000,ANSWER_WINDOW=8000,LOG_MAX=100; // finished tossups kept 
 
 function renderSide(){
  if(!editing)$('name').textContent=S.name;$('sc').textContent=S.c;$('sn').textContent=S.neg;$('sh').textContent=S.heard;$('sp').textContent=S.pts;
+ $('scoreReset').disabled=!(S.pts||S.c||S.neg||S.heard);if($('scoreReset').disabled)disarm();
  $('wpm').value=S.wpm;$('wpmv').textContent=S.wpm+' wpm';$('wpm').style.setProperty('--p',((S.wpm-120)/480*100)+'%');
  const avail=c=>T.filter(t=>t.ch===c).length;
  $('chaps').innerHTML=CH.map(([n,t])=>`<div class="chap ${S.chapters.includes(n)?'on':''}" data-n="${n}" tabindex="0" role="checkbox" aria-checked="${S.chapters.includes(n)}"><span class="box"></span><span class="no">${String(n).padStart(2,'0')}</span><span>${t}</span><span class="ct">${avail(n)||''}</span></div>`).join('');
@@ -226,7 +228,7 @@ function next(){
  if(!pool.length){S.state='empty';$('meta').textContent='';$('num').textContent='—';qText('<span class="msg">No tossups available for the selected chapters yet. <b>Try other chapters.</b></span>');setAct('buzz','Buzz',true);hint('');return}
  S.state='loading';qText('<span class="caret blink"></span>');setAct('buzz','Buzz',true);hint('');
  setTimeout(()=>{
-  S.t=pool[Math.floor(Math.random()*pool.length)];S.seen.push(S.t);S.words=S.t.q.split(/\s+/);S.i=0;S.num++;S.prompted=false;
+  S.t=pool[Math.floor(Math.random()*pool.length)];S.seen.push(S.t);S.words=S.t.q.split(/\s+/);S.i=0;S.num++;S.prompted=false;S.promptGiven='';
   $('num').textContent=String(S.num).padStart(2,'0');
   $('meta').textContent='Generated tossup'; // no chapter: it would be a clue
   S.state='reading';setAct('buzz','Buzz');hint('Space to buzz   → to skip');showQ();
@@ -243,8 +245,10 @@ function buzz(){
 function submit(timeout){
  if(S.state!=='buzzed')return;stopAll();S.state='checking';setAct('checking','Checking',true);$('ans').disabled=true;
  setTimeout(()=>{$('ans').disabled=false;const g=norm($('ans').value);
-  const v=timeout?'reject':judgeAnswer($('ans').value,S.t.acc,S.t.prompt,JR,S.prompted);
-  if(v==='prompt'){S.prompted=true;S.state='buzzed';$('ansLab').textContent='Be more specific';$('ans').value='';$('ans').focus();setAct('buzz','Submit');startBar(ANSWER_WINDOW,()=>submit(true));return}
+  // On timeout the typed text is judged as is, as in rooms (a prompt then can't ask again).
+  const v=judgeAnswer($('ans').value,S.t.acc,S.t.prompt,JR,S.prompted||!!timeout,S.promptGiven);
+  if(v==='prompt'){S.prompted=true;S.promptGiven=$('ans').value.trim();S.state='buzzed';$('ansLab').textContent=`More specific than “${S.promptGiven}”?`;$('ans').value='';$('ans').focus();setAct('buzz','Submit');startBar(ANSWER_WINDOW,()=>submit(true));return}
+  if(S.promptGiven)$('ans').value=S.promptGiven+' → '+$('ans').value.trim();
   judge(g,v==='accept')},600);
 }
 function judge(g,accepted){
@@ -293,6 +297,12 @@ function closeEd(inp,save){
  const span=document.createElement('span');span.id='name';inp.replaceWith(span);renderSide();renderLog();$('me').focus();
 }
 $('me').onclick=openEd;$('me').onkeydown=e=>{if(!editing&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();openEd()}};
+// Resetting takes two clicks (the second within RESET_CONFIRM_MS), so a stray click costs nothing.
+const RESET_CONFIRM_MS=3000;let armed=null;
+function disarm(){clearTimeout(armed);armed=null;const b=$('scoreReset');b.classList.remove('armed');b.textContent='Score Reset'}
+$('scoreReset').onclick=()=>{if($('scoreReset').disabled)return;
+ if(armed){disarm();S.pts=S.c=S.neg=S.heard=0;renderSide();return}
+ $('scoreReset').classList.add('armed');$('scoreReset').textContent='Confirm reset';armed=setTimeout(disarm,RESET_CONFIRM_MS)};
 $('reset').onclick=()=>{store.set('tipShown',false);store.set('name',null);location.reload()};
 // init
 renderSide();renderLog();

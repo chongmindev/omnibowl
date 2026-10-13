@@ -372,6 +372,14 @@ ignore_words = ["the", "a", "an"]
 typo_free_below = 5
 one_typo_up_to = 8
 long_typos = 2
+# Inflections (decision "answer judging: leniency", 2026-10-12): words this long or longer
+# also match by a light stem, so "testing" or "tested" counts for "test". 0 turns it off.
+stem_from = 4
+# Trailing words that are optional in an answer ("<u>test</u> phase", "<u>false-belief</u>
+# test"): the rest alone is accepted and only the rest is underlined. Kept only when the
+# rest has at least `optional_tail_min_letters` letters.
+optional_tails = ["effect", "effects", "phase", "test", "task", "paradigm", "area"]
+optional_tail_min_letters = 4
 # P1: prompt on the last words of a multi-word answer ("aphasia" for "Broca's aphasia").
 # Forms with these words are skipped (the head comes before "of": "theory of mind").
 prompt_skip_words = ["of", "and", "or"]

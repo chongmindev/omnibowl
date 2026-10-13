@@ -15,8 +15,11 @@
    "working memory",
    "memory",
    "lexical decision",
-   "broca"
-  ]
+   "broca",
+   "priming",
+   "test"
+  ],
+  "stem_from": 4
  },
  "cases": [
   [
@@ -206,6 +209,150 @@
    ],
    false,
    "reject"
+  ],
+  [
+   "testing",
+   [
+    "test phase",
+    "test"
+   ],
+   [
+    "phase"
+   ],
+   false,
+   "accept"
+  ],
+  [
+   "tested",
+   [
+    "test"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "Tests",
+   [
+    "test"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "planning",
+   [
+    "plan"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "coding errors",
+   [
+    "code error"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "categories",
+   [
+    "category"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "priming",
+   [
+    "prime"
+   ],
+   [],
+   false,
+   "reject"
+  ],
+  [
+   "bias",
+   [
+    "biases"
+   ],
+   [],
+   false,
+   "accept"
+  ],
+  [
+   "phase",
+   [
+    "test phase",
+    "test"
+   ],
+   [
+    "phase"
+   ],
+   false,
+   "prompt"
+  ],
+  [
+   "Broca's",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   true,
+   "accept",
+   "aphasia"
+  ],
+  [
+   "broca",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   true,
+   "accept",
+   "aphasia"
+  ],
+  [
+   "Wernicke's",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   true,
+   "reject",
+   "aphasia"
+  ],
+  [
+   "aphasia",
+   [
+    "brocas aphasia"
+   ],
+   [
+    "aphasia"
+   ],
+   true,
+   "reject",
+   "aphasia"
+  ],
+  [
+   "prime",
+   [
+    "priming"
+   ],
+   [],
+   false,
+   "accept"
   ]
  ]
 }
