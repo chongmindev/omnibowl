@@ -46,7 +46,12 @@ Write one tossup per input, as JSON: `[{"id": "...", "question": "..."}, ...]`.
    the answer type is clear immediately. Later sentences may use more specific
    descriptors ("this neurologist", "this ERP component"), each supported by the
    sources, never more specific than the clues around it, and always unambiguously the
-   same answer. The giveaway uses the most specific descriptor. `referent` is a
+   same answer. The giveaway uses the most specific descriptor. The lead-in handle
+   must not give the answer away in this closed pool: its noun must fit at least
+   `[verify] lead_handle_min_answers` answers (3) among the played tossups, or be a
+   generic one ("this phenomenon", "this structure", "this concept", "this person"). The
+   verifier checks this; `tools/leadin_handles.py` exports failures with the allowed
+   handles and applies first-sentence fixes. `referent` is a
    suggestion; use "this man/woman" only if the sources refer to the person with
    he/his or she/her, otherwise "this researcher"/"this scientist".
 4. **No pronouns.** Never "he/she/it/they/his/its/their". Repeat the referent or name

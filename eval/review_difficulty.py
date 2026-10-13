@@ -3,8 +3,9 @@
 uv run python eval/review_difficulty.py [--book language_in_mind] [--n 20] [--seed 0]
 open data/review/difficulty.html
 
-Picks `--n` played tossups (seeded) with at least four sentences before the giveaway and
-shows each one's sentences shuffled. Click them hardest first; "Copy JSON" gives
+Picks `--n` played tossups (seeded) with at least four sentences before the giveaway, not
+already in eval/difficulty_gold.json, and shows each one's sentences shuffled. Skip any
+tossup whose topic you don't know; only ordered ones go into the JSON. Click them hardest first; "Copy JSON" gives
 {"tossups": {id: [sentence index, ...]}} with indices into the question's sentences (no
 text), to save as eval/difficulty_gold.json. The page holds book text, so it is written to
 data/review/ (gitignored).
@@ -39,7 +40,7 @@ button{font:inherit;border:2px solid var(--ink);background:none;padding:4px 12px
 textarea{width:100%;height:120px;font:12px ui-monospace,monospace}
 </style></head><body>
 <h1>Order by difficulty</h1>
-<p>For each tossup, click its sentences from hardest (fewest students would know it) to easiest.
+<p>Skip any tossup you don't know well. For the rest, click the sentences from hardest (fewest students would know it) to easiest.
 The giveaway is left out. Reset a tossup to redo it. When done, copy the JSON into eval/difficulty_gold.json.</p>
 __TOSSUPS__
 <div class="t"><button id="copy">Copy JSON</button><span id="count"></span><textarea id="out" readonly></textarea></div>
@@ -64,7 +65,9 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
     rng = random.Random(args.seed)
-    pool = [t for t in played(args.book) if len(clue_sentences(t["question"])[0]) >= 4]
+    gold = ROOT / "eval" / "difficulty_gold.json"
+    done = set(json.loads(gold.read_text())["tossups"]) if gold.exists() else set()
+    pool = [t for t in played(args.book) if len(clue_sentences(t["question"])[0]) >= 4 and t["id"] not in done]
     blocks = []
     for k, t in enumerate(rng.sample(pool, min(args.n, len(pool))), 1):
         sents = clue_sentences(t["question"])[0]

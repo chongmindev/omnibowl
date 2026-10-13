@@ -10,6 +10,8 @@ tossup when it:
   - names the answer or a stem of it;
   - does not end with a "For 10 points, name ..." sentence, or has fewer than 4 or more
     than 7 sentences.
+  - opens with a handle ("this organ") that fits fewer than `lead_handle_min_answers`
+    answers in the pool of passing rewrites (omnibowl.handles; config [verify]).
 Style warning only (the rewrite still passes): a giveaway longer than 20 words.
 Writes data/rewrites/verified.json: {tossup id: {"ok": bool, "issues": [...]}}.
 """
@@ -20,6 +22,9 @@ import sys
 from pathlib import Path
 
 from wordfreq import zipf_frequency
+
+from omnibowl import config
+from omnibowl.handles import fits, lead_handle
 
 ROOT = Path(__file__).resolve().parents[1]
 WORD = re.compile(r"[A-Za-z][A-Za-z'’-]*|\d[\d.,–-]*")
@@ -71,10 +76,40 @@ def check(item: dict, rewrite: str) -> list[str]:
     return sorted(set(issues))
 
 
+def answer_key(tid: str) -> str:
+    """Variants ("-v2") are the same answer."""
+    return tid.rsplit("-v", 1)[0]
+
+
+def always_fit(cfg: dict) -> set[str]:
+    return set(cfg["rank"]["generic_categories"]) | set(cfg["verify"]["extra_generic_handles"])
+
+
+def handle_fits(passing: dict[str, tuple[dict, str]], nlp) -> dict[str, set[str]]:
+    """{handle noun: answers it fits} over the passing rewrites {id: (item, question)}."""
+    pool = {}
+    for tid, (item, q) in passing.items():
+        pool.setdefault(answer_key(tid), []).extend([q, f"this {item['referent']}"])
+    return fits(pool, nlp)
+
+
+def lead_issues(passing: dict[str, tuple[dict, str]], nlp, cfg: dict) -> dict[str, str]:
+    """{id: issue} for rewrites whose lead-in handle fits too few answers in the pool."""
+    need, generic = cfg["verify"]["lead_handle_min_answers"], always_fit(cfg)
+    fit = handle_fits(passing, nlp)
+    out = {}
+    for tid, (_, q) in passing.items():
+        first = re.split(r"(?<=[.!?])\s+", q.strip())[0]
+        h = lead_handle(first, nlp)
+        if h and h.head not in generic and len(fit[h.head]) < need:
+            out[tid] = f"lead-in '{h.text}' fits {len(fit[h.head])} answer(s) in the pool (want {need}+)"
+    return out
+
+
 def main() -> None:
     show_style = "--style" in sys.argv
     d = ROOT / "data" / "rewrites"
-    results = {}
+    results, questions = {}, {}
     for batch in sorted(d.glob("batch_*.json")):
         out = d / batch.name.replace("batch_", "out_")
         if not out.exists():
@@ -89,6 +124,13 @@ def main() -> None:
                 continue
             issues = check(item, r["question"])
             results[r["id"]] = {"ok": not any(not i.startswith(STYLE) for i in issues), "issues": issues}
+            questions[r["id"]] = (item, r["question"])
+    import spacy
+    cfg = config.load()
+    nlp = spacy.load(cfg["sentences"]["spacy_model"], exclude=["ner"])
+    passing = {tid: questions[tid] for tid, v in results.items() if v["ok"]}
+    for tid, issue in lead_issues(passing, nlp, cfg).items():
+        results[tid] = {"ok": False, "issues": sorted(results[tid]["issues"] + [issue])}
     (d / "verified.json").write_text(json.dumps(results, indent=1))
     ok = sum(v["ok"] for v in results.values())
     style = sum(v["ok"] and bool(v["issues"]) for v in results.values())

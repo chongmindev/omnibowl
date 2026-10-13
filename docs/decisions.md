@@ -480,3 +480,19 @@ now: keep the old weights live (config), store every feature, and tune once the 
 has 15 to 20 tossups; five is too few to fit weights. What would break on another book:
 nothing book-specific; a book quizbowl rarely touches gets few familiarity values and the
 weighted mean leans on the book's own signals.
+
+## rewrite: lead-in handles, pool check (2026-10-12, option A)
+
+In a closed pool the lead-in handle can give the answer away by itself ("these animals"
+was only ever vervets). Chosen: A, the first sentence's "this <noun>" must fit at least 3
+answers among the played tossups (`[verify] lead_handle_min_answers`), where a noun fits an
+answer when that answer's tossups use it anywhere or it is its referent; nouns in the
+generic list (`[rank] generic_categories` plus `[verify] extra_generic_handles`) always
+pass. Later sentences may still sharpen. Rejected: B (fixed generic lead-ins for every
+tossup, blander) and C (a bigger pool; combinable with A later). Measured on the played
+pool: 103 of 266 failed (71 handles fit one answer). All 103 were broadened in this
+session through `tools/leadin_handles.py` (only the handle may change; every fix passed
+the verifier), and 266 pass again. Head nouns come from spaCy's parse
+(`omnibowl/handles.py`), which occasionally mistakes a verb for a noun; that shows up as
+a false flag. What would break on another book: nothing book-specific; the counts depend
+on the pool, so they are recomputed whenever the pool changes.

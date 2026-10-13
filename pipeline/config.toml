@@ -278,6 +278,14 @@ retries = 3
 max_return = 25             # tossups returned per phrase, for positions
 phrase_classes = ["answer", "broad_answer", "clue_only", "variant"]  # not too_broad: everyday words
 
+[verify]
+# tools/verify_rewrites.py, lead-in handles (decision "lead-in handles: pool check", A): the
+# first sentence's "this <noun>" must fit at least this many answers in the played pool
+# (answers whose tossups use that noun, or whose referent it is), so it cannot give the
+# answer away by itself. Nouns in [rank] generic_categories and these always pass.
+lead_handle_min_answers = 3
+extra_generic_handles = ["item", "concept", "entity", "person", "people"]
+
 [pyramid]
 # eval/pyramid.py: linking rewritten sentences to their source sentences, and drop-backs.
 link_word_prefix = 5        # compare words by their first 5 letters (inflection)
