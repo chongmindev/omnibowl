@@ -164,8 +164,7 @@ everything else.
   - Room: square checkboxes for room-wide options, currently "Allow skipping
     mid-question" (off by default).
   - Chapters in play: the label row carries the count ("6 of 13"). Under it, a help
-    row: one mono `--mute` line, "Only checked chapters are asked, from the next tossup
-    on. Numbers are tossups per chapter." (rooms add "Shared by the whole room."), with
+    row: one mono `--mute` line, "Only checked chapters are asked.", with
     two plain controls at its right, All and None, each `--faint` and inert when it
     would change nothing. Then
     a list of square checkboxes (11px, 2px ink border; filled ink with a white check

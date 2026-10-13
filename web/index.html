@@ -111,7 +111,6 @@ button{all:unset;cursor:pointer}
 .chap:hover .box{background:#E4E0D6}.chap.on:hover .box{background:var(--ink)}
 .chap.on .box{background:var(--ink)}
 .chap .no{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--mute)}
-.chap .ct{font-family:'Red Hat Mono',monospace;font-size:var(--flab);color:var(--faint)}
 .chap:not(.on){color:var(--faint)}
 .chap:hover{color:var(--ink)}
 @media (max-width:900px){body{height:auto;overflow:visible}.app{min-height:0}.body{grid-template-columns:1fr}.reader{border-right:0;border-bottom:var(--line)}.log{max-height:40vh}.side{overflow:visible}.foot{position:sticky;bottom:0;background:var(--paper);z-index:4}.act{min-width:120px}}
@@ -172,7 +171,7 @@ button{all:unset;cursor:pointer}
       </div>
       <div class="sec last">
         <div class="lab chlab"><span>Chapters in play</span><span class="aside" id="chcount"></span></div>
-        <div class="chhelp"><span>Only checked chapters are asked, from the next tossup on. Shared by the whole room. Numbers are tossups per chapter.</span><button class="chbtn" id="chAll">All</button><button class="chbtn" id="chNone">None</button></div>
+        <div class="chhelp"><span>Only checked chapters are asked.</span><button class="chbtn" id="chAll">All</button><button class="chbtn" id="chNone">None</button></div>
         <div id="chaps"></div>
       </div>
     </aside>
@@ -315,7 +314,7 @@ function renderSide(){
  }
  const m=me();$('scoreReset').disabled=!m||!(m.points||m.correct||m.neg||m.heard);if($('scoreReset').disabled)disarm();
  if(document.activeElement!==$('wpm')){$('wpm').value=S.wpm;showWpm(S.wpm)}
- $('chaps').innerHTML=S.chapters.map(([n,t,ct])=>{const on=S.selected.includes(n);return `<div class="chap ${on?'on':''}" data-n="${n}" tabindex="0" role="checkbox" aria-checked="${on}"><span class="box"></span><span class="no">${String(n).padStart(2,'0')}</span><span>${esc(t)}</span><span class="ct">${ct||''}</span></div>`}).join('');
+ $('chaps').innerHTML=S.chapters.map(([n,t])=>{const on=S.selected.includes(n);return `<div class="chap ${on?'on':''}" data-n="${n}" tabindex="0" role="checkbox" aria-checked="${on}"><span class="box"></span><span class="no">${String(n).padStart(2,'0')}</span><span>${esc(t)}</span></div>`}).join('');
  $('chcount').textContent=S.selected.length+' of '+S.chapters.length;$('chAll').disabled=S.selected.length===S.chapters.length;$('chNone').disabled=!S.selected.length;
  $('skipOpt').classList.toggle('on',S.skip_allowed);$('skipOpt').setAttribute('aria-checked',S.skip_allowed);
 }
