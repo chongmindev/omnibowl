@@ -22,14 +22,23 @@ discovered into a profile rather than hard-coded.
 | `candidates` | answer terms with keyness, coverage and a class | done |
 | `coref` | coreference chains | done |
 | `clues` | one-fact clues per answer, grounded in sentence ids | first version; being tuned |
-| `rank` | referent, giveaway, clue difficulty, clue uniqueness | rough first version |
+| `qbreader` | how often real quizbowl tossups use each book term, and where | done (cached lookups) |
+| `rank` | referent, giveaway, clue difficulty features, clue uniqueness | working; difficulty weights being tuned |
 | `assemble` | tossups, ordered hard to easy | rough first version (455 drafts for the v0 book) |
-| single-player page | static page that reveals tossups, judges answers, keeps score | working (local only) |
-| multiplayer rooms | protobowl-style rooms on a FastAPI WebSocket server | v0 working (private link, LAN or tunnel) |
+| single-player page | one self-contained HTML file: reveal, buzz, judging, score, history | working |
+| multiplayer rooms | protobowl-style rooms on a FastAPI WebSocket server | v0 working (private link, reachable from anywhere through Tailscale Funnel) |
 
 For the v0 book, drafts are rewritten into quizbowl wording in Claude Code sessions and
 checked against their source sentences by a classical verifier (`docs/rewrite-v1.md`);
 the pipeline still chooses every answer and fact. 266 verified tossups are in the player.
+The verifier also checks that each lead-in's "this ..." handle fits at least three answers
+in the played pool, so the first words never give the answer away.
+
+**Now working on:** clue difficulty. Played tossups did not always feel pyramidal, so
+`rank` now stores four signals per clue (placement in the book, how often the book
+restates the fact, how detailed it is, and how familiar its terms are in real quizbowl).
+Their weights are being tuned against hand-ordered tossups (`eval/difficulty_gold.json`);
+until then the original score stays live.
 
 Tested on two textbooks with different layouts: a single-column psycholinguistics text
 and a converted AP psychology ebook (three-level outline, panels, two-column glossary).
@@ -38,7 +47,7 @@ and a converted AP psychology ebook (three-level outline, panels, two-column glo
 
 ```
 PDF -> measure -> profile -> tag -> sentences -> back matter      (parse)
-    -> candidates -> coref -> clues -> rank -> assemble           (tossups)
+    -> candidates -> coref -> clues -> qbreader -> rank -> assemble   (tossups)
 ```
 
 Each stage reads the previous stage's stored output from SQLite and writes its own
@@ -117,11 +126,23 @@ with their own subjects; otherwise the whole sentence is kept. Possessives that 
 thing ("Broca's area") are not mentions of the person. Each clue records its sentence
 ids, section, kind of text, and how it was found (named, coref, definition).
 
-### rank (`rank.py`)
+### qbreader (`qbreader.py`)
 
-Clue difficulty = textbook emphasis (definitions, summaries and bold introductions are
-easy; boxes, captions, coreference-only and off-chapter clues are harder) combined with
-specificity (how rare the clue's most distinctive words are in the book). Referent: the
+For every book term that appears inside some clue, searches QBReader's tossup text for
+the exact phrase and stores how many real tossups use it and how far into the question it
+usually comes. Every response is cached in `data/qbreader_cache/`, so the roughly 40
+minutes of lookups happen once per book; later runs read the cache. A book whose terms
+quizbowl never uses simply gets no familiarity signal.
+
+### rank (`rank.py`, `difficulty.py`)
+
+Clue difficulty combines textbook emphasis (definitions, summaries and bold introductions
+are easy; boxes, captions, coreference-only and off-chapter clues are harder) with
+specificity (how rare the clue's most distinctive words are in the book). Four more
+signals are stored per clue for tuning: repetition (a fact the book restates is easier),
+detail (years, numbers, citations, people and quoted stimuli make a clue harder) and
+QBReader familiarity (terms real tossups use often, and late, are easier). Weights live
+in `config.toml`. Referent: the
 kind of thing the book calls the answer ("X is a gene", "linguist Charles Hockett"),
 else the head noun of its definition, else its own head word, else "this term". The
 definition, after its head noun, becomes the giveaway.
@@ -152,8 +173,13 @@ stores tossups in QBReader's format with source, sections and clue ids.
 | pytest | tests |
 
 The player pages are plain HTML and JavaScript with no build step. Answers are judged
-locally (same rules in `server/judge.py` and `tools/judge.js`); QBReader's API is not
-used yet.
+locally, with the same rules in `server/judge.py` and `tools/judge.js`: the answerline or
+an alternate, ignoring case, punctuation, articles and word order; small typos and
+inflections ("testing" for "test") unless the guess is a different book term; a person's
+surname; an abbreviation or its expansion; and one prompt on a partial answer ("aphasia"
+for "Broca's aphasia"), where the next answer is tried together with the first. The
+answerline underlines only what is required ("<u>test</u> phase", "Paul <u>Broca</u>").
+QBReader's API is used only by the `qbreader` stage.
 
 ## Setup
 
@@ -174,12 +200,13 @@ uv run python -m omnibowl.run --stage parse --book data/books/<file>.pdf        
 uv run python -m omnibowl.run --stage candidates --book data/books/<file>.pdf
 uv run python -m omnibowl.run --stage coref --book data/books/<file>.pdf
 uv run python -m omnibowl.run --stage clues --book data/books/<file>.pdf
+uv run python -m omnibowl.run --stage qbreader --book data/books/<file>.pdf     # network the first time, then cached
 uv run python -m omnibowl.run --stage rank --book data/books/<file>.pdf
 uv run python -m omnibowl.run --stage assemble --book data/books/<file>.pdf
 uv run pytest
 ```
 
-Play the generated tossups (both write and read only `data/`, since they hold book text):
+Play the generated tossups (both write to and read from `data/`):
 
 ```
 uv run python tools/play.py && open data/play/index.html    # single player
@@ -187,9 +214,12 @@ uv run python -m server                                      # multiplayer: prin
 ```
 
 The server binds port 8000 on all interfaces and prints a link for this machine and one
-for the same Wi-Fi, each with a private key. Any path is a room (`/lobby`, `/psych101`).
-Playing across networks (Tailscale Funnel, private Tailscale, cloudflared) and the room rules are in
-`docs/multiplayer.md`.
+for the same Wi-Fi, each with a private key, plus an "Anywhere" link when Tailscale Funnel
+is on. Any path is a room (`/lobby`, `/psych101`). Rooms have a scoreboard (each player
+can reset their own score), shared reading speed and chapter filter, and a history of
+finished tossups that can be reread. The server runs on your machine, so rooms are
+reachable only while it is awake and running; the single-player file works anywhere,
+offline. Setup and room rules are in `docs/multiplayer.md`.
 
 `--stage profile`, `tag`, `sentences` and `backmatter` rerun parse from that step on.
 Output goes to `data/omnibowl.db`.
@@ -208,8 +238,9 @@ quoted text.
 | `eval/candidate_classes.py` | labeled share per class | answers 41% labeled |
 | `eval/clue_accuracy.py` | clues vs. a 20-answer golden set | precision 85%, recall 82% |
 | `eval/clue_uniqueness.py` | whether clue uniqueness predicts answers the rewrite skipped | AUC 0.55 overall; see `docs/decisions.md` |
+| `eval/pyramid.py` | clue order of played tossups under each difficulty score, vs. hand orders | 89% of sentences linked to a source; 0.75 pair agreement with 5 gold orders |
 
-`eval/review_tags.py` and `eval/review_clues.py` build local review pages (written to
+`eval/review_tags.py`, `eval/review_clues.py` and `eval/review_difficulty.py` build local review pages (written to
 `data/review/`, since they contain book text) for checking labels by eye.
 
 ## Layout
@@ -220,7 +251,7 @@ pipeline/config.toml all thresholds and weights; no magic numbers in code
 pipeline/tests/      pytest suite
 server/              multiplayer room server (FastAPI), answer judge, tests
 web/                 room page (plain HTML/JS)
-tools/               player export (play.py), v1 rewrite batches and verifier
+tools/               player export (play.py), v1 rewrite batches, verifier, lead-in handle fixes
 profiles/            hand corrections to generated layout profiles
 eval/                labeled data and metric scripts
 docs/                design notes, decisions.md, reader spec, multiplayer.md
@@ -234,11 +265,13 @@ verification; not built) is described in `docs/llm-layer-plan.md`.
 
 ## Content policy
 
-Textbook content never enters the repository: PDFs, extracted text, the database and
-review pages stay in `data/`. Use a textbook you are licensed to use. Generated
-questions contain its text and are for personal study unless the book's license allows
-sharing (openly licensed books, such as OpenStax titles under CC BY, can be shared with
-attribution).
+Textbook content never enters the repository: PDFs, extracted text, the database,
+rewrite batches and review pages stay in `data/`. The one exception is the v0 book's
+single-player page (`play/index.html`), which may be published, credited to the book, for
+personal study (decision 2026-10-13). Use a textbook you are licensed to use. Generated
+questions closely paraphrase the book, and credit is not permission; share them only as
+far as the book's license allows (openly licensed books, such as OpenStax titles under CC
+BY, can be shared with attribution).
 
 ## License
 

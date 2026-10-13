@@ -38,6 +38,11 @@ button{all:unset;cursor:pointer}
 .grow{display:grid;grid-template-rows:0fr;transition:grid-template-rows 150ms var(--ease)}
 .grow.open{grid-template-rows:1fr}
 .grow>div{overflow:hidden}
+/* The answer and verdict rows share one slot that keeps the answer row's height, and the
+   question box is sized for the whole tossup (fitQ), so the button below never jumps. */
+.slot{display:grid;border-top:var(--line)}.slot>.grow{grid-area:1/1}.slot .ans,.slot .verdict{border-top:0}
+.slot>#ansWrap{grid-template-rows:1fr}#ansWrap:not(.open)>div,#verWrap:not(.open)>div{visibility:hidden}#verWrap:not(.open){pointer-events:none}.slot>#verWrap.open{background:var(--paper)}
+.stage{position:relative}.q.ghost{position:absolute;left:0;right:0;top:0;visibility:hidden;pointer-events:none;min-height:0}
 .ans{display:grid;grid-template-columns:auto 1fr;border-top:var(--line)}
 .ans .lab{background:var(--ink);color:#fff;padding:12px 16px;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;font-weight:700;display:flex;align-items:center}
 .ans input{all:unset;padding:12px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--fq)}
@@ -144,10 +149,11 @@ button{all:unset;cursor:pointer}
   <div class="body">
     <main class="reader">
       <div class="stage"><div class="q mono" id="q" aria-live="polite"><span class="caret blink"></span></div>
+        <div class="q mono ghost" id="qGhost" aria-hidden="true"></div>
         <div class="timebar" id="bar"><i id="barFill"></i></div>
       </div>
-      <div class="grow" id="ansWrap"><div><div class="ans"><div class="lab" id="ansLab">Answer</div><input id="ans" autocomplete="off" spellcheck="false" aria-label="Your answer" maxlength="200"></div></div></div>
-      <div class="grow" id="verWrap"><div><div class="verdict"><div class="res" id="res"></div><div class="line" id="aline"></div><div class="src" id="src"></div></div></div></div>
+      <div class="slot"><div class="grow" id="ansWrap"><div><div class="ans"><div class="lab" id="ansLab">Answer</div><input id="ans" autocomplete="off" spellcheck="false" aria-label="Your answer" maxlength="200"></div></div></div>
+      <div class="grow" id="verWrap"><div><div class="verdict"><div class="res" id="res"></div><div class="line" id="aline"></div><div class="src" id="src"></div></div></div></div></div>
       <div class="foot"><div class="hint" id="hint"></div><button class="act buzz" id="act" disabled>Buzz</button></div>
       <div class="log" id="log"></div>
     </main>
@@ -224,8 +230,16 @@ function marked(words,buzzes,live){
  let out='';for(let k=0;k<=words.length;k++){if(at[k])out+=(k?' ':'')+at[k].join('');if(k<words.length)out+=(k||at[0]?' ':'')+esc(words[k])}
  return out}
 
+// fitQ: size the question box for the longest tossup (plus a line for buzz markers), so
+// revealing a question or starting the next one never moves the rows and buttons below.
+let qFill='';
+function fitQ(text){qFill=text;const g=$('qGhost');g.textContent=text;
+ $('q').style.minHeight=text?(g.offsetHeight+parseFloat(getComputedStyle(g).lineHeight))+'px':''}
+addEventListener('resize',()=>fitQ(qFill));if(document.fonts)document.fonts.ready.then(()=>fitQ(qFill)); // the web font changes line height
 function apply(m){
  const prev=S;S=m;
+ // Rooms know the longest tossup's length, not its words: a filler of that many characters.
+ if(!prev||prev.max_len!==S.max_len)fitQ('xxxxxx '.repeat(Math.ceil(S.max_len/7)).slice(0,S.max_len));
  if(!prev||prev.num!==S.num||prev.state!==S.state)checking=false;
  renderHead();renderQ();renderTimer();renderAnswer(prev);renderVerdict();renderFoot();renderSide();renderLog();
 }
@@ -260,7 +274,7 @@ function renderTimer(){
 function renderAnswer(prev){
  const open=S.state==='buzzed',mine=open&&S.buzzer===S.you,inp=$('ans');
  $('ansWrap').classList.toggle('open',open);
- if(!open){inp.disabled=false;return}
+ if(!open){inp.disabled=false;if(document.activeElement===inp)inp.blur();return}
  const fresh=!prev||prev.state!=='buzzed'||prev.buzzer!==S.buzzer||prev.prompted!==S.prompted||prev.num!==S.num;
  if(mine){
   $('ansLab').textContent=S.prompted?`More specific than “${S.prompt_given}”?`:'Answer';
@@ -347,11 +361,13 @@ function submit(){if(!S||S.state!=='buzzed'||S.buzzer!==S.you||checking)return;c
 function skip(){if(S&&(['judged','empty'].includes(S.state)||(S.skip_allowed&&['reading','window'].includes(S.state))))send({type:'next'})}
 $('act').onclick=()=>{if(!S)return;if(S.state==='reading'||S.state==='window')buzz();else if(S.state==='buzzed')submit();else if(S.state==='judged')skip()};
 $('ans').oninput=()=>{if(S&&S.state==='buzzed'&&S.buzzer===S.you)send({type:'typing',text:$('ans').value})};
+// Keys go to the answer box only while it is open (a closed one can still hold focus).
+const answering=()=>document.activeElement===$('ans')&&$('ansWrap').classList.contains('open');
 document.addEventListener('keydown',e=>{
  if(editing)return;
- if(e.key===' '&&document.activeElement!==$('ans')){e.preventDefault();buzz()}
+ if(e.key===' '&&!answering()){e.preventDefault();buzz()}
  else if(e.key==='Enter'&&S&&S.state==='buzzed'){e.preventDefault();submit()}
- else if(e.key==='ArrowRight'&&document.activeElement!==$('ans')&&document.activeElement!==$('wpm')){e.preventDefault();skip()}
+ else if(e.key==='ArrowRight'&&!answering()&&document.activeElement!==$('wpm')){e.preventDefault();skip()}
 });
 $('wpm').oninput=e=>showWpm(+e.target.value);
 $('wpm').onchange=e=>send({type:'wpm',wpm:+e.target.value});

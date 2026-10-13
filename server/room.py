@@ -353,6 +353,8 @@ class Room:
             "type": "state", "room": self.name, "you": you, "book": lib.book,
             "chapters": [[n, title, counts.get(n, 0)] for n, title in lib.chapters],
             "selected": sorted(self.selected), "wpm": self.wpm,
+            # characters in the longest question, so the page can size the question box once
+            "max_len": max((len(" ".join(t.words)) for t in lib.tossups), default=0),
             "state": self.state, "empty_reason": self.empty_reason, "num": self.num,
             "buzzer": self.buzzer, "prompted": self.prompted, "prompt_given": self.prompt_given,
             "typed": self.typed,

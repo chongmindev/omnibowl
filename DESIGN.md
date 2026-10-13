@@ -124,6 +124,11 @@ everything else.
   the result (blue correct, red wrong, mute 0); "buzzing" in red while they answer. The
   color carries the result, so no points are written. No box around it. Markers stay
   when the question is reread from the history. Rooms and single player alike.
+- **Stable layout.** The question box is sized for the book's longest tossup (plus one
+  line for buzz markers), and the answer and verdict rows share one slot that keeps the
+  answer row's height, so the action button never moves between reading, buzzing,
+  judging and the next tossup. A closed answer box gives up focus, so Space and → work
+  right after a verdict.
 - **Answer row.** Opens under the question on buzz: an ink label cell "Answer" and a
   text field. A prompt shows "More specific than “<what you said>”?" in the label cell. In
   rooms, other players see the row open read-only with "<name> answering" (or "<name>

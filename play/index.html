@@ -40,7 +40,7 @@ button{all:unset;cursor:pointer}
 /* The answer and verdict rows share one slot that keeps the answer row's height, and the
    question box is sized for the whole tossup (fitQ), so the button below never jumps. */
 .slot{display:grid;border-top:var(--line)}.slot>.grow{grid-area:1/1}.slot .ans,.slot .verdict{border-top:0}
-.slot>#ansWrap{grid-template-rows:1fr}#ansWrap:not(.open)>div{visibility:hidden}.slot>#verWrap{background:var(--paper)}
+.slot>#ansWrap{grid-template-rows:1fr}#ansWrap:not(.open)>div,#verWrap:not(.open)>div{visibility:hidden}#verWrap:not(.open){pointer-events:none}.slot>#verWrap.open{background:var(--paper)}
 .stage{position:relative}.q.ghost{position:absolute;left:0;right:0;top:0;visibility:hidden;pointer-events:none;min-height:0}
 .ans{display:grid;grid-template-columns:auto 1fr;border-top:var(--line)}
 .ans .lab{background:var(--ink);color:#fff;padding:12px 16px;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;font-weight:700;display:flex;align-items:center}

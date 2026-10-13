@@ -37,6 +37,11 @@ button{all:unset;cursor:pointer}
 .grow{display:grid;grid-template-rows:0fr;transition:grid-template-rows 150ms var(--ease)}
 .grow.open{grid-template-rows:1fr}
 .grow>div{overflow:hidden}
+/* The answer and verdict rows share one slot that keeps the answer row's height, and the
+   question box is sized for the whole tossup (fitQ), so the button below never jumps. */
+.slot{display:grid;border-top:var(--line)}.slot>.grow{grid-area:1/1}.slot .ans,.slot .verdict{border-top:0}
+.slot>#ansWrap{grid-template-rows:1fr}#ansWrap:not(.open)>div,#verWrap:not(.open)>div{visibility:hidden}#verWrap:not(.open){pointer-events:none}.slot>#verWrap.open{background:var(--paper)}
+.stage{position:relative}.q.ghost{position:absolute;left:0;right:0;top:0;visibility:hidden;pointer-events:none;min-height:0}
 .ans{display:grid;grid-template-columns:auto 1fr;border-top:var(--line)}
 .ans .lab{background:var(--ink);color:#fff;padding:12px 16px;font-size:var(--flab);letter-spacing:.06em;text-transform:uppercase;font-weight:700;display:flex;align-items:center}
 .ans input{all:unset;padding:12px 16px;font-family:'Red Hat Mono',monospace;font-size:var(--fq)}
@@ -137,10 +142,11 @@ button{all:unset;cursor:pointer}
   <div class="body">
     <main class="reader">
       <div class="stage"><div class="q mono" id="q" aria-live="polite"></div>
+        <div class="q mono ghost" id="qGhost" aria-hidden="true"></div>
         <div class="timebar" id="bar"><i id="barFill"></i></div>
       </div>
-      <div class="grow" id="ansWrap"><div><div class="ans"><div class="lab" id="ansLab">Answer</div><input id="ans" autocomplete="off" spellcheck="false" aria-label="Your answer"></div></div></div>
-      <div class="grow" id="verWrap"><div><div class="verdict"><div class="res" id="res"></div><div class="line" id="aline"></div><div class="src" id="src"></div></div></div></div>
+      <div class="slot"><div class="grow" id="ansWrap"><div><div class="ans"><div class="lab" id="ansLab">Answer</div><input id="ans" autocomplete="off" spellcheck="false" aria-label="Your answer"></div></div></div>
+      <div class="grow" id="verWrap"><div><div class="verdict"><div class="res" id="res"></div><div class="line" id="aline"></div><div class="src" id="src"></div></div></div></div></div>
       <div class="foot"><div class="hint" id="hint"></div><button class="act buzz" id="act">Buzz</button></div>
       <div class="log" id="log"></div>
     </main>
@@ -211,7 +217,14 @@ function toggleLog(row){
 }
 function setAct(kind,label,disabled){const a=$('act');a.className='act '+kind;a.textContent=label;a.disabled=!!disabled;a.toggleAttribute('disabled',!!disabled)}
 function hint(s){$('hint').textContent=s}
+// fitQ: size the question box for the longest tossup (plus a line for buzz markers), so
+// revealing a question or starting the next one never moves the rows and buttons below.
+let qFill='';
+function fitQ(text){qFill=text;const g=$('qGhost');g.textContent=text;
+ $('q').style.minHeight=text?(g.offsetHeight+parseFloat(getComputedStyle(g).lineHeight))+'px':''}
+addEventListener('resize',()=>fitQ(qFill));if(document.fonts)document.fonts.ready.then(()=>fitQ(qFill)); // the web font changes line height
 function qText(html){$('q').innerHTML=html}
+fitQ(T.reduce((a,t)=>t.q.length>a.length?t.q:a,''));
 function showQ(){const live=S.state==='buzzed'||S.state==='checking';
  qText(marked(S.words.slice(0,S.i),live?S.buzzAt:null,0,live)+(S.state==='reading'||S.state==='window'?'<span class="caret"></span>':''))}
 function stopAll(){clearInterval(tick);tick=null;clearTimeout(timer);cancelAnimationFrame(raf);$('bar').classList.remove('on')}
@@ -254,7 +267,7 @@ function judge(g,accepted){
  const p=g===null?0:ok?10:(S.finished?0:-5);
  S.heard++;S.pts+=p;if(p>0)S.c++;if(p<0)S.neg++;
  const at=g===null?null:S.buzzAt;
- S.state='judged';S.i=S.words.length;qText(marked(S.words,at,p,false));$('ansWrap').classList.remove('open');
+ S.state='judged';S.i=S.words.length;qText(marked(S.words,at,p,false));$('ansWrap').classList.remove('open');$('ans').blur();
  const r=$('res');r.style.background=p>0?'var(--blue)':'var(--red)';r.textContent=g===null?'0 no buzz':p>0?'+10 correct':p<0?'−5 incorrect':'0 incorrect';
  $('aline').innerHTML='Answer: '+S.t.a+(g!==null&&g!==''?`<span class="said">you said “${esc($('ans').value)}”</span>`:'');
  $('src').textContent=(S.t.rw?'rewritten, ':'draft, ')+'clues from '+S.t.secs;$('verWrap').classList.add('open');
@@ -263,11 +276,13 @@ function judge(g,accepted){
 }
 function skip(){if(S.state==='reading'||S.state==='window'){judge(null)}else if(S.state==='judged'){next()}}
 $('act').onclick=()=>{if(S.state==='reading'||S.state==='window')buzz();else if(S.state==='buzzed')submit(false);else if(S.state==='judged')next()};
+// Keys go to the answer box only while it is open (a closed one can still hold focus).
+const answering=()=>document.activeElement===$('ans')&&$('ansWrap').classList.contains('open');
 document.addEventListener('keydown',e=>{
  if(editing)return;
- if(e.key===' '&&document.activeElement!==$('ans')){e.preventDefault();buzz()}
+ if(e.key===' '&&!answering()){e.preventDefault();buzz()}
  else if(e.key==='Enter'&&S.state==='buzzed'){e.preventDefault();submit(false)}
- else if(e.key==='ArrowRight'&&document.activeElement!==$('ans')&&document.activeElement!==$('wpm')){e.preventDefault();skip()}
+ else if(e.key==='ArrowRight'&&!answering()&&document.activeElement!==$('wpm')){e.preventDefault();skip()}
 });
 $('log').onclick=e=>{const row=e.target.closest('.row[data-n]');if(row)toggleLog(row)};
 $('log').onkeydown=e=>{const row=e.target.closest('.row[data-n]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();toggleLog(row)}};

@@ -455,6 +455,15 @@ words of a multi-word answer ("cortex" for "cerebral cortex"; not for people, no
 and tools/judge.js, held together by server/tests/judge_cases.json (the test runs both).
 Limits in `[judge]`; tools/play.py writes them and the guard terms into tossups.json.
 
+## repo: publishing the v0 question page (2026-10-13)
+
+Ground rule 6 said questions from the v0 book were never deployed publicly. Chong changed
+it: the generated questions may be published as the single-player page
+(`play/index.html`), credited to the book, so a friend can play without his Mac running.
+Still never committed: the PDF, extracted text, the database, rewrite batches, and
+anything else in `data/`. Risk noted when deciding: the tossups are close paraphrases of
+the book's sentences, so a publisher could object; credit is not permission.
+
 ## play: answer judging, leniency (2026-10-12)
 
 Chong's fixes after playing: (1) a person's surname alone is always accepted; a name the
