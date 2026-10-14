@@ -56,3 +56,10 @@ def test_bad_mention_hyphen_and_noun_modifiers(nlp):
         assert bad_mention(doc, a, a + len(word)), text
     doc = nlp("Stress can set off hormonal changes.")
     assert bad_mention(doc, 0, 6) is None
+
+
+def test_answerline_drops_forms_judged_the_same():
+    _, plain = answerline("artificial language", ["artificial languages", "artificial-language",
+                                                  ". artificial language", "artificial language experiments"])
+    assert plain == "artificial language [accept artificial language experiments]"
+    assert answerline("Virginia Woolf", ["Virginia Woolf’s"])[1] == "Virginia Woolf"

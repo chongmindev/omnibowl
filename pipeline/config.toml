@@ -183,6 +183,9 @@ generic_answer_filter = true
 # effect", "lexical decision task") becomes class `variant` of the shorter one; its forms
 # are accepted for it. English words, not book facts.
 variant_merge = true
+# A noun-phrase answer that is a person answer's full name ("Michael Tomasello" found by both
+# extractors) becomes a variant of the person, so the name is one answer (2026-10-14).
+person_merge = true
 variant_light_nouns = ["effect", "activity", "response", "task", "system", "theory", "view", "model",
                        "network", "study", "process", "datum", "data", "level", "scan", "principle",
                        "phenomenon", "paradigm", "experiment", "work"]

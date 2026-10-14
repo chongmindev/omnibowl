@@ -3,7 +3,7 @@
 import pytest
 import spacy
 
-from omnibowl.candidates import capitalized_share, concept_key, concept_spans, person_spans, topic_names, variant_heads
+from omnibowl.candidates import capitalized_share, concept_key, concept_spans, person_spans, topic_names, person_duplicates, variant_heads
 
 
 @pytest.fixture(scope="module")
@@ -117,3 +117,13 @@ def test_variant_heads():
     kinds = {i: "concept" for _, i, _ in classed}
     out = variant_heads(classed, kinds, {"effect", "task", "study"})
     assert out == {2: 1, 5: 4, 10: 11}
+
+
+def test_person_duplicates():
+    classed = [["answer", 1, "michael tomasello"], ["answer", 2, "tomasello"], ["answer", 3, "carl jung"],
+               ["clue_only", 4, "jung"], ["answer", 5, "templates"], ["answer", 6, "templates"]]
+    kinds = {1: "concept", 2: "person", 3: "concept", 4: "person", 5: "concept", 6: "person"}
+    displays = {1: "Michael Tomasello", 2: "Michael Tomasello", 3: "Carl Jung", 4: "Carl Jung",
+                5: "templates", 6: "Templates"}
+    # only when both are answers; the person is kept
+    assert person_duplicates(classed, kinds, displays) == {1: 2, 5: 6}

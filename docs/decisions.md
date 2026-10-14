@@ -539,3 +539,26 @@ matchings: anywhere in the name (blocks "Cassidy", "Scunthorpe") and whole words
 (lets "...face" through). Known cost of the edge rule on the full list: it also refuses
 some real names and words, e.g. "Dickens", "Hancock", "Analisa", "Grape", "Therapist".
 What would break on another book: nothing; the rule is about players, not the book.
+
+## candidates: one answer per person (2026-10-14)
+
+Some people were found twice, once by the person extractor and once as a noun phrase
+("Michael Tomasello", term kinds person and concept), and both became answers, so the
+same person could hold two answer ids. Now (`[candidates.classes] person_merge`), a
+non-person answer whose display equals a person answer's display becomes a `variant` of
+the person (the "answer variants" mechanism): it plays as the person and its forms are
+accepted. Only answer/answer pairs merge; a pair where one side is clue_only is left
+alone (promoting a person would change the class lines, a separate decision). Applied by
+rerunning classification only (`classify_terms`), which keeps term ids, so v1 rewrites
+keyed by term id stay valid: 16 merges over both books (4 in the v0 book: Tomasello,
+Broca, Woolf, Twain), no other class changed. What would break on another book: nothing
+book-specific; a person and a different concept with the same written name would merge
+wrongly, which needs a capitalized multi-word name on both sides and is unlikely.
+
+## assemble: answerline alternates (2026-10-14)
+
+The "[accept ...]" list showed forms the judge already treats as the same answer
+("artificial-language", ". artificial language", "Virginia Woolf’s"). Alternates are now
+compared the way judging compares them (case, punctuation, hyphens, a possessive, a plural
+s), edge punctuation is trimmed, and only forms that differ are listed. Display only:
+the accepted forms used for judging are unchanged.

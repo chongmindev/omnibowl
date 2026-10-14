@@ -506,8 +506,26 @@ def classify_terms(book_id: int, conn, cfg: dict) -> None:
                 o[0] = "variant"
         conn.executemany("INSERT INTO term_variants (book_id, term_id, head_id) VALUES (?, ?, ?)",
                          [(book_id, v, h) for v, h in pairs.items()])
+    if c["person_merge"]:
+        displays = dict(conn.execute("SELECT id, display FROM terms WHERE book_id = ?", (book_id,)).fetchall())
+        kinds = {r["id"]: r["kind"] for r in conn.execute("SELECT id, kind FROM terms WHERE book_id = ?", (book_id,))}
+        pairs = person_duplicates(out, kinds, displays)
+        for o in out:
+            if o[1] in pairs:
+                o[0] = "variant"
+        conn.executemany("INSERT OR IGNORE INTO term_variants (book_id, term_id, head_id) VALUES (?, ?, ?)",
+                         [(book_id, v, h) for v, h in pairs.items()])
     conn.executemany("UPDATE terms SET class = ? WHERE id = ?", [(cls, tid) for cls, tid, _ in out])
     conn.commit()
+
+
+def person_duplicates(classed: list, kinds: dict[int, str], displays: dict[int, str]) -> dict[int, int]:
+    """{term id: person term id} for a non-person answer that is a person answer's full name
+    ("Michael Tomasello" found both as a noun phrase and as a person): one answer, played
+    as the person. `classed` rows are [class, id, norm]."""
+    people = {displays[i].lower(): i for cls, i, _ in classed if cls == "answer" and kinds[i] == "person"}
+    return {i: people[displays[i].lower()] for cls, i, _ in classed
+            if cls == "answer" and kinds[i] != "person" and displays[i].lower() in people}
 
 
 def variant_heads(classed: list, kinds: dict[int, str], light: set[str]) -> dict[int, int]:

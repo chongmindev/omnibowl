@@ -88,15 +88,28 @@ def answer_stems(forms: list[str], ref: str, cfg: dict) -> set[str]:
     return stems
 
 
+EDGE_PUNCT = " .,;:!?\"'“”‘’()[]-–—"
+
+
+def alt_key(form: str) -> str:
+    """What an accepted form is compared by: forms that differ only in case, punctuation,
+    hyphens, a possessive or a plural s are judged the same, so one is enough on the line."""
+    k = re.sub(r"['’]s\b", "", form.lower())
+    k = " ".join(re.sub(r"[^\w]+", " ", k).split())
+    return k.rstrip("s")
+
+
 def answerline(display: str, forms: list[str], core: str | None = None,
                expansion: str | None = None) -> tuple[str, str]:
     """(html, plain). `core` is the part of `display`, at its start or end, that is required
     (only it is underlined: "<u>test</u> phase", "Paul <u>Broca</u>"); `expansion` spells out an abbreviated answer and is
     shown in parentheses ("SLI (specific language impairment)")."""
-    shown = {x.lower().rstrip("s") for x in (display, core, expansion) if x}
+    shown = {alt_key(x) for x in (display, core, expansion) if x}
     alts = []
     for f in forms:
-        if f.lower().rstrip("s") not in shown and f.lower() not in [a.lower() for a in alts]:
+        f = f.strip(EDGE_PUNCT)  # ". artificial language" (a form cut at a sentence edge)
+        if f and alt_key(f) not in shown:
+            shown.add(alt_key(f))
             alts.append(f)
     acc = f" [accept {' or '.join(alts[:3])}]" if alts else ""
     if core and core != display and display.startswith(core):
