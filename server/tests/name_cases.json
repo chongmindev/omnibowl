@@ -1,0 +1,21 @@
+{"rules": {"blocked": ["zonk", "bad", "grim job", "xy"], "edge_min_letters": 4},
+ "cases": [
+  ["Mina", true],
+  ["", true],
+  ["zonk", false],
+  ["ZONK", false],
+  ["z0nk", false],
+  ["Mr Zonk", false],
+  ["zonkface", false],
+  ["bigzonk", false],
+  ["z.o.n.k", false],
+  ["zönk", false],
+  ["unzonked", true],
+  ["bad", false],
+  ["badminton", true],
+  ["grim job", false],
+  ["grimjob", false],
+  ["grim jobs", true],
+  ["xy", false],
+  ["xylophone", true]
+ ]}

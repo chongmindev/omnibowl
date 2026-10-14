@@ -522,3 +522,20 @@ the verifier), and 266 pass again. Head nouns come from spaCy's parse
 (`omnibowl/handles.py`), which occasionally mistakes a verb for a noun; that shows up as
 a false flag. What would break on another book: nothing book-specific; the counts depend
 on the pool, so they are recomputed whenever the pool changes.
+
+## room names: blocked words (2026-10-14)
+
+Players should not be able to take an offensive name. Chosen (Chong): the public
+LDNOOBW English list (403 entries, CC BY 4.0, saved unchanged in
+`server/blocked_words.txt`) with "words + edges" matching: a name is refused when a
+listed entry appears as its own word(s) or as the whole name with separators removed
+("f.u.c.k"), or when a word of the name starts or ends with a listed word of at least
+`[names] edge_min_letters` (4) letters ("...face"). Digits and symbols that stand for
+letters are read as letters first. The server checks on join (a refused name becomes
+"guest") and on rename (the old name stays, the page shows "Pick a different name"); the
+single-player page runs the same rule (`nameOk` in `tools/judge.js`). Rejected: our own
+short list (misses too much) and a Python package (a dependency, server only). Rejected
+matchings: anywhere in the name (blocks "Cassidy", "Scunthorpe") and whole words only
+(lets "...face" through). Known cost of the edge rule on the full list: it also refuses
+some real names and words, e.g. "Dickens", "Hancock", "Analisa", "Grape", "Therapist".
+What would break on another book: nothing; the rule is about players, not the book.

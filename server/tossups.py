@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .judge import Rules, judge, norm
+from .names import NameRules
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PATH = ROOT / "data" / "play" / "tossups.json"
@@ -41,6 +42,7 @@ class Library:
     book: str
     chapters: tuple[tuple[int, str], ...]
     tossups: tuple[Tossup, ...]
+    names: NameRules = NameRules()
 
 
 def load(path: Path = DEFAULT_PATH) -> Library:
@@ -54,4 +56,5 @@ def load(path: Path = DEFAULT_PATH) -> Library:
                rewritten=bool(t.get("rw")), rules=rules)
         for t in data["tossups"] if t["q"].strip())
     chapters = tuple((int(n), title) for n, title in data["chapters"])
-    return Library(book=data.get("book", ""), chapters=chapters, tossups=tossups)
+    return Library(book=data.get("book", ""), chapters=chapters, tossups=tossups,
+                   names=NameRules.from_json(data.get("names", {})))

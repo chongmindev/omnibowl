@@ -386,3 +386,13 @@ prompt_skip_words = ["of", "and", "or"]
 # Classes whose terms guard against near misses: a typo match is refused when the guess
 # is as close to one of these other terms ("morpheme" is not a typo of "phoneme").
 guard_classes = ["answer", "broad_answer", "clue_only", "too_broad", "variant"]
+
+# Player names (decision "room names: blocked words", 2026-10-14). tools/play.py writes the
+# list and this rule into tossups.json and the page; server/names.py and tools/judge.js
+# apply them. A name is refused when a listed entry appears as its own word(s), or when a
+# word of the name starts or ends with a listed word of at least `edge_min_letters` letters
+# ("fuckface"). Digits and symbols standing for letters (0 o, 1 i, 3 e, 4 a, 5 s, 7 t,
+# @ a, $ s, ! i) are read as those letters first.
+[names]
+blocked_words = "server/blocked_words.txt"
+edge_min_letters = 4

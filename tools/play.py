@@ -113,7 +113,8 @@ def main() -> None:
     ap.add_argument("--all", action="store_true",
                     help="include unrewritten drafts (default: only verified rewrites, when any exist)")
     args = ap.parse_args()
-    jc = config.load()["judge"]
+    cfg = config.load()
+    jc, nc = cfg["judge"], cfg["names"]
     conn = sqlite3.connect(args.db)
     conn.row_factory = sqlite3.Row
     book = conn.execute("SELECT * FROM books WHERE slug = ?", (args.book,)).fetchone()
@@ -181,9 +182,14 @@ def main() -> None:
         f"SELECT display FROM terms WHERE book_id = ? AND class IN ({','.join('?' * len(jc['guard_classes']))})",
         (book["id"], *jc["guard_classes"]))} - {""})
     judge = {k: jc[k] for k in ("ignore_words", "typo_free_below", "one_typo_up_to", "long_typos", "stem_from")} | {"terms": guard}
+    # Words a player name may not contain, and the edge rule (server/names.py, nameOk in judge.js).
+    names = {"blocked": [w.strip() for w in (ROOT / nc["blocked_words"]).read_text().splitlines()
+                         if w.strip() and not w.startswith("#")],
+             "edge_min_letters": nc["edge_min_letters"]}
     page = (ROOT / "tools" / "play_template.html").read_text()
     page = (page.replace("__JUDGE_JS__", (ROOT / "tools" / "judge.js").read_text())
                 .replace("__JUDGE__", json.dumps(judge, ensure_ascii=False))
+                .replace("__NAMES__", json.dumps(names, ensure_ascii=False))
                 .replace("__CHAPTERS__", json.dumps(chapters, ensure_ascii=False))
                 .replace("__TOSSUPS__", json.dumps(tossups, ensure_ascii=False))
                 .replace("__COUNT__", str(len(tossups))))
@@ -193,7 +199,7 @@ def main() -> None:
     # The same tossups as data for the multiplayer server (server/ reads this file, never
     # the database, so pipeline reruns cannot break a game in progress).
     (out.parent / "tossups.json").write_text(json.dumps(
-        {"book": book["title"], "slug": args.book, "chapters": chapters, "judge": judge, "tossups": tossups},
+        {"book": book["title"], "slug": args.book, "chapters": chapters, "judge": judge, "names": names, "tossups": tossups},
         ensure_ascii=False, indent=1))
     print(f"wrote {out} and tossups.json ({len(tossups)} tossups, {sum(x['rw'] for x in tossups)} rewritten)")
 

@@ -32,4 +32,14 @@ function judgeOne(given,accept,prompt,r,prompted){const g=r.key(given||'');if(!g
  if(!others.includes(g)){const gs=r.stemKey(g); // a different book term is never an inflection of the answer
   if([...acc].some(a=>r.stemKey(a)===gs))return'accept';if(!prompted&&[...pr].some(p=>r.stemKey(p)===gs))return'prompt'}
  if(closeTo(g,acc,others,r))return'accept';if(!prompted&&closeTo(g,pr,others,r))return'prompt';return'reject'}
-if(typeof module!=='undefined')module.exports={norm,judgeRules,judgeAnswer,distance,stem};
+// Player names (decision "room names: blocked words"): same rule as server/names.py.
+const LEET={'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s','!':'i'};
+function nameWords(s){s=s.toLowerCase().replace(/[013457@$!]/g,c=>LEET[c]).normalize('NFKD').replace(/[̀-ͯ]/g,'');return s.match(/[a-z]+/g)||[]}
+function nameRules(j){const phrases=(j.blocked||[]).map(nameWords).filter(p=>p.length),n=j.edge_min_letters||0;
+ return{phrases,edges:new Set(phrases.map(p=>p.join('')).filter(e=>n&&e.length>=n))}}
+function nameOk(name,r){const ws=nameWords(name);if(!ws.length)return true;
+ const padded=' '+ws.join(' ')+' ',whole=ws.join('');
+ if(r.phrases.some(p=>padded.includes(' '+p.join(' ')+' ')||p.join('')===whole))return false;
+ for(const w of ws)for(const e of r.edges)if(w.startsWith(e)||w.endsWith(e))return false;
+ return true}
+if(typeof module!=='undefined')module.exports={norm,judgeRules,judgeAnswer,distance,stem,nameRules,nameOk};

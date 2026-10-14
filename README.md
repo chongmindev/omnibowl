@@ -280,3 +280,7 @@ It depends on PyMuPDF, which is itself AGPL-3.0; the other dependencies are perm
 (spaCy, en_core_web_sm, fastcoref and the F-coref model: MIT; transformers, wordfreq
 code: Apache-2.0; PyTorch: BSD; wordfreq's frequency data: CC BY-SA 4.0, installed by
 users, not redistributed here).
+
+`server/blocked_words.txt`, the list used to refuse offensive player names, is the English
+"List of Dirty, Naughty, Obscene, and Otherwise Bad Words" (LDNOOBW, Shutterstock),
+CC BY 4.0, included unchanged except for a header.

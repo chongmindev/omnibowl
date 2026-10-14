@@ -175,7 +175,7 @@ button{all:unset;cursor:pointer}
 
 <script>
 __JUDGE_JS__
-const JR=judgeRules(__JUDGE__);
+const JR=judgeRules(__JUDGE__),NR=nameRules(__NAMES__);
 const CH=__CHAPTERS__;
 const T=__TOSSUPS__;
 const $=id=>document.getElementById(id);
@@ -306,8 +306,10 @@ function openEd(){
 function closeEd(inp,save){
  if(!editing)return;editing=false;
  const v=inp.value.trim().slice(0,20); // empty keeps the old name
- if(save&&v){S.name=v;store.set('name',v)}
+ const refused=save&&v&&!nameOk(v,NR); // a blocked word: keep the old name
+ if(save&&v&&!refused){S.name=v;store.set('name',v)}
  const span=document.createElement('span');span.id='name';inp.replaceWith(span);renderSide();renderLog();$('me').focus();
+ if(refused){const t=document.createElement('span');t.className='tip';t.textContent='Pick a different name';$('me').appendChild(t);setTimeout(hideTip,3000)}
 }
 $('me').onclick=openEd;$('me').onkeydown=e=>{if(!editing&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();openEd()}};
 // Resetting takes two clicks (the second within RESET_CONFIRM_MS), so a stray click costs nothing.

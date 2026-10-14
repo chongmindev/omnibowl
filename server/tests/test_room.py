@@ -258,3 +258,23 @@ def test_reset_score_clears_only_your_own_line():
         assert lines == {"p1": (0, 0, 0, 0), "p2": (15, 2, 1, 4)}
         assert b.state["log"][0] == {"kind": "reset", "pid": "p1", "name": "alice"}
     run(go())
+
+
+def test_blocked_names_are_refused_on_join_and_rename():
+    from dataclasses import replace
+    from server.names import NameRules
+    lib = replace(LIB, names=NameRules.from_json({"blocked": ["zonk"], "edge_min_letters": 4}))
+
+    async def go():
+        r, a, b = Room(name="t", library=lambda: lib, settings=FAST, rng=random.Random(0)), Fake(), Fake()
+        await r.join(a, "p1", "zonkface")
+        assert {"type": "name_refused"} in a.msgs
+        assert a.state["players"][0]["name"] == "guest"
+        await r.join(b, "p2", "bob")
+        await r.handle(b, {"type": "name", "name": "Mr Zonk"})
+        assert b.msgs[-2] == {"type": "name_refused"}
+        assert [p["name"] for p in b.state["players"] if p["pid"] == "p2"] == ["bob"]
+        assert not any(e["kind"] == "rename" for e in b.state["log"])
+        await r.handle(b, {"type": "name", "name": "Robert"})
+        assert [p["name"] for p in b.state["players"] if p["pid"] == "p2"] == ["Robert"]
+    run(go())

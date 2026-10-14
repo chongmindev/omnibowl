@@ -14,6 +14,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
 
+from .names import name_ok
 from .tossups import Library, Tossup
 
 COLORS = ("blue", "yellow", "red", "ink")
@@ -94,8 +95,11 @@ class Room:
     async def join(self, conn: Conn, pid: str, name: str) -> None:
         async with self.lock:
             p = self.players.get(pid)
+            refused = False
             if p is None:
-                p = Player(pid=pid, name=self._clean_name(name) or "guest",
+                name = self._clean_name(name)
+                refused = bool(name) and not self._name_ok(name)
+                p = Player(pid=pid, name=name if name and not refused else "guest",
                            color=COLORS[len(self.players) % len(COLORS)])
                 self.players[pid] = p
                 self._history({"kind": "join", "pid": pid, "name": p.name})
@@ -103,6 +107,8 @@ class Room:
             self.conns[conn] = pid
             if self.state == "idle":
                 self._next()
+            if refused:
+                await self._send(conn, {"type": "name_refused"})
             await self._broadcast()
 
     async def leave(self, conn: Conn) -> None:
@@ -145,7 +151,12 @@ class Room:
             elif kind == "wpm":
                 changed = self._set_wpm(msg.get("wpm"))
             elif kind == "name":
-                changed = self._rename(pid, str(msg.get("name", "")))
+                name = self._clean_name(str(msg.get("name", "")))
+                if name and not self._name_ok(name):
+                    await self._send(conn, {"type": "name_refused"})
+                    changed = False
+                else:
+                    changed = self._rename(pid, name)
             elif kind == "reset_score":
                 changed = self._reset_score(pid)
             else:
@@ -289,6 +300,9 @@ class Room:
 
     def _clean_name(self, name: str) -> str:
         return " ".join(name.split())[: self.settings.max_name]
+
+    def _name_ok(self, name: str) -> bool:
+        return name_ok(name, self.library().names)
 
     def _rename(self, pid: str, name: str) -> bool:
         name = self._clean_name(name)

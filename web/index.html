@@ -195,6 +195,7 @@ const ROOM=location.pathname.replace(/^\/+|\/+$/g,'')||'lobby';
 // One player per tab: two tabs in one browser are two players. A chosen name is saved on
 // the device; until then each tab is its own guest.
 const PID=tab.get('pid',null)||(()=>{const p=Math.random().toString(36).slice(2,12);tab.set('pid',p);return p})();
+let nameRefused=false; // the server refused the name just sent (blocked word); it keeps the old one
 let myName=local.get('name',null)||tab.get('guest',null);
 if(!myName){myName='guest'+Math.floor(1000+Math.random()*9000);tab.set('guest',myName)}
 const COLOR={blue:'var(--blue)',yellow:'var(--yellow)',red:'var(--red)',ink:'var(--ink)'};
@@ -207,7 +208,7 @@ function connect(){
  clearTimeout(retryTimer);
  ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws/'+encodeURIComponent(ROOM));
  ws.onopen=()=>{retry=0;send({type:'hello',pid:PID,name:myName});setConn(true)};
- ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='state')apply(m);else if(m.type==='word')word(m);else if(m.type==='typing')typing(m)};
+ ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='state')apply(m);else if(m.type==='name_refused')nameRefused=true;else if(m.type==='word')word(m);else if(m.type==='typing')typing(m)};
  ws.onclose=e=>{setConn(false);if(e.code===1008){offline('This room needs the private link. <b>Ask the host for it.</b>',false);return}
   offline('Server unreachable. <b>Reconnecting…</b>',true);retryTimer=setTimeout(connect,Math.min(8000,500*2**retry++))};
 }
@@ -238,6 +239,7 @@ function fitQ(text){qFill=text;const g=$('qGhost');g.textContent=text;
 addEventListener('resize',()=>fitQ(qFill));if(document.fonts)document.fonts.ready.then(()=>fitQ(qFill)); // the web font changes line height
 function apply(m){
  const prev=S;S=m;
+ if(nameRefused){nameRefused=false;const me=S.players.find(p=>p.pid===S.you);if(me){myName=me.name;local.set('name',myName)}refuseTip()}
  // Rooms know the longest tossup's length, not its words: a filler of that many characters.
  if(!prev||prev.max_len!==S.max_len)fitQ('xxxxxx '.repeat(Math.ceil(S.max_len/7)).slice(0,S.max_len));
  if(!prev||prev.num!==S.num||prev.state!==S.state)checking=false;
@@ -386,6 +388,7 @@ $('chaps').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();e.s
 
 // name
 let tip=null;
+function refuseTip(){if(tip)tip.remove();tip=document.createElement('span');tip.className='tip';tip.textContent='Pick a different name';lastSb='';setTimeout(hideTip,3000)}
 function hideTip(){if(tip){const t=tip;tip=null;t.style.opacity=0;setTimeout(()=>t.remove(),200)}local.set('tipShown',true)}
 function openEd(){
  if(editing||!$('me'))return;hideTip();editing=true;
