@@ -219,3 +219,7 @@ everything else.
 
 Speed is changed only with the slider. Every action also works by pointer and touch, and
 every control has a visible focus state: a 2px ink outline offset 2px.
+- **Single player remembers progress.** Score, history (up to 100) and the tossups already
+  asked are saved in the browser after every finished tossup, so a reload or a new visit
+  picks up where you left off (same browser and device only). Score Reset clears the score
+  and keeps the history; "Reset first visit" clears everything.

@@ -184,6 +184,10 @@ let S={state:'loading',t:null,words:[],i:0,num:0,pts:0,c:0,neg:0,heard:0,log:[],
 if(!S.name){S.name='guest'+Math.floor(1000+Math.random()*9000);store.set('name',S.name)}
 let tick=null,timer=null,timerEnd=0,timerDur=0,raf=null;
 const BUZZ_WINDOW=5000,ANSWER_WINDOW=8000,LOG_MAX=100; // finished tossups kept in history, as in rooms
+// Score, history and tossups already asked are kept in this browser between visits.
+function saveProgress(){store.set('progress',{num:S.log.length?S.log[0].num:0,pts:S.pts,c:S.c,neg:S.neg,heard:S.heard,log:S.log,seen:S.seen.map(t=>t.id)})}
+{const P=store.get('progress',null);if(P){const seen=new Set(P.seen||[]);
+ Object.assign(S,{num:P.num||0,pts:P.pts||0,c:P.c||0,neg:P.neg||0,heard:P.heard||0,log:(P.log||[]).slice(0,LOG_MAX),seen:T.filter(t=>seen.has(t.id))})}}
 
 function renderSide(){
  if(!editing)$('name').textContent=S.name;$('sc').textContent=S.c;$('sn').textContent=S.neg;$('sh').textContent=S.heard;$('sp').textContent=S.pts;
@@ -271,7 +275,7 @@ function judge(g,accepted){
  const r=$('res');r.style.background=p>0?'var(--blue)':'var(--red)';r.textContent=g===null?'0 no buzz':p>0?'+10 correct':p<0?'−5 incorrect':'0 incorrect';
  $('aline').innerHTML='Answer: '+S.t.a+(g!==null&&g!==''?`<span class="said">you said “${esc($('ans').value)}”</span>`:'');
  $('src').textContent=(S.t.rw?'rewritten, ':'draft, ')+'clues from '+S.t.secs;$('verWrap').classList.add('open');
- S.log.unshift({num:S.num,answer:S.t.a,p,words:S.words,at,given:$('ans').value.trim(),ch:S.t.ch,rw:S.t.rw,secs:S.t.secs});S.log.length=Math.min(S.log.length,LOG_MAX);renderLog();renderSide();
+ S.log.unshift({num:S.num,answer:S.t.a,p,words:S.words,at,given:$('ans').value.trim(),ch:S.t.ch,rw:S.t.rw,secs:S.t.secs});S.log.length=Math.min(S.log.length,LOG_MAX);saveProgress();renderLog();renderSide();
  setAct('next','Next →');hint('→ for the next tossup');
 }
 function skip(){if(S.state==='reading'||S.state==='window'){judge(null)}else if(S.state==='judged'){next()}}
@@ -316,9 +320,9 @@ $('me').onclick=openEd;$('me').onkeydown=e=>{if(!editing&&(e.key==='Enter'||e.ke
 const RESET_CONFIRM_MS=3000;let armed=null;
 function disarm(){clearTimeout(armed);armed=null;const b=$('scoreReset');b.classList.remove('armed');b.textContent='Score Reset'}
 $('scoreReset').onclick=()=>{if($('scoreReset').disabled)return;
- if(armed){disarm();S.pts=S.c=S.neg=S.heard=0;renderSide();return}
+ if(armed){disarm();S.pts=S.c=S.neg=S.heard=0;saveProgress();renderSide();return}
  $('scoreReset').classList.add('armed');$('scoreReset').textContent='Confirm reset';armed=setTimeout(disarm,RESET_CONFIRM_MS)};
-$('reset').onclick=()=>{store.set('tipShown',false);store.set('name',null);location.reload()};
+$('reset').onclick=()=>{store.set('tipShown',false);store.set('name',null);store.set('progress',null);location.reload()};
 // init
 renderSide();renderLog();
 if(!store.get('tipShown',false)){const t=document.createElement('span');t.className='tip';t.textContent=`You're ${S.name}. Click to rename.`;$('me').appendChild(t);setTimeout(hideTip,9000)}
